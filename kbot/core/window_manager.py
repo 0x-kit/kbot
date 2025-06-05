@@ -273,3 +273,29 @@ class WindowManager:
         
         self.logger.info(f"Found {len(game_windows)} potential game windows")
         return game_windows
+    
+    def get_client_rect(self, hwnd=None):
+        """Get client area rectangle (without window borders/title bar)"""
+        target_hwnd = hwnd or (self.target_window.hwnd if self.target_window else None)
+        
+        if not target_hwnd:
+            raise WindowError("No target window specified")
+        
+        try:
+            import win32gui
+            
+            # Get window rectangle
+            window_rect = win32gui.GetWindowRect(target_hwnd)
+            
+            # Get client rectangle
+            client_rect = win32gui.GetClientRect(target_hwnd)
+            
+            # Convert client coordinates to screen coordinates
+            left, top = win32gui.ClientToScreen(target_hwnd, (0, 0))
+            right = left + client_rect[2]
+            bottom = top + client_rect[3]
+            
+            return (left, top, right, bottom)
+            
+        except Exception as e:
+            raise WindowError(f"Failed to get client rectangle: {e}")

@@ -760,10 +760,93 @@ class TantraBotMainWindow(QMainWindow):
             dialog.exec_()
         except Exception as e:
             QMessageBox.critical(self, "Skill Config Error", f"Failed to configure skills: {e}")
-    
+
+    def _show_pixel_test_results_optimized(self, vitals, debug_image, regions, window_rect):
+        """Show optimized pixel test results"""
+        try:
+            # Create dialog
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Pixel Test Results (UI Only)")
+            dialog.setFixedSize(600, 500)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # Results text
+            results_text = f"""
+            <h3>Pixel Analysis Results</h3>
+            <table border="1" cellpadding="5">
+            <tr><td><b>HP:</b></td><td>{vitals['hp']}%</td></tr>
+            <tr><td><b>MP:</b></td><td>{vitals['mp']}%</td></tr>
+            <tr><td><b>Target Exists:</b></td><td>{'Yes' if vitals['target_exists'] else 'No'}</td></tr>
+            <tr><td><b>Target Health:</b></td><td>{vitals['target_health']}%</td></tr>
+            <tr><td><b>Target Name:</b></td><td>{vitals.get('target_name', 'None')}</td></tr>
+            </table>
+            
+            <h4>Capture Info:</h4>
+            <p><b>Window Rect:</b> {window_rect}</p>
+            <p><b>UI Capture Area:</b> Top-left 200x100 pixels</p>
+            
+            <h4>Region Coordinates:</h4>
+            <table border="1" cellpadding="5">
+            <tr><th>Region</th><th>Coordinates (x1,y1,x2,y2)</th></tr>
+            <tr><td>HP Bar</td><td>{regions['hp']}</td></tr>
+            <tr><td>MP Bar</td><td>{regions['mp']}</td></tr>
+            <tr><td>Target Health</td><td>{regions['target']}</td></tr>
+            <tr><td>Target Name</td><td>{regions['target_name']}</td></tr>
+            </table>
+            """
+            
+            results_label = QLabel(results_text)
+            results_label.setWordWrap(True)
+            layout.addWidget(results_label)
+            
+            # Image display (only UI area - much smaller and clearer)
+            if debug_image:
+                image_label = QLabel("UI Region (200x100 pixels with regions marked):")
+                layout.addWidget(image_label)
+                
+                # Convert PIL image to QPixmap
+                if debug_image.mode != "RGB":
+                    debug_image = debug_image.convert("RGB")
+                
+                # Scale up the small UI image for better visibility
+                scale_factor = 2  # Make it 3x bigger for visibility
+                new_size = (debug_image.width * scale_factor, debug_image.height * scale_factor)
+                debug_image = debug_image.resize(new_size, Image.NEAREST)
+                
+                # Convert to QImage
+                data = debug_image.tobytes("raw", "RGB")
+                qimg = QImage(data, debug_image.width, debug_image.height, QImage.Format_RGB888)
+                
+                # Create pixmap and display
+                pixmap = QPixmap.fromImage(qimg)
+                img_display = QLabel()
+                img_display.setPixmap(pixmap)
+                img_display.setAlignment(Qt.AlignCenter)
+                img_display.setStyleSheet("border: 1px solid #ccc; background-color: white;")
+                
+                layout.addWidget(img_display)
+            
+            # Tips
+            tips_text = self._get_pixel_test_tips(vitals)
+            tips_label = QLabel(tips_text)
+            tips_label.setWordWrap(True)
+            tips_label.setStyleSheet("background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc;")
+            layout.addWidget(tips_label)
+            
+            # Close button
+            btn_box = QDialogButtonBox(QDialogButtonBox.Ok)
+            btn_box.accepted.connect(dialog.accept)
+            layout.addWidget(btn_box)
+            
+            dialog.exec_()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Display Error", f"Failed to show test results: {e}")
+        
     @pyqtSlot()
     def _test_pixels(self):
-        """Test pixel accuracy with visual feedback"""
+        """Test pixel accuracy with optimized UI-only capture"""
         try:
             # Check if window is selected
             if not self.bot_engine.window_manager.target_window:
@@ -776,27 +859,28 @@ class TantraBotMainWindow(QMainWindow):
             # Update window rectangle
             self.bot_engine.window_manager.update_target_window_rect()
             
-            # Set monitor rect for pixel analyzer
-            if self.bot_engine.window_manager.target_window:
-                self.bot_engine.pixel_analyzer.set_monitor_rect(
-                    self.bot_engine.window_manager.target_window.rect
-                )
+            # Get window rectangle
+            window_rect = self.bot_engine.window_manager.target_window.rect
+            
+            # Set UI capture region (only top-left corner where UI is)
+            self.bot_engine.pixel_analyzer.set_ui_capture_region(window_rect)
             
             # Get current regions
             regions = self.bot_engine.config_manager.get_regions()
             
-            # Analyze vitals
+            # Analyze vitals using optimized capture
             vitals = self.bot_engine.pixel_analyzer.analyze_vitals(regions)
             
-            # Create debug image with regions marked
-            debug_image = self.bot_engine.pixel_analyzer.create_debug_image(regions)
+            # Create debug image with only UI area
+            debug_image = self.bot_engine.pixel_analyzer.create_debug_image_ui(regions)
             
-            # Create test results dialog
-            self._show_pixel_test_results(vitals, debug_image, regions)
+            # Show results
+            self._show_pixel_test_results_optimized(vitals, debug_image, regions, window_rect)
             
         except Exception as e:
             error_msg = f"Pixel test failed: {str(e)}\n\nFull error:\n{traceback.format_exc()}"
             QMessageBox.critical(self, "Test Error", error_msg)
+
 
     def _get_pixel_test_tips(self, vitals):
         """Get tips and interpretation for pixel test results"""

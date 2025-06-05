@@ -33,6 +33,8 @@ class PixelAnalyzer:
             'mp': {'b_min': 150, 'r_max': 100, 'g_max': 100},
             'bright_threshold': 200  # Skip bright pixels (text/highlights)
         }
+
+
     
     def set_monitor_rect(self, rect: Tuple[int, int, int, int]) -> None:
         """Set the window rectangle to monitor"""
@@ -183,10 +185,11 @@ class PixelAnalyzer:
         except Exception as e:
             raise AnalysisError(f"OCR extraction failed: {e}")
     
-    def analyze_vitals(self, regions: Dict[str, Tuple[int, int, int, int]]) -> Dict[str, any]:
-        """Get current HP, MP and target status"""
+    def analyze_vitals(self, regions):
+        """Get current HP, MP and target status using optimized UI capture"""
         try:
-            img = self.capture_screen()
+            # Use the optimized UI-only capture
+            img = self.capture_ui_only()
             
             hp_pixels = self.get_region_pixels(img, regions['hp'])
             mp_pixels = self.get_region_pixels(img, regions['mp'])
@@ -213,7 +216,7 @@ class PixelAnalyzer:
             }
         except Exception as e:
             raise AnalysisError(f"Vitals analysis failed: {e}")
-    
+        
     def create_debug_image(self, regions: Dict[str, Tuple[int, int, int, int]]) -> Image.Image:
         """Create test image with regions marked for debugging"""
         try:
@@ -278,3 +281,53 @@ class PixelAnalyzer:
             }
         except Exception as e:
             raise AnalysisError(f"OCR test failed: {e}")
+        
+    def set_ui_capture_region(self, window_rect):
+        """Set capture region to only include the UI area (top-left corner)"""
+        # UI is always in top-left corner, typically first 200x100 pixels
+        x, y, right, bottom = window_rect
+        
+        # Define UI region - adjust these values if needed
+        ui_width = 200   # Width of UI area
+        ui_height = 100  # Height of UI area
+        
+        # Set monitor rect to only capture UI area
+        self.monitor_rect = (x, y, x + ui_width, y + ui_height)
+
+    def capture_ui_only(self):
+        """Capture only the UI region (top-left corner)"""
+        try:
+            return ImageGrab.grab(bbox=self.monitor_rect)
+        except Exception as e:
+            raise AnalysisError(f"Failed to capture UI region: {e}")
+
+    def create_debug_image_ui(self, regions):
+        """Create debug image showing only UI area with regions marked"""
+        try:
+            img = self.capture_ui_only()
+            draw = ImageDraw.Draw(img)
+            
+            # Define colors for different regions
+            region_colors = {
+                "hp": "red",
+                "mp": "blue", 
+                "target": "green",
+                "target_name": "yellow"
+            }
+            
+            # Draw rectangles around monitored regions
+            for name, region in regions.items():
+                color = region_colors.get(name, "white")
+                draw.rectangle(region, outline=color, width=2)
+                
+                # Add coordinate labels
+                x1, y1, x2, y2 = region
+                label = f"{name.upper()}"
+                draw.text((x1, y1 - 15), label, fill=color)
+            
+            return img
+        except Exception as e:
+            raise AnalysisError(f"Failed to create debug image: {e}")
+
+        
+        
