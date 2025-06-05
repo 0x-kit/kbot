@@ -1,0 +1,184 @@
+2025-06-05 22:02:21,922 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:02:21,923 - Application - CRITICAL - Critical error: super-class __init__() of type TantraBotMainWindow was never called
+2025-06-05 22:16:44,252 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:16:44,253 - Application - CRITICAL - Critical error: super-class __init__() of type TantraBotMainWindow was never called
+2025-06-05 22:22:05,215 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:22:05,216 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-05 22:22:05,216 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-05 22:22:05,216 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-05 22:22:05,344 - Application - CRITICAL - Critical error: list index out of range
+2025-06-05 22:24:57,746 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:25:09,469 - Application - INFO - Application closed
+2025-06-05 22:25:35,127 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:26:25,849 - Application - INFO - Application closed
+2025-06-05 22:26:32,784 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:26:32,784 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-05 22:26:32,984 - Application - INFO - DEBUG: Import successful
+2025-06-05 22:26:32,984 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-05 22:26:32,985 - Application - INFO - DEBUG: Main window created successfully
+2025-06-05 22:26:32,985 - Application - INFO - DEBUG: Showing main window...
+2025-06-05 22:26:33,080 - Application - INFO - DEBUG: Main window shown
+2025-06-05 22:26:33,081 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-05 22:29:06,970 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:29:06,971 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-05 22:29:07,211 - Application - INFO - DEBUG: Import successful
+2025-06-05 22:29:07,211 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-05 22:29:07,213 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-05 22:29:07,213 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-05 22:29:07,214 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-05 22:29:07,342 - Application - CRITICAL - Critical error: list index out of range
+2025-06-05 22:29:07,342 - Application - CRITICAL - Full traceback:
+2025-06-05 22:29:07,343 - Application - CRITICAL - Traceback (most recent call last):
+  File "c:\Users\Cristo\Documents\claude\tantra bot\tantra_bot_v2\main.py", line 34, in main
+    main_window = TantraBotMainWindow()
+  File "c:\Users\Cristo\Documents\claude\tantra bot\tantra_bot_v2\ui\main_window.py", line 48, in __init__
+    self._setup_ui()
+    ~~~~~~~~~~~~~~^^
+  File "c:\Users\Cristo\Documents\claude\tantra bot\tantra_bot_v2\ui\main_window.py", line 102, in _setup_ui
+    self._create_skills_tab()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "c:\Users\Cristo\Documents\claude\tantra bot\tantra_bot_v2\ui\main_window.py", line 260, in _create_skills_tab
+    spin.setValue(1 if i not in [3, 6, 7] else [150, 150, 600][i-3])
+                                               ~~~~~~~~~~~~~~~^^^^^
+IndexError: list index out of range
+
+2025-06-05 22:42:09,422 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:42:09,422 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-05 22:42:09,663 - Application - INFO - DEBUG: Import successful
+2025-06-05 22:42:09,663 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-05 22:42:09,665 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-05 22:42:09,665 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-05 22:42:09,665 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-05 22:42:09,814 - Application - INFO - DEBUG: Main window created successfully
+2025-06-05 22:42:09,814 - Application - INFO - DEBUG: Showing main window...
+2025-06-05 22:42:09,904 - Application - INFO - DEBUG: Main window shown
+2025-06-05 22:42:09,904 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-05 22:42:23,319 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-05 22:54:38,974 - Application - INFO - Application closed
+2025-06-05 22:54:48,271 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 22:54:48,271 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-05 22:54:48,516 - Application - INFO - DEBUG: Import successful
+2025-06-05 22:54:48,516 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-05 22:54:48,518 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-05 22:54:48,518 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-05 22:54:48,518 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-05 22:54:48,672 - Application - INFO - DEBUG: Main window created successfully
+2025-06-05 22:54:48,672 - Application - INFO - DEBUG: Showing main window...
+2025-06-05 22:54:48,767 - Application - INFO - DEBUG: Main window shown
+2025-06-05 22:54:48,767 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-05 22:55:34,853 - BotEngine - INFO - Configuration saved successfully
+2025-06-05 23:02:03,069 - Application - INFO - Application closed
+2025-06-05 23:02:07,638 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-05 23:02:07,638 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-05 23:02:07,876 - Application - INFO - DEBUG: Import successful
+2025-06-05 23:02:07,876 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-05 23:02:07,878 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-05 23:02:07,878 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-05 23:02:07,878 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-05 23:02:08,031 - Application - INFO - DEBUG: Main window created successfully
+2025-06-05 23:02:08,031 - Application - INFO - DEBUG: Showing main window...
+2025-06-05 23:02:08,123 - Application - INFO - DEBUG: Main window shown
+2025-06-05 23:02:08,123 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-05 23:04:57,769 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-05 23:08:54,315 - BotEngine - INFO - Configuration saved successfully
+2025-06-06 00:01:24,334 - Application - INFO - Application closed
+2025-06-06 00:01:26,483 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 00:01:26,483 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 00:01:26,733 - Application - INFO - DEBUG: Import successful
+2025-06-06 00:01:26,733 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 00:01:26,736 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 00:01:26,736 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 00:01:26,736 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 00:01:26,879 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 00:01:26,879 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 00:01:26,971 - Application - INFO - DEBUG: Main window shown
+2025-06-06 00:01:26,971 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 00:18:21,854 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 00:20:31,187 - Application - INFO - Application closed
+2025-06-06 00:20:35,312 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 00:20:35,313 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 00:20:35,547 - Application - INFO - DEBUG: Import successful
+2025-06-06 00:20:35,547 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 00:20:35,550 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 00:20:35,550 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 00:20:35,550 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 00:20:35,685 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 00:20:35,685 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 00:20:35,774 - Application - INFO - DEBUG: Main window shown
+2025-06-06 00:20:35,774 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 00:20:41,662 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 00:21:17,971 - Application - INFO - Application closed
+2025-06-06 00:22:12,325 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 00:22:12,326 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 00:22:12,558 - Application - INFO - DEBUG: Import successful
+2025-06-06 00:22:12,558 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 00:22:12,560 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 00:22:12,561 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 00:22:12,561 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 00:22:12,700 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 00:22:12,700 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 00:22:12,796 - Application - INFO - DEBUG: Main window shown
+2025-06-06 00:22:12,796 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 00:22:17,471 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:04:10,391 - Application - INFO - Application closed
+2025-06-06 01:04:23,971 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 01:04:23,971 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 01:04:24,218 - Application - INFO - DEBUG: Import successful
+2025-06-06 01:04:24,218 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 01:04:24,220 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 01:04:24,220 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 01:04:24,220 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 01:04:24,357 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 01:04:24,357 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 01:04:24,449 - Application - INFO - DEBUG: Main window shown
+2025-06-06 01:04:24,449 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 01:04:39,486 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:05:01,519 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 01:05:01,520 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 01:05:01,706 - Application - INFO - DEBUG: Import successful
+2025-06-06 01:05:01,707 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 01:05:01,709 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 01:05:01,709 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 01:05:01,709 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 01:05:01,839 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 01:05:01,840 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 01:05:01,918 - Application - INFO - DEBUG: Main window shown
+2025-06-06 01:05:01,918 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 01:05:14,605 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:06:00,914 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 01:06:00,914 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 01:06:01,128 - Application - INFO - DEBUG: Import successful
+2025-06-06 01:06:01,128 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 01:06:01,130 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 01:06:01,131 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 01:06:01,131 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 01:06:01,266 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 01:06:01,266 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 01:06:01,354 - Application - INFO - DEBUG: Main window shown
+2025-06-06 01:06:01,354 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 01:06:11,185 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:09:54,683 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 01:09:54,684 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 01:09:54,906 - Application - INFO - DEBUG: Import successful
+2025-06-06 01:09:54,906 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 01:09:54,908 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 01:09:54,908 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 01:09:54,909 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 01:09:55,040 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 01:09:55,040 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 01:09:55,129 - Application - INFO - DEBUG: Main window shown
+2025-06-06 01:09:55,129 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 01:09:59,529 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:11:27,206 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 01:11:27,207 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 01:11:27,443 - Application - INFO - DEBUG: Import successful
+2025-06-06 01:11:27,444 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 01:11:27,446 - BotEngine - INFO - Mob whitelist updated: ['Byokbo']
+2025-06-06 01:11:27,446 - BotEngine - INFO - Potion threshold set to 70%
+2025-06-06 01:11:27,446 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 01:11:27,581 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 01:11:27,581 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 01:11:27,661 - Application - INFO - DEBUG: Main window shown
+2025-06-06 01:11:27,661 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 01:11:31,974 - BotEngine - INFO - Target window set:   (0x140D52)
+2025-06-06 01:37:24,630 - Application - INFO - Application closed
