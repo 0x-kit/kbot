@@ -24,6 +24,8 @@ class CombatManager:
         self.skill_manager = skill_manager
         self.input_controller = input_controller
         self.logger = logger
+
+        self.is_running = False
         
         # Combat state
         self.state = CombatState.IDLE
@@ -246,3 +248,18 @@ class CombatManager:
         self.current_target = None
         self.input_controller.emergency_stop()
         self.logger.info("Combat emergency stop executed")
+    def start(self):
+        self.is_running = True
+        self.logger.info("Combat manager started")
+
+    def stop(self):
+        self.is_running = False
+        self.current_target = None
+        self.state = CombatState.IDLE
+        self.logger.info("Combat manager stopped")
+
+    def pause(self):
+        self.is_running = False
+
+    def resume(self):
+        self.is_running = True

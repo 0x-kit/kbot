@@ -190,6 +190,8 @@ class BotEngine(QObject):
             
             # Reset stats
             self.stats['start_time'] = time.time()
+
+            self.combat_manager.start()
             
             # Start timers
             self.timer_manager.start_all_timers()
@@ -214,6 +216,8 @@ class BotEngine(QObject):
             
             # Stop all timers
             self.timer_manager.stop_all_timers()
+
+            self.combat_manager.stop()
             
             # Emergency stop input controller
             self.input_controller.emergency_stop()
@@ -239,6 +243,7 @@ class BotEngine(QObject):
         try:
             self._set_state(BotState.PAUSING)
             self.timer_manager.stop_all_timers()
+            self.combat_manager.pause()
             self._set_state(BotState.PAUSED)
             self.logger.info("Bot paused")
             return True
@@ -252,6 +257,8 @@ class BotEngine(QObject):
             return False
         
         try:
+            self.combat_manager.resume()
+            
             self.timer_manager.start_all_timers()
             self._set_state(BotState.RUNNING)
             self.logger.info("Bot resumed")
