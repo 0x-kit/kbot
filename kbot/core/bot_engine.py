@@ -101,24 +101,30 @@ class BotEngine(QObject):
             raise BotError(f"Configuration setup failed: {e}")
     
     def _setup_skills(self) -> None:
-        """Setup skills from configuration"""
-        try:
-            # Create basic Tantra skills
-            basic_skills = TantraSkillTemplates.create_basic_skills()
-            for skill in basic_skills:
-                self.skill_manager.register_skill(skill)
-            
-            # Load custom skill configuration
-            skill_config = self.config_manager.get_skills()
-            if skill_config and any(skill_config.values()):
-                self.skill_manager.import_config(skill_config)
-            
-            # Update skill keybinds from slots configuration
-            slots = self.config_manager.get_slots()
-            self._update_skill_keybinds(slots)
-            
-        except Exception as e:
-            self.logger.error(f"Failed to setup skills: {e}")
+            """Setup skills from configuration"""
+            try:
+                # Clear existing skills first to avoid duplicates
+                self.skill_manager.skills.clear()
+                self.skill_manager.usage_stats.clear()
+                
+                # Create basic Tantra skills
+                basic_skills = TantraSkillTemplates.create_basic_skills()
+                for skill in basic_skills:
+                    self.skill_manager.register_skill(skill)
+                
+                # Load custom skill configuration
+                skill_config = self.config_manager.get_skills()
+                if skill_config and any(skill_config.values()):
+                    self.skill_manager.import_config(skill_config)
+                
+                # Update skill keybinds from slots configuration
+                slots = self.config_manager.get_slots()
+                self._update_skill_keybinds(slots)
+                
+                self.logger.info(f"Skills setup completed: {len(self.skill_manager.skills)} skills loaded")
+                
+            except Exception as e:
+                self.logger.error(f"Failed to setup skills: {e}")
     
     def _update_skill_keybinds(self, slots: Dict[str, str]) -> None:
         """Update skill keybinds and cooldowns from slot configuration"""
@@ -297,69 +303,121 @@ class BotEngine(QObject):
         
         return True
     
-    def _check_vitals(self) -> None:
-        """Check health/mana and use potions if needed"""
-        if self.state != BotState.RUNNING:
-            return
+    def _is_likely_ocr_noise(self, new_name: str, current_name: str) -> bool:
+        """Check if the new name is likely OCR noise"""
+        # Very different length
+        if abs(len(new_name) - len(current_name)) > 3:
+            return True
         
-        try:
-            # Update window rectangle in case it moved
-            self.window_manager.update_target_window_rect()
+        # Contains obvious OCR garbage
+        if any(char in new_name.lower() for char in ['1', '0', 'l', 'i']) and len(new_name) > 6:
+            return True
+        
+        # Very short and not similar
+        if len(new_name) <= 2:
+            return True
+        
+        # Check similarity (simple check)
+        if len(current_name) > 0:
+            common_chars = sum(1 for c in new_name.lower() if c in current_name.lower())
+            similarity = common_chars / max(len(new_name), len(current_name))
             
-            # Set monitor rect for pixel analyzer
-            if self.window_manager.target_window:
-                self.pixel_analyzer.set_monitor_rect(self.window_manager.target_window.rect)
-            
-            # Get current vitals
-            regions = self.config_manager.get_regions()
-            vitals = self.pixel_analyzer.analyze_vitals(regions)
-            
-            # Update skill manager game state
-            self.skill_manager.update_game_state({
-                'hp': vitals['hp'],
-                'mp': vitals['mp'],
-                'target_exists': vitals['target_exists'],
-                'target_hp': vitals['target_health'],
-                'in_combat': vitals['target_exists']
-            })
-            
-            # Check for target changes
-            if vitals['target_name'] != self.current_target:
-                old_target = self.current_target
-                self.current_target = vitals['target_name']
-                
-                if old_target and not self.current_target:
-                    self.stats['targets_killed'] += 1
-                    self.logger.info(f"Target defeated: {old_target}")
-                
-                if self.current_target:
-                    self.logger.info(f"New target: {self.current_target}")
-                
-                self.target_changed.emit(self.current_target or "")
-            
-            # Use potions if needed
-            auto_pots = self.config_manager.get_option('auto_pots', True)
-            if auto_pots:
-                threshold = self.config_manager.get_option('potion_threshold', 70)
-                
-                if vitals['hp'] < threshold:
-                    if self.skill_manager.use_skill('HP Potion'):
-                        self.stats['potions_used'] += 1
-                        self.logger.info(f"Used HP potion (HP: {vitals['hp']}%)")
-                
-                if vitals['mp'] < threshold:
-                    if self.skill_manager.use_skill('MP Potion'):
-                        self.stats['potions_used'] += 1
-                        self.logger.info(f"Used MP potion (MP: {vitals['mp']}%)")
-            
-            # Store vitals and emit signal
-            self.last_vitals = vitals
-            self.vitals_updated.emit(vitals)
-            
-        except Exception as e:
-            self.logger.error(f"Error checking vitals: {e}")
-            self.stats['errors_occurred'] += 1
+            # If less than 30% similarity, likely noise
+            if similarity < 0.3:
+                return True
+        
+        return False
     
+    def _check_vitals(self) -> None:
+            """Check health/mana and use potions if needed"""
+            if self.state != BotState.RUNNING:
+                return
+            
+            try:
+                # Update window rectangle in case it moved
+                self.window_manager.update_target_window_rect()
+                
+                # Set monitor rect for pixel analyzer
+                if self.window_manager.target_window:
+                    self.pixel_analyzer.set_monitor_rect(self.window_manager.target_window.rect)
+                
+                # Get current vitals
+                regions = self.config_manager.get_regions()
+                vitals = self.pixel_analyzer.analyze_vitals(regions)
+                
+                # Update skill manager game state - Include target_name!
+                self.skill_manager.update_game_state({
+                    'hp': vitals['hp'],
+                    'mp': vitals['mp'],
+                    'target_exists': vitals['target_exists'],
+                    'target_hp': vitals['target_health'],
+                    'target_name': vitals.get('target_name', ''),
+                    'in_combat': vitals['target_exists']
+                })
+                
+                # Check for SIGNIFICANT target changes (filter OCR noise)
+                detected_name = vitals['target_name']
+                
+                # Only log target changes if they're meaningful
+                should_log_change = False
+                
+                if detected_name != self.current_target:
+                    # Different name detected
+                    if not self.current_target and detected_name:
+                        # No previous target -> new target (always log)
+                        should_log_change = True
+                    elif self.current_target and not detected_name:
+                        # Had target -> no target (target died/lost)
+                        should_log_change = True
+                    elif self.current_target and detected_name:
+                        # Target name changed - check if it's significant
+                        # Filter out OCR noise: very short names or garbage characters
+                        if (len(detected_name) >= 3 and 
+                            detected_name.isalpha() and
+                            not self._is_likely_ocr_noise(detected_name, self.current_target)):
+                            should_log_change = True
+                        else:
+                            # Likely OCR noise - don't update current_target
+                            self.logger.debug(f"Filtering OCR noise: '{detected_name}' (keeping '{self.current_target}')")
+                            detected_name = self.current_target  # Keep the current target
+                
+                # Only update and log if it's a significant change
+                if should_log_change:
+                    old_target = self.current_target
+                    self.current_target = detected_name
+                    
+                    if old_target and not self.current_target:
+                        self.stats['targets_killed'] += 1
+                        self.logger.info(f"Target defeated: {old_target}")
+                    
+                    if self.current_target and self.current_target != old_target:
+                        self.logger.info(f"New target: {self.current_target}")
+                    
+                    self.target_changed.emit(self.current_target or "")
+                
+                # Use potions if needed
+                auto_pots = self.config_manager.get_option('auto_pots', True)
+                if auto_pots:
+                    threshold = self.config_manager.get_option('potion_threshold', 70)
+                    
+                    if vitals['hp'] < threshold:
+                        if self.skill_manager.use_skill('HP Potion'):
+                            self.stats['potions_used'] += 1
+                            self.logger.info(f"Used HP potion (HP: {vitals['hp']}%)")
+                    
+                    if vitals['mp'] < threshold:
+                        if self.skill_manager.use_skill('MP Potion'):
+                            self.stats['potions_used'] += 1
+                            self.logger.info(f"Used MP potion (MP: {vitals['mp']}%)")
+                
+                # Store vitals and emit signal
+                self.last_vitals = vitals
+                self.vitals_updated.emit(vitals)
+                
+            except Exception as e:
+                self.logger.error(f"Error checking vitals: {e}")
+                self.stats['errors_occurred'] += 1
+            
     def _combat_loop(self) -> None:
         """Main combat loop"""
         if self.state != BotState.RUNNING:
