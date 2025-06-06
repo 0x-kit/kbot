@@ -64,24 +64,36 @@ class CombatManager:
     
     def process_combat(self) -> None:
         """Main combat processing method"""
-        current_time = time.time()
-        
-        # Check if we have a valid target
-        has_target = self._check_current_target()
-        
-        if has_target:
-            self._handle_combat()
-        else:
-            self._handle_no_target(current_time)
-    
+        if not self.is_running:
+            return
+            
+        try:
+            current_time = time.time()
+            
+            # Check if we have a valid target
+            has_target = self._check_current_target()
+            
+            if has_target and self.current_target:
+                # We have a valid target - ATTACK IT!
+                self._handle_combat()
+            else:
+                # No target - try to find one
+                self._handle_no_target(current_time)
+                
+        except Exception as e:
+            self.logger.error(f"Error in combat loop: {e}")
+
     def _check_current_target(self) -> bool:
         """Check if current target is valid"""
         try:
-            # This would be called from the main vitals check
-            # We assume the game state is already updated in skill_manager
+            # Get game state from skill manager
             game_state = self.skill_manager.game_state
             
-            if not game_state.get('target_exists', False):
+            target_exists = game_state.get('target_exists', False)
+            target_name = game_state.get('target_name', '')
+            
+            # If no target exists, clear current target
+            if not target_exists:
                 if self.current_target:
                     self.logger.info(f"Lost target: {self.current_target}")
                     self.current_target = None
@@ -89,27 +101,27 @@ class CombatManager:
                     self.state = CombatState.IDLE
                 return False
             
-            # Target exists, check if it's a valid target
-            target_name = game_state.get('target_name', '')
-            
-            if target_name and target_name != self.current_target:
-                # New target detected
+            # If we have a target name, validate it
+            if target_name:
                 if self._is_target_allowed(target_name):
-                    self.current_target = target_name
-                    self.combat_stats['targets_acquired'] += 1
-                    self.logger.info(f"Target acquired: {target_name}")
-                    self.state = CombatState.FIGHTING
+                    # Valid target found
+                    if target_name != self.current_target:
+                        self.current_target = target_name
+                        self.combat_stats['targets_acquired'] += 1
+                        self.logger.info(f"Target acquired: {target_name}")
+                        self.state = CombatState.FIGHTING
                     return True
                 else:
-                    # Invalid target, try to find a new one
+                    # Invalid target - clear it and find a new one
                     self.logger.info(f"Skipping forbidden target: {target_name}")
-                    self._attempt_new_target()
+                    self.current_target = None
                     return False
             
+            # We have target_exists=True but no name - this might be lag
+            # Keep current target if we had one recently
             if self.current_target:
-                self.state = CombatState.FIGHTING
                 return True
-            
+                
             return False
             
         except Exception as e:
@@ -125,35 +137,40 @@ class CombatManager:
         return any(allowed.lower() in target_lower for allowed in self.mob_whitelist)
     
     def _handle_combat(self) -> None:
-        """Handle combat when we have a target"""
+        """Handle combat when we have a valid target"""
         try:
-            # Get next skill to use
-            next_skill = self.skill_manager.get_next_skill()
+            current_time = time.time()
             
-            if next_skill:
-                if self.skill_manager.use_skill(next_skill):
-                    self.logger.debug(f"Used skill: {next_skill}")
-                else:
-                    # If we can't use any skills, fall back to basic attack
-                    if self.skill_manager.use_skill('Basic Attack', force=True):
-                        self.logger.debug("Used basic attack (fallback)")
+            # Check if enough time has passed since last attack
+            if current_time - self.last_attack_time < self.timing['attack_interval']:
+                return  # Not ready to attack yet
+            
+            # ATTACK THE TARGET!
+            if self.input_controller.send_key('r'):
+                self.last_attack_time = current_time
+                self.logger.info(f"Attacking {self.current_target}")
+                
+                # Optional: Check target health for low health message
+                game_state = self.skill_manager.game_state
+                target_health = game_state.get('target_hp', 0)
+                if target_health > 0 and target_health < 30:
+                    self.logger.info(f"{self.current_target} is low health ({target_health}%)")
             else:
-                # No skills available, use basic attack
-                if self.skill_manager.use_skill('Basic Attack', force=True):
-                    self.logger.debug("Used basic attack (no skills available)")
-                    
+                self.logger.warning("Failed to send attack command")
+                
         except Exception as e:
-            self.logger.error(f"Error in combat handling: {e}")
+            self.logger.error(f"Attack error: {e}")
     
     def _handle_no_target(self, current_time: float) -> None:
         """Handle situation when we have no target"""
-        # Try to acquire a new target
+        # Only try to target if enough time has passed
         if (current_time - self.last_target_attempt > 
             self.timing['target_attempt_interval']):
+            
             self._attempt_new_target()
             self.last_target_attempt = current_time
         
-        # If we still don't have a target after multiple attempts, move around
+        # If we still don't have a target after many attempts, move around
         if (self.state == CombatState.IDLE and 
             current_time - self.last_movement > self.timing['movement_interval']):
             self._move_to_find_targets()

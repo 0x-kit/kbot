@@ -69,6 +69,7 @@ class ConfigManager:
         try:
             with open(self.config_file, 'w') as configfile:
                 self.config.write(configfile)
+            print(f"ConfigManager: Saved config to {self.config_file}")  # Debug
         except Exception as e:
             raise ConfigError(f"Failed to save configuration: {e}")
     
@@ -137,6 +138,14 @@ class ConfigManager:
         """Get region coordinates"""
         regions = {}
         
+        # Default regions
+        default_regions = {
+            'hp': (4, 20, 168, 36),
+            'mp': (4, 36, 168, 51),
+            'target': (4, 66, 168, 75),
+            'target_name': (4, 55, 168, 70)
+        }
+        
         if self.config.has_section('Regions'):
             for region in ['hp', 'mp', 'target', 'target_name']:
                 if self.config.has_option('Regions', region):
@@ -144,16 +153,19 @@ class ConfigManager:
                         coords = ast.literal_eval(self.config['Regions'][region])
                         if isinstance(coords, tuple) and len(coords) == 4:
                             regions[region] = coords
-                        else:
-                            regions[region] = self._defaults['regions'][region]
-                    except (ValueError, SyntaxError):
-                        regions[region] = self._defaults['regions'][region]
-                else:
-                    regions[region] = self._defaults['regions'][region]
+                            continue
+                    except (ValueError, SyntaxError) as e:
+                        print(f"Error parsing region {region}: {e}")
+                
+                # Use default if parsing failed or option doesn't exist
+                regions[region] = default_regions[region]
         else:
-            regions = self._defaults['regions'].copy()
+            # No Regions section, use all defaults
+            regions = default_regions.copy()
         
+        print(f"ConfigManager: Got regions {regions}")  # Debug
         return regions
+
     
     def set_regions(self, regions: Dict[str, Tuple[int, int, int, int]]) -> None:
         """Set region coordinates"""
@@ -162,6 +174,8 @@ class ConfigManager:
         
         for region, coords in regions.items():
             self.config['Regions'][region] = str(coords)
+        
+        print(f"ConfigManager: Set regions to {regions}")  # Debug
     
     def get_timing(self) -> Dict[str, float]:
         """Get timing intervals"""

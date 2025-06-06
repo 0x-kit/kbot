@@ -160,7 +160,7 @@ class BotEngine(QObject):
         # Combat timer
         self.timer_manager.create_timer(
             'combat_loop',
-            timing.get('combat_check', 1.0),
+            timing.get('combat_check', 0.5),
             self._combat_loop
         )
         

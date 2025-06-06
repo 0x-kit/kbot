@@ -747,8 +747,13 @@ class TantraBotMainWindow(QMainWindow):
     def _configure_regions(self):
         """Open region configuration dialog"""
         try:
-            dialog = RegionConfigDialog(self.bot_engine.pixel_analyzer, self)
-            dialog.exec_()
+            # Pass bot_engine instead of just pixel_analyzer
+            dialog = RegionConfigDialog(self.bot_engine, self)
+            
+            if dialog.exec_() == dialog.Accepted:
+                # Regions are already saved by the dialog
+                self.status_bar.showMessage("Region configuration updated", 2000)
+                
         except Exception as e:
             QMessageBox.critical(self, "Region Config Error", f"Failed to configure regions: {e}")
     
@@ -810,7 +815,7 @@ class TantraBotMainWindow(QMainWindow):
                     debug_image = debug_image.convert("RGB")
                 
                 # Scale up the small UI image for better visibility
-                scale_factor = 2  # Make it 3x bigger for visibility
+                scale_factor = 1  # Make it 3x bigger for visibility
                 new_size = (debug_image.width * scale_factor, debug_image.height * scale_factor)
                 debug_image = debug_image.resize(new_size, Image.NEAREST)
                 

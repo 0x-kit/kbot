@@ -2,14 +2,13 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QGridLayout, QSpinBox,
                             QLabel, QDialogButtonBox, QPushButton, QGroupBox,
                             QMessageBox)
 from PyQt5.QtCore import Qt
-from core.pixel_analyzer import PixelAnalyzer
 
 class RegionConfigDialog(QDialog):
     """Dialog for configuring screen regions"""
     
-    def __init__(self, pixel_analyzer: PixelAnalyzer, parent=None):
+    def __init__(self, bot_engine, parent=None):
         super().__init__(parent)
-        self.pixel_analyzer = pixel_analyzer
+        self.bot_engine = bot_engine  # Store bot_engine instead of just pixel_analyzer
         self.setWindowTitle("Configure Screen Regions")
         self.setFixedSize(500, 400)
         
@@ -17,7 +16,7 @@ class RegionConfigDialog(QDialog):
         self.original_regions = {}
         
         self._setup_ui()
-        self._load_regions()
+        self._load_current_regions()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
@@ -71,9 +70,31 @@ class RegionConfigDialog(QDialog):
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
     
-    def _load_regions(self):
-        """Load current region coordinates"""
-        # Default regions from the original bot
+    def _load_current_regions(self):
+        """Load current region coordinates from config"""
+        try:
+            # Get regions from config manager
+            current_regions = self.bot_engine.config_manager.get_regions()
+            
+            # Store original values for cancel
+            self.original_regions = current_regions.copy()
+            
+            # Load values into spinboxes
+            for region, coords in current_regions.items():
+                if region in self.region_spinboxes:
+                    spinboxes = self.region_spinboxes[region]
+                    for i, coord in enumerate(coords):
+                        spinboxes[i].setValue(coord)
+            
+            print(f"Loaded regions: {current_regions}")  # Debug
+            
+        except Exception as e:
+            QMessageBox.warning(self, "Load Error", f"Failed to load current regions: {e}")
+            # Fall back to defaults if loading fails
+            self._load_default_regions()
+    
+    def _load_default_regions(self):
+        """Load default regions if current ones can't be loaded"""
         default_regions = {
             'hp': (4, 20, 168, 36),
             'mp': (4, 36, 168, 51),
@@ -86,48 +107,45 @@ class RegionConfigDialog(QDialog):
                 spinboxes = self.region_spinboxes[region]
                 for i, coord in enumerate(coords):
                     spinboxes[i].setValue(coord)
-                
-                # Store original values
-                self.original_regions[region] = coords
     
     def _test_regions(self):
         """Test the current region configuration"""
         try:
-            # Apply current values temporarily
-            self._apply_regions()
+            # Get current values from spinboxes
+            regions = self._get_current_regions()
+            
+            # Temporarily update the pixel analyzer regions for testing
+            temp_regions = self.bot_engine.config_manager.get_regions()
+            
+            # Update config temporarily
+            self.bot_engine.config_manager.set_regions(regions)
             
             # Show info about testing
             QMessageBox.information(
                 self, "Test Regions", 
-                "Region coordinates have been updated.\n\n"
-                "To properly test:\n"
-                "1. Make sure your game window is selected\n"
+                "Region coordinates have been temporarily updated.\n\n"
+                "To test:\n"
+                "1. Click OK to close this dialog\n"
                 "2. Use 'Test Pixel Accuracy' from the main window\n"
-                "3. Check if HP/MP bars are detected correctly"
+                "3. Check if HP/MP bars are detected correctly\n"
+                "4. Come back here to adjust if needed"
             )
             
         except Exception as e:
             QMessageBox.critical(self, "Test Error", f"Failed to test regions: {e}")
     
-    def _apply_regions(self):
-        """Apply current region values"""
+    def _get_current_regions(self):
+        """Get current region values from spinboxes"""
         regions = {}
         for region, spinboxes in self.region_spinboxes.items():
             coords = tuple(spinbox.value() for spinbox in spinboxes)
             regions[region] = coords
-        
-        # In a complete implementation, this would update the pixel analyzer
-        # For now, we just return the regions
         return regions
-    
-    def get_regions(self):
-        """Get the configured regions"""
-        return self._apply_regions()
     
     def accept(self):
         """Accept dialog and save regions"""
         try:
-            regions = self._apply_regions()
+            regions = self._get_current_regions()
             
             # Validate regions
             for region, coords in regions.items():
@@ -135,18 +153,39 @@ class RegionConfigDialog(QDialog):
                 if x1 >= x2 or y1 >= y2:
                     QMessageBox.warning(
                         self, "Invalid Region", 
-                        f"Invalid coordinates for {region}: x2 must be > x1 and y2 must be > y1"
+                        f"Invalid coordinates for {region}:\n"
+                        f"X2 ({x2}) must be greater than X1 ({x1})\n"
+                        f"Y2 ({y2}) must be greater than Y1 ({y1})"
                     )
                     return
             
-            # Store the regions for retrieval
-            self.configured_regions = regions
+            # Save to config manager
+            self.bot_engine.config_manager.set_regions(regions)
+            
+            # Save config to file
+            self.bot_engine.config_manager.save_config()
+            
+            print(f"Saved regions: {regions}")  # Debug
+            
+            QMessageBox.information(
+                self, "Success", 
+                "Region coordinates saved successfully!\n"
+                "Use 'Test Pixel Accuracy' to verify the new settings."
+            )
+            
             super().accept()
             
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save regions: {e}")
+            QMessageBox.critical(self, "Save Error", f"Failed to save regions: {e}")
     
     def reject(self):
         """Reject dialog and restore original regions"""
-        # Restore original regions if needed
+        try:
+            # Restore original regions if they were changed during testing
+            if self.original_regions:
+                self.bot_engine.config_manager.set_regions(self.original_regions)
+                print("Restored original regions on cancel")
+        except Exception as e:
+            print(f"Error restoring regions on cancel: {e}")
+        
         super().reject()
