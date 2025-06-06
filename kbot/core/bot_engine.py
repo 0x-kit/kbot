@@ -24,13 +24,13 @@ class BotState(Enum):
     ERROR = "error"
 
 class BotEngine(QObject):
-    """Main bot engine that coordinates all subsystems"""
+    """Enhanced bot engine with full skills integration"""
     
     # Signals for UI updates
-    state_changed = pyqtSignal(str)  # Bot state changes
-    vitals_updated = pyqtSignal(dict)  # Health/mana updates
-    target_changed = pyqtSignal(str)  # Target changes
-    error_occurred = pyqtSignal(str)  # Error messages
+    state_changed = pyqtSignal(str)
+    vitals_updated = pyqtSignal(dict)
+    target_changed = pyqtSignal(str)
+    error_occurred = pyqtSignal(str)
     
     def __init__(self):
         super().__init__()
@@ -42,14 +42,23 @@ class BotEngine(QObject):
         self.window_manager = WindowManager(self.logger)
         self.input_controller = InputController(self.logger)
         self.timer_manager = TimerManager()
+
+        # NUEVO: Crear movement manager
+        from core.movement_manager import MovementManager
+        self.movement_manager = MovementManager(
+            self.input_controller,
+            self.window_manager,
+            self.logger
+        )
         
-        # Initialize combat system
-        self.skill_manager = SkillManager(self.input_controller)
+        # Initialize skill system
+        self.skill_manager = SkillManager(self.input_controller, self.logger)
         self.combat_manager = CombatManager(
             self.pixel_analyzer,
             self.skill_manager,
             self.input_controller,
-            self.logger
+            self.logger,
+            self.movement_manager
         )
         
         # Bot state
@@ -83,8 +92,8 @@ class BotEngine(QObject):
             # Load timing intervals
             timing = self.config_manager.get_timing()
             
-            # Setup skills
-            self._setup_skills()
+            # Setup skills with enhanced configuration
+            self._setup_enhanced_skills()
             
             # Load whitelist for combat manager
             whitelist = self.config_manager.get_whitelist()
@@ -94,37 +103,122 @@ class BotEngine(QObject):
             threshold = self.config_manager.get_option('potion_threshold', 70)
             self.combat_manager.set_potion_threshold(threshold)
             
-            self.logger.info("Bot configured successfully from config file")
+            # Configure combat manager skills settings
+            self.combat_manager.set_skill_usage(True)  # Enable skills by default
+            self.combat_manager.set_skill_priority_mode("rotation")  # Use rotation mode
+
+            # Configure movement manager
+            movement_config = {
+                'movement_interval': 4.0,        # Move every 4 seconds when searching
+                'max_stuck_time': 12.0,          # Consider stuck after 12 seconds
+                'click_radius': 150,             # Larger click radius for more movement
+                'directional_duration': 3.0      # Longer directional movements
+            }
+            self.movement_manager.set_movement_config(movement_config)
+
+            # Configure combat manager for more aggressive searching
+            self.combat_manager.configure_movement_behavior(aggressive_search=True)
+
+            self.logger.info("Movement manager configured for active mob searching")
+            
+            # Update combat timing to include skills
+            enhanced_timing = timing.copy()
+            enhanced_timing['skill_interval'] = 0.8  # Add skill interval
+            self.combat_manager.set_timing(enhanced_timing)
+            
+            self.logger.info("Bot configured successfully with enhanced skills integration")
             
         except Exception as e:
             self.logger.error(f"Failed to setup from config: {e}")
             raise BotError(f"Configuration setup failed: {e}")
+        
+    def _create_basic_skills_fallback(self) -> None:
+        """Create basic skills as fallback"""
+        try:
+            # Create comprehensive Tantra skills
+            basic_skills = TantraSkillTemplates.create_basic_skills()
+            
+            # Register all basic skills
+            for skill in basic_skills:
+                self.skill_manager.register_skill(skill)
+            
+            # Create a simple default rotation
+            self.skill_manager.create_rotation("Default", ["Skill 1", "Skill 2"], repeat=True)
+            self.skill_manager.set_active_rotation("Default")
+            
+            self.logger.info("Created basic skills fallback configuration")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to create basic skills fallback: {e}")
     
-    def _setup_skills(self) -> None:
-            """Setup skills from configuration"""
-            try:
-                # Clear existing skills first to avoid duplicates
-                self.skill_manager.skills.clear()
-                self.skill_manager.usage_stats.clear()
+    def _setup_enhanced_skills(self) -> None:
+        """FIXED: Enhanced skill setup with proper config loading"""
+        try:
+            # Clear existing skills first
+            self.skill_manager.skills.clear()
+            self.skill_manager.usage_stats.clear()
+            self.skill_manager.rotations.clear()
+            
+            # Load custom configuration FIRST from config file
+            skill_config = self.config_manager.get_skills()
+            
+            self.logger.info(f"Loading skills config: {len(skill_config.get('skills', {}))} skills found in config")
+            
+            # If we have a complete custom skills configuration, use it
+            if skill_config and skill_config.get('skills'):
+                self.logger.info("Loading skills from saved configuration")
                 
-                # Create basic Tantra skills
-                basic_skills = TantraSkillTemplates.create_basic_skills()
-                for skill in basic_skills:
-                    self.skill_manager.register_skill(skill)
-                
-                # Load custom skill configuration
-                skill_config = self.config_manager.get_skills()
-                if skill_config and any(skill_config.values()):
+                # Import the complete configuration from file
+                try:
                     self.skill_manager.import_config(skill_config)
-                
-                # Update skill keybinds from slots configuration
-                slots = self.config_manager.get_slots()
-                self._update_skill_keybinds(slots)
-                
-                self.logger.info(f"Skills setup completed: {len(self.skill_manager.skills)} skills loaded")
-                
-            except Exception as e:
-                self.logger.error(f"Failed to setup skills: {e}")
+                    self.logger.info(f"Imported {len(self.skill_manager.skills)} skills from config")
+                    
+                    # Log which skills were loaded
+                    for skill_name, skill in self.skill_manager.skills.items():
+                        self.logger.debug(f"Loaded skill: {skill_name} (Key: {skill.key}, Enabled: {skill.enabled})")
+                    
+                except Exception as e:
+                    self.logger.error(f"Failed to import skills config: {e}")
+                    # Fall back to creating basic skills
+                    self._create_basic_skills_fallback()
+            else:
+                # No saved config, create basic skills
+                self.logger.info("No saved skills config found, creating basic skills")
+                self._create_basic_skills_fallback()
+            
+            # Update skill keybinds and cooldowns from slots configuration
+            slots = self.config_manager.get_slots()
+            self._update_skill_keybinds(slots)
+            
+            # ENSURE ACTIVE ROTATION IS SET
+            if skill_config.get('active_rotation') and skill_config['active_rotation'] in self.skill_manager.rotations:
+                self.skill_manager.set_active_rotation(skill_config['active_rotation'])
+                self.logger.info(f"Set active rotation from config: {skill_config['active_rotation']}")
+            elif self.skill_manager.rotations:
+                # If no active rotation set but rotations exist, set the first one
+                first_rotation = list(self.skill_manager.rotations.keys())[0]
+                self.skill_manager.set_active_rotation(first_rotation)
+                self.logger.info(f"Auto-set active rotation: {first_rotation}")
+            
+            # Log final skill setup
+            enabled_skills = [name for name, skill in self.skill_manager.skills.items() if skill.enabled]
+            self.logger.info(f"Skills setup completed: {len(self.skill_manager.skills)} total, {len(enabled_skills)} enabled")
+            self.logger.info(f"Active skills: {enabled_skills}")
+            
+            if self.skill_manager.rotations:
+                self.logger.info(f"Available rotations: {list(self.skill_manager.rotations.keys())}")
+                if self.skill_manager.active_rotation:
+                    rotation = self.skill_manager.rotations[self.skill_manager.active_rotation]
+                    self.logger.info(f"Active rotation: {self.skill_manager.active_rotation} -> Skills: {rotation.skills}")
+                else:
+                    self.logger.warning("No active rotation set!")
+            else:
+                self.logger.warning("No rotations configured!")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to setup enhanced skills: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
     
     def _update_skill_keybinds(self, slots: Dict[str, str]) -> None:
         """Update skill keybinds and cooldowns from slot configuration"""
@@ -137,6 +231,7 @@ class BotEngine(QObject):
                     try:
                         cooldown = float(slots[slot_key])
                         self.skill_manager.skills[skill_name].cooldown = cooldown
+                        self.logger.debug(f"Updated {skill_name} cooldown to {cooldown}s")
                     except ValueError:
                         self.logger.warning(f"Invalid cooldown value for {skill_name}: {slots[slot_key]}")
         
@@ -149,6 +244,7 @@ class BotEngine(QObject):
                     try:
                         cooldown = float(slots[slot_key])
                         self.skill_manager.skills[skill_name].cooldown = cooldown
+                        self.logger.debug(f"Updated {skill_name} cooldown to {cooldown}s")
                     except ValueError:
                         self.logger.warning(f"Invalid cooldown value for {skill_name}: {slots[slot_key]}")
     
@@ -163,7 +259,7 @@ class BotEngine(QObject):
             self._check_vitals
         )
         
-        # Combat timer
+        # Combat timer with skills
         self.timer_manager.create_timer(
             'combat_loop',
             timing.get('combat_check', 0.5),
@@ -176,9 +272,16 @@ class BotEngine(QObject):
             5.0,  # Update stats every 5 seconds
             self._update_stats
         )
+        
+        # Skills maintenance timer (check cooldowns, etc.)
+        self.timer_manager.create_timer(
+            'skills_maintenance',
+            2.0,  # Every 2 seconds
+            self._maintain_skills
+        )
     
     def start(self) -> bool:
-        """Start the bot"""
+        """Start the bot with enhanced logging"""
         if self.state != BotState.STOPPED:
             self.logger.warning("Bot is already running or in transition")
             return False
@@ -196,14 +299,22 @@ class BotEngine(QObject):
             
             # Reset stats
             self.stats['start_time'] = time.time()
-
+            
+            # Start combat manager
             self.combat_manager.start()
             
             # Start timers
             self.timer_manager.start_all_timers()
             
             self._set_state(BotState.RUNNING)
-            self.logger.info("Bot started successfully")
+            
+            # Log startup summary
+            skill_summary = self.combat_manager.get_skill_usage_summary()
+            self.logger.info(f"Bot started successfully!")
+            self.logger.info(f"Skills: {skill_summary.get('enabled_skills', 0)}/{skill_summary.get('total_skills_registered', 0)} enabled")
+            if skill_summary.get('active_rotation'):
+                self.logger.info(f"Active rotation: {skill_summary['active_rotation']}")
+            
             return True
             
         except Exception as e:
@@ -222,7 +333,8 @@ class BotEngine(QObject):
             
             # Stop all timers
             self.timer_manager.stop_all_timers()
-
+            
+            # Stop combat manager
             self.combat_manager.stop()
             
             # Emergency stop input controller
@@ -232,8 +344,18 @@ class BotEngine(QObject):
             if self.stats['start_time'] > 0:
                 self.stats['total_runtime'] += time.time() - self.stats['start_time']
             
-            self._set_state(BotState.STOPPED)
+            # Log final statistics
+            combat_stats = self.combat_manager.get_combat_stats()
+            skill_summary = self.combat_manager.get_skill_usage_summary()
+            
             self.logger.info("Bot stopped successfully")
+            self.logger.info(f"Session summary:")
+            self.logger.info(f"  Targets killed: {combat_stats.get('targets_acquired', 0)}")
+            self.logger.info(f"  Skills used: {combat_stats.get('skills_used', 0)}")
+            self.logger.info(f"  Basic attacks: {combat_stats.get('attacks_made', 0)}")
+            self.logger.info(f"  Total skill uses: {skill_summary.get('total_skill_uses', 0)}")
+            
+            self._set_state(BotState.STOPPED)
             return True
             
         except Exception as e:
@@ -264,7 +386,6 @@ class BotEngine(QObject):
         
         try:
             self.combat_manager.resume()
-            
             self.timer_manager.start_all_timers()
             self._set_state(BotState.RUNNING)
             self.logger.info("Bot resumed")
@@ -301,6 +422,11 @@ class BotEngine(QObject):
             self.logger.error("Not all regions are configured")
             return False
         
+        # Check if we have at least some enabled skills
+        enabled_skills = [s for s in self.skill_manager.skills.values() if s.enabled]
+        if not enabled_skills:
+            self.logger.warning("No skills are enabled - bot will only use basic attack")
+        
         return True
     
     def _is_likely_ocr_noise(self, new_name: str, current_name: str) -> bool:
@@ -329,97 +455,108 @@ class BotEngine(QObject):
         return False
     
     def _check_vitals(self) -> None:
-            """Check health/mana and use potions if needed"""
-            if self.state != BotState.RUNNING:
-                return
+        """Enhanced vitals checking with better skill state tracking"""
+        if self.state != BotState.RUNNING:
+            return
+        
+        try:
+            # Update window rectangle in case it moved
+            self.window_manager.update_target_window_rect()
             
-            try:
-                # Update window rectangle in case it moved
-                self.window_manager.update_target_window_rect()
-                
-                # Set monitor rect for pixel analyzer
-                if self.window_manager.target_window:
-                    self.pixel_analyzer.set_monitor_rect(self.window_manager.target_window.rect)
-                
-                # Get current vitals
-                regions = self.config_manager.get_regions()
-                vitals = self.pixel_analyzer.analyze_vitals(regions)
-                
-                # Update skill manager game state - Include target_name!
-                self.skill_manager.update_game_state({
-                    'hp': vitals['hp'],
-                    'mp': vitals['mp'],
-                    'target_exists': vitals['target_exists'],
-                    'target_hp': vitals['target_health'],
-                    'target_name': vitals.get('target_name', ''),
-                    'in_combat': vitals['target_exists']
-                })
-                
-                # Check for SIGNIFICANT target changes (filter OCR noise)
-                detected_name = vitals['target_name']
-                
-                # Only log target changes if they're meaningful
-                should_log_change = False
-                
-                if detected_name != self.current_target:
-                    # Different name detected
-                    if not self.current_target and detected_name:
-                        # No previous target -> new target (always log)
+            # Set monitor rect for pixel analyzer
+            if self.window_manager.target_window:
+                self.pixel_analyzer.set_monitor_rect(self.window_manager.target_window.rect)
+            
+            # Get current vitals
+            regions = self.config_manager.get_regions()
+            vitals = self.pixel_analyzer.analyze_vitals(regions)
+            
+            # Update skill manager game state with comprehensive information
+            self.skill_manager.update_game_state({
+                'hp': vitals['hp'],
+                'mp': vitals['mp'],
+                'target_exists': vitals['target_exists'],
+                'target_hp': vitals['target_health'],
+                'target_name': vitals.get('target_name', ''),
+                'in_combat': vitals['target_exists'] and vitals['target_health'] > 0
+            })
+            
+            # Check for SIGNIFICANT target changes (filter OCR noise)
+            detected_name = vitals['target_name']
+            
+            # Smart target change detection
+            should_log_change = False
+            
+            if detected_name != self.current_target:
+                if not self.current_target and detected_name:
+                    # No previous target -> new target
+                    should_log_change = True
+                elif self.current_target and not detected_name:
+                    # Had target -> no target (target died/lost)
+                    should_log_change = True
+                elif self.current_target and detected_name:
+                    # Target name changed - check if it's significant
+                    if (len(detected_name) >= 3 and 
+                        detected_name.isalpha() and
+                        not self._is_likely_ocr_noise(detected_name, self.current_target)):
                         should_log_change = True
-                    elif self.current_target and not detected_name:
-                        # Had target -> no target (target died/lost)
-                        should_log_change = True
-                    elif self.current_target and detected_name:
-                        # Target name changed - check if it's significant
-                        # Filter out OCR noise: very short names or garbage characters
-                        if (len(detected_name) >= 3 and 
-                            detected_name.isalpha() and
-                            not self._is_likely_ocr_noise(detected_name, self.current_target)):
-                            should_log_change = True
-                        else:
-                            # Likely OCR noise - don't update current_target
-                            self.logger.debug(f"Filtering OCR noise: '{detected_name}' (keeping '{self.current_target}')")
-                            detected_name = self.current_target  # Keep the current target
+                    else:
+                        # Likely OCR noise - don't update current_target
+                        self.logger.debug(f"Filtering OCR noise: '{detected_name}' (keeping '{self.current_target}')")
+                        detected_name = self.current_target
+            
+            # Only update and log if it's a significant change
+            if should_log_change:
+                old_target = self.current_target
+                self.current_target = detected_name
                 
-                # Only update and log if it's a significant change
-                if should_log_change:
-                    old_target = self.current_target
-                    self.current_target = detected_name
-                    
-                    if old_target and not self.current_target:
-                        self.stats['targets_killed'] += 1
-                        self.logger.info(f"Target defeated: {old_target}")
-                    
-                    if self.current_target and self.current_target != old_target:
-                        self.logger.info(f"New target: {self.current_target}")
-                    
-                    self.target_changed.emit(self.current_target or "")
+                if old_target and not self.current_target:
+                    self.stats['targets_killed'] += 1
+                    self.logger.info(f"Target defeated: {old_target}")
                 
-                # Use potions if needed
-                auto_pots = self.config_manager.get_option('auto_pots', True)
-                if auto_pots:
-                    threshold = self.config_manager.get_option('potion_threshold', 70)
-                    
-                    if vitals['hp'] < threshold:
+                if self.current_target and self.current_target != old_target:
+                    self.logger.info(f"New target: {self.current_target}")
+                
+                self.target_changed.emit(self.current_target or "")
+            
+            # Enhanced potion usage with skill manager integration
+            auto_pots = self.config_manager.get_option('auto_pots', True)
+            if auto_pots:
+                threshold = self.config_manager.get_option('potion_threshold', 70)
+                
+                # Try to use potions through skill manager first (for better tracking)
+                if vitals['hp'] < threshold:
+                    if self.skill_manager.can_use_skill('HP Potion'):
                         if self.skill_manager.use_skill('HP Potion'):
                             self.stats['potions_used'] += 1
-                            self.logger.info(f"Used HP potion (HP: {vitals['hp']}%)")
-                    
-                    if vitals['mp'] < threshold:
+                            self.logger.info(f"Used HP potion via skill system (HP: {vitals['hp']}%)")
+                    else:
+                        # Fallback to direct input if skill system fails
+                        if self.input_controller.send_key('0'):
+                            self.stats['potions_used'] += 1
+                            self.logger.info(f"Used HP potion directly (HP: {vitals['hp']}%)")
+                
+                if vitals['mp'] < threshold:
+                    if self.skill_manager.can_use_skill('MP Potion'):
                         if self.skill_manager.use_skill('MP Potion'):
                             self.stats['potions_used'] += 1
-                            self.logger.info(f"Used MP potion (MP: {vitals['mp']}%)")
-                
-                # Store vitals and emit signal
-                self.last_vitals = vitals
-                self.vitals_updated.emit(vitals)
-                
-            except Exception as e:
-                self.logger.error(f"Error checking vitals: {e}")
-                self.stats['errors_occurred'] += 1
+                            self.logger.info(f"Used MP potion via skill system (MP: {vitals['mp']}%)")
+                    else:
+                        # Fallback to direct input if skill system fails
+                        if self.input_controller.send_key('9'):
+                            self.stats['potions_used'] += 1
+                            self.logger.info(f"Used MP potion directly (MP: {vitals['mp']}%)")
             
+            # Store vitals and emit signal
+            self.last_vitals = vitals
+            self.vitals_updated.emit(vitals)
+            
+        except Exception as e:
+            self.logger.error(f"Error checking vitals: {e}")
+            self.stats['errors_occurred'] += 1
+    
     def _combat_loop(self) -> None:
-        """Main combat loop"""
+        """Main combat loop with enhanced logging"""
         if self.state != BotState.RUNNING:
             return
         
@@ -430,15 +567,44 @@ class BotEngine(QObject):
             self.logger.error(f"Error in combat loop: {e}")
             self.stats['errors_occurred'] += 1
     
+    def _maintain_skills(self) -> None:
+        """Maintain skills system (check cooldowns, update stats, etc.)"""
+        if self.state != BotState.RUNNING:
+            return
+        
+        try:
+            # Update skill usage stats for main stats
+            total_skill_uses = sum(usage.total_uses for usage in self.skill_manager.usage_stats.values())
+            self.stats['skills_used'] = total_skill_uses
+            
+            # Log skill cooldown status periodically (every 30 seconds)
+            current_time = time.time()
+            if not hasattr(self, '_last_skill_log') or current_time - self._last_skill_log > 30:
+                self._last_skill_log = current_time
+                
+                skills_on_cooldown = []
+                for skill_name, skill in self.skill_manager.skills.items():
+                    if skill.enabled:
+                        usage = self.skill_manager.usage_stats.get(skill_name)
+                        if usage and current_time - usage.last_used < skill.cooldown:
+                            remaining = skill.cooldown - (current_time - usage.last_used)
+                            if remaining > 1:  # Only log if more than 1 second remaining
+                                skills_on_cooldown.append(f"{skill_name}({remaining:.0f}s)")
+                
+                if skills_on_cooldown:
+                    self.logger.debug(f"Skills on cooldown: {', '.join(skills_on_cooldown)}")
+            
+        except Exception as e:
+            self.logger.error(f"Error maintaining skills: {e}")
+    
     def _update_stats(self) -> None:
-        """Update runtime statistics"""
+        """Update runtime statistics with skills information"""
         if self.state == BotState.RUNNING and self.stats['start_time'] > 0:
             current_runtime = time.time() - self.stats['start_time']
             
-            # Update skill usage stats
-            self.stats['skills_used'] = sum(
-                usage.total_uses for usage in self.skill_manager.usage_stats.values()
-            )
+            # Update skill usage stats from skill manager
+            total_skill_uses = sum(usage.total_uses for usage in self.skill_manager.usage_stats.values())
+            self.stats['skills_used'] = total_skill_uses
     
     def _set_state(self, new_state: BotState) -> None:
         """Set bot state and emit signal"""
@@ -452,14 +618,14 @@ class BotEngine(QObject):
         """Handle log messages (can be connected to UI)"""
         pass  # This can be connected to UI log display
     
-    # Public API methods
+    # Enhanced public API methods
     
     def get_state(self) -> str:
         """Get current bot state"""
         return self.state.value
     
     def get_stats(self) -> Dict[str, Any]:
-        """Get bot statistics"""
+        """Get enhanced bot statistics including skills"""
         current_stats = self.stats.copy()
         
         if self.state == BotState.RUNNING and self.stats['start_time'] > 0:
@@ -470,6 +636,14 @@ class BotEngine(QObject):
         # Add input controller stats
         input_stats = self.input_controller.get_input_stats()
         current_stats.update(input_stats)
+        
+        # Add combat stats
+        combat_stats = self.combat_manager.get_combat_stats()
+        current_stats.update(combat_stats)
+        
+        # Add skill usage summary
+        skill_summary = self.combat_manager.get_skill_usage_summary()
+        current_stats['skill_summary'] = skill_summary
         
         return current_stats
     
@@ -497,7 +671,7 @@ class BotEngine(QObject):
     def save_config(self) -> bool:
         """Save current configuration"""
         try:
-            # Update skill configuration
+            # Update skill configuration from skill manager
             skill_config = self.skill_manager.export_config()
             self.config_manager.set_skills(skill_config)
             
@@ -508,3 +682,46 @@ class BotEngine(QObject):
         except Exception as e:
             self.logger.error(f"Failed to save configuration: {e}")
             return False
+    
+    # New methods for skills management
+    
+    def get_skill_manager(self) -> SkillManager:
+        """Get the skill manager instance"""
+        return self.skill_manager
+    
+    def get_combat_manager(self) -> CombatManager:
+        """Get the combat manager instance"""
+        return self.combat_manager
+    
+    def toggle_skill_usage(self) -> bool:
+        """Toggle skill usage on/off"""
+        current_state = self.combat_manager.use_skills
+        new_state = not current_state
+        self.combat_manager.set_skill_usage(new_state)
+        self.logger.info(f"Skill usage {'enabled' if new_state else 'disabled'}")
+        return new_state
+    
+    def set_active_rotation(self, rotation_name: Optional[str]) -> bool:
+        """Set the active skill rotation"""
+        try:
+            self.skill_manager.set_active_rotation(rotation_name)
+            if rotation_name:
+                self.logger.info(f"Active rotation set to: {rotation_name}")
+            else:
+                self.logger.info("Active rotation disabled (using priority mode)")
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to set active rotation: {e}")
+            return False
+    
+    def get_skills_status(self) -> Dict[str, Any]:
+        """Get comprehensive skills status"""
+        return {
+            'skill_usage_enabled': self.combat_manager.use_skills,
+            'priority_mode': self.combat_manager.skill_priority_mode,
+            'active_rotation': self.skill_manager.active_rotation,
+            'total_skills': len(self.skill_manager.skills),
+            'enabled_skills': len([s for s in self.skill_manager.skills.values() if s.enabled]),
+            'available_rotations': list(self.skill_manager.rotations.keys()),
+            'skill_usage_summary': self.combat_manager.get_skill_usage_summary()
+        }

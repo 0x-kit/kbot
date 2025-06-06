@@ -200,50 +200,85 @@ class ConfigManager:
     
 
     def get_skills(self) -> Dict[str, Any]:
-            """Get skill configurations"""
-            skills = {
-                'rotations': {},
-                'priorities': {},
-                'cooldowns': {},
-                'conditions': {},
-                'skills': {},
-                'active_rotation': None,
-                'global_cooldown': 0.5
-            }
+        """FIXED: Get skill configurations with better parsing"""
+        skills = {
+            'rotations': {},
+            'priorities': {},
+            'cooldowns': {},
+            'conditions': {},
+            'skills': {},
+            'active_rotation': None,
+            'global_cooldown': 0.5
+        }
+        
+        if self.config.has_section('Skills'):
+            print("DEBUG: Skills section found in config")
             
-            if self.config.has_section('Skills'):
-                # Load skills data
-                if self.config.has_option('Skills', 'skills'):
-                    try:
-                        skills_data = ast.literal_eval(self.config['Skills']['skills'])
-                        if isinstance(skills_data, dict):
-                            skills['skills'] = skills_data
-                    except (ValueError, SyntaxError) as e:
-                        print(f"Error parsing skills: {e}")
-                
-                # Load rotations
-                if self.config.has_option('Skills', 'rotations'):
-                    try:
-                        rotations_data = ast.literal_eval(self.config['Skills']['rotations'])
-                        if isinstance(rotations_data, dict):
-                            skills['rotations'] = rotations_data
-                    except (ValueError, SyntaxError) as e:
-                        print(f"Error parsing rotations: {e}")
-                
-                # Load active rotation
-                if self.config.has_option('Skills', 'active_rotation'):
-                    skills['active_rotation'] = self.config['Skills']['active_rotation']
-                    if skills['active_rotation'] == 'None':
-                        skills['active_rotation'] = None
-                
-                # Load global cooldown
-                if self.config.has_option('Skills', 'global_cooldown'):
-                    try:
-                        skills['global_cooldown'] = float(self.config['Skills']['global_cooldown'])
-                    except ValueError:
-                        pass
+            # Load skills data with better error handling
+            if self.config.has_option('Skills', 'skills'):
+                try:
+                    skills_str = self.config['Skills']['skills']
+                    print(f"DEBUG: Raw skills string: {skills_str[:200]}...")  # Show first 200 chars
+                    
+                    skills_data = ast.literal_eval(skills_str)
+                    if isinstance(skills_data, dict):
+                        skills['skills'] = skills_data
+                        print(f"DEBUG: Parsed {len(skills_data)} skills from config")
+                        
+                        # Debug: Show which skills were loaded
+                        for skill_name, skill_data in skills_data.items():
+                            enabled = skill_data.get('enabled', False)
+                            key = skill_data.get('key', '')
+                            print(f"DEBUG: Skill {skill_name}: enabled={enabled}, key={key}")
+                    else:
+                        print("DEBUG: Skills data is not a dict")
+                except (ValueError, SyntaxError) as e:
+                    print(f"DEBUG: Error parsing skills: {e}")
+            else:
+                print("DEBUG: No 'skills' option found in Skills section")
             
-            return skills
+            # Load rotations with better error handling
+            if self.config.has_option('Skills', 'rotations'):
+                try:
+                    rotations_str = self.config['Skills']['rotations']
+                    print(f"DEBUG: Raw rotations string: {rotations_str[:200]}...")
+                    
+                    rotations_data = ast.literal_eval(rotations_str)
+                    if isinstance(rotations_data, dict):
+                        skills['rotations'] = rotations_data
+                        print(f"DEBUG: Parsed {len(rotations_data)} rotations from config")
+                        
+                        # Debug: Show which rotations were loaded
+                        for rot_name, rot_data in rotations_data.items():
+                            rot_skills = rot_data.get('skills', [])
+                            print(f"DEBUG: Rotation {rot_name}: skills={rot_skills}")
+                    else:
+                        print("DEBUG: Rotations data is not a dict")
+                except (ValueError, SyntaxError) as e:
+                    print(f"DEBUG: Error parsing rotations: {e}")
+            else:
+                print("DEBUG: No 'rotations' option found in Skills section")
+            
+            # Load active rotation
+            if self.config.has_option('Skills', 'active_rotation'):
+                active_rot = self.config['Skills']['active_rotation']
+                if active_rot and active_rot != 'None':
+                    skills['active_rotation'] = active_rot
+                    print(f"DEBUG: Active rotation: {active_rot}")
+                else:
+                    print("DEBUG: No active rotation set")
+            
+            # Load global cooldown
+            if self.config.has_option('Skills', 'global_cooldown'):
+                try:
+                    skills['global_cooldown'] = float(self.config['Skills']['global_cooldown'])
+                except ValueError:
+                    pass
+        else:
+            print("DEBUG: No Skills section found in config")
+        
+        print(f"DEBUG: Final skills config: {len(skills['skills'])} skills, {len(skills['rotations'])} rotations")
+        return skills
     
     def set_skills(self, skills: Dict[str, Any]) -> None:
         """Set skill configurations"""

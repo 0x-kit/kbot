@@ -55,43 +55,306 @@ class SkillUsage:
         return self.successful_uses / self.total_uses
 
 class SkillRotation:
-    """Defines a sequence of skills to execute"""
+    """FIXED: Defines a sequence of skills to execute with proper indexing"""
     
     def __init__(self, name: str, skills: List[str], repeat: bool = True):
         self.name = name
         self.skills = skills  # List of skill names
         self.repeat = repeat
-        self.current_index = 0
+        self.current_index = 0  # Start at 0
         self.enabled = True
+        self.skills_used = 0  # Track total skills used for debugging
     
     def get_next_skill(self) -> Optional[str]:
-        """Get the next skill in the rotation"""
+        """FIXED: Get the next skill in the rotation"""
         if not self.enabled or not self.skills:
             return None
         
+        # Get current skill BEFORE advancing
         skill_name = self.skills[self.current_index]
+        
+        # Debug info
+        print(f"DEBUG Rotation '{self.name}': Index {self.current_index} -> Skill '{skill_name}' (Skills: {self.skills})")
+        
+        # Advance to next skill AFTER getting current
         self._advance_index()
+        
+        # Increment usage counter
+        self.skills_used += 1
+        
         return skill_name
     
     def _advance_index(self) -> None:
-        """Advance to next skill in rotation"""
+        """FIXED: Advance to next skill in rotation"""
         self.current_index += 1
+        
+        # If we've reached the end of the rotation
         if self.current_index >= len(self.skills):
             if self.repeat:
-                self.current_index = 0
+                self.current_index = 0  # Reset to beginning
+                print(f"DEBUG Rotation '{self.name}': Completed cycle, resetting to index 0")
             else:
                 self.enabled = False
+                self.current_index = len(self.skills) - 1  # Stay at last skill
+                print(f"DEBUG Rotation '{self.name}': Non-repeating rotation completed")
     
     def reset(self) -> None:
         """Reset rotation to beginning"""
         self.current_index = 0
         self.enabled = True
+        self.skills_used = 0
+        print(f"DEBUG Rotation '{self.name}': Reset to index 0")
+    
+    def get_current_skill(self) -> Optional[str]:
+        """Get the current skill without advancing"""
+        if not self.enabled or not self.skills:
+            return None
+        return self.skills[self.current_index]
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get rotation status for debugging"""
+        next_index = (self.current_index + 1) % len(self.skills) if self.skills else 0
+        
+        return {
+            'name': self.name,
+            'current_index': self.current_index,
+            'total_skills': len(self.skills),
+            'current_skill': self.skills[self.current_index] if self.skills else None,
+            'next_skill': self.skills[next_index] if self.skills else None,
+            'enabled': self.enabled,
+            'repeat': self.repeat,
+            'skills_used': self.skills_used,
+            'all_skills': self.skills.copy()
+        }
+
+# ALSO FIX the set_active_rotation method to ensure proper reset:
+def set_active_rotation(self, rotation_name: Optional[str]) -> None:
+    """FIXED: Set the active rotation with proper reset"""
+    if rotation_name and rotation_name not in self.rotations:
+        raise SkillError(f"Rotation '{rotation_name}' not found")
+    
+    # If switching rotations, reset the new one
+    if rotation_name and rotation_name != self.active_rotation:
+        self.rotations[rotation_name].reset()
+        print(f"DEBUG: Reset rotation '{rotation_name}' when setting as active")
+    
+    self.active_rotation = rotation_name
+    
+    if rotation_name:
+        rotation = self.rotations[rotation_name]
+        print(f"DEBUG: Active rotation set to '{rotation_name}' - Skills: {rotation.skills}, Starting at index: {rotation.current_index}")
+    else:
+        print("DEBUG: Active rotation cleared")
+
+    """ENHANCED: Get the next skill to use based on rotation and priorities"""
+    try:
+        # If we have an active rotation, use it
+        if self.active_rotation and self.active_rotation in self.rotations:
+            rotation = self.rotations[self.active_rotation]
+            
+            if hasattr(self, 'logger'):
+                self.logger.debug(f"Using rotation '{self.active_rotation}' - Index: {rotation.current_index}/{len(rotation.skills)}")
+            
+            if rotation.enabled and rotation.skills:
+                next_skill = rotation.get_next_skill()
+                
+                if hasattr(self, 'logger'):
+                    # Calculate what step we're on (after the skill was used)
+                    step = rotation.current_index
+                    total = len(rotation.skills)
+                    self.logger.debug(f"Rotation returned skill: {next_skill} [Next index will be: {step}/{total}]")
+                
+                # Check if the skill from rotation can be used
+                if next_skill and self.can_use_skill(next_skill):
+                    return next_skill
+                else:
+                    if hasattr(self, 'logger'):
+                        self.logger.debug(f"Rotation skill '{next_skill}' not available, falling back to priority")
+        
+        # Fall back to priority-based selection
+        return self._get_priority_skill()
+        
+    except Exception as e:
+        if hasattr(self, 'logger'):
+            self.logger.error(f"Error in get_next_skill: {e}")
+        return None
+class SkillRotation:
+    """FIXED: Defines a sequence of skills to execute with proper indexing"""
+    
+    def __init__(self, name: str, skills: List[str], repeat: bool = True):
+        self.name = name
+        self.skills = skills  # List of skill names
+        self.repeat = repeat
+        self.current_index = 0  # Start at 0
+        self.enabled = True
+        self.skills_used = 0  # Track total skills used for debugging
+    
+    def get_next_skill(self) -> Optional[str]:
+        """FIXED: Get the next skill in the rotation"""
+        if not self.enabled or not self.skills:
+            return None
+        
+        # Get current skill BEFORE advancing
+        skill_name = self.skills[self.current_index]
+        
+        # Debug info
+        print(f"DEBUG Rotation '{self.name}': Index {self.current_index} -> Skill '{skill_name}' (Skills: {self.skills})")
+        
+        # Advance to next skill AFTER getting current
+        self._advance_index()
+        
+        # Increment usage counter
+        self.skills_used += 1
+        
+        return skill_name
+    
+    def _advance_index(self) -> None:
+        """FIXED: Advance to next skill in rotation"""
+        self.current_index += 1
+        
+        # If we've reached the end of the rotation
+        if self.current_index >= len(self.skills):
+            if self.repeat:
+                self.current_index = 0  # Reset to beginning
+                print(f"DEBUG Rotation '{self.name}': Completed cycle, resetting to index 0")
+            else:
+                self.enabled = False
+                self.current_index = len(self.skills) - 1  # Stay at last skill
+                print(f"DEBUG Rotation '{self.name}': Non-repeating rotation completed")
+    
+    def reset(self) -> None:
+        """Reset rotation to beginning"""
+        self.current_index = 0
+        self.enabled = True
+        self.skills_used = 0
+        print(f"DEBUG Rotation '{self.name}': Reset to index 0")
+    
+    def get_current_skill(self) -> Optional[str]:
+        """Get the current skill without advancing"""
+        if not self.enabled or not self.skills:
+            return None
+        return self.skills[self.current_index]
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get rotation status for debugging"""
+        next_index = (self.current_index + 1) % len(self.skills) if self.skills else 0
+        
+        return {
+            'name': self.name,
+            'current_index': self.current_index,
+            'total_skills': len(self.skills),
+            'current_skill': self.skills[self.current_index] if self.skills else None,
+            'next_skill': self.skills[next_index] if self.skills else None,
+            'enabled': self.enabled,
+            'repeat': self.repeat,
+            'skills_used': self.skills_used,
+            'all_skills': self.skills.copy()
+        }
+
+    """FIXED: Defines a sequence of skills to execute with proper indexing"""
+    
+    def __init__(self, name: str, skills: List[str], repeat: bool = True):
+        self.name = name
+        self.skills = skills  # List of skill names
+        self.repeat = repeat
+        self.current_index = 0  # Start at 0
+        self.enabled = True
+        self.skills_used = 0  # Track total skills used for debugging
+    
+    def get_next_skill(self) -> Optional[str]:
+        """FIXED: Get the next skill in the rotation"""
+        if not self.enabled or not self.skills:
+            return None
+        
+        # Get current skill BEFORE advancing
+        skill_name = self.skills[self.current_index]
+        
+        # Debug info
+        print(f"DEBUG Rotation '{self.name}': Index {self.current_index} -> Skill '{skill_name}' (Skills: {self.skills})")
+        
+        # Advance to next skill AFTER getting current
+        self._advance_index()
+        
+        # Increment usage counter
+        self.skills_used += 1
+        
+        return skill_name
+    
+    def _advance_index(self) -> None:
+        """FIXED: Advance to next skill in rotation"""
+        self.current_index += 1
+        
+        # If we've reached the end of the rotation
+        if self.current_index >= len(self.skills):
+            if self.repeat:
+                self.current_index = 0  # Reset to beginning
+                print(f"DEBUG Rotation '{self.name}': Completed cycle, resetting to index 0")
+            else:
+                self.enabled = False
+                self.current_index = len(self.skills) - 1  # Stay at last skill
+                print(f"DEBUG Rotation '{self.name}': Non-repeating rotation completed")
+    
+    def reset(self) -> None:
+        """Reset rotation to beginning"""
+        self.current_index = 0
+        self.enabled = True
+        self.skills_used = 0
+        print(f"DEBUG Rotation '{self.name}': Reset to index 0")
+    
+    def get_current_skill(self) -> Optional[str]:
+        """Get the current skill without advancing"""
+        if not self.enabled or not self.skills:
+            return None
+        return self.skills[self.current_index]
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get rotation status for debugging"""
+        next_index = (self.current_index + 1) % len(self.skills) if self.skills else 0
+        
+        return {
+            'name': self.name,
+            'current_index': self.current_index,
+            'total_skills': len(self.skills),
+            'current_skill': self.skills[self.current_index] if self.skills else None,
+            'next_skill': self.skills[next_index] if self.skills else None,
+            'enabled': self.enabled,
+            'repeat': self.repeat,
+            'skills_used': self.skills_used,
+            'all_skills': self.skills.copy()
+        }
+
+# ALSO FIX the set_active_rotation method to ensure proper reset:
+def set_active_rotation(self, rotation_name: Optional[str]) -> None:
+    """FIXED: Set the active rotation with proper reset"""
+    if rotation_name and rotation_name not in self.rotations:
+        raise SkillError(f"Rotation '{rotation_name}' not found")
+    
+    # If switching rotations, reset the new one
+    if rotation_name and rotation_name != self.active_rotation:
+        self.rotations[rotation_name].reset()
+        print(f"DEBUG: Reset rotation '{rotation_name}' when setting as active")
+    
+    self.active_rotation = rotation_name
+    
+    if rotation_name:
+        rotation = self.rotations[rotation_name]
+        print(f"DEBUG: Active rotation set to '{rotation_name}' - Skills: {rotation.skills}, Starting at index: {rotation.current_index}")
+    else:
+        print("DEBUG: Active rotation cleared")
 
 class SkillManager:
     """Advanced skill management system"""
     
-    def __init__(self, input_controller: InputController):
+    def __init__(self, input_controller: InputController, logger=None):
         self.input_controller = input_controller
+
+        # Add logger support
+        if logger:
+            self.logger = logger
+        else:
+            from utils.logger import BotLogger
+            self.logger = BotLogger("SkillManager")
+
         self.skills: Dict[str, Skill] = {}
         self.rotations: Dict[str, SkillRotation] = {}
         self.usage_stats: Dict[str, SkillUsage] = {}
@@ -217,20 +480,6 @@ class SkillManager:
             usage.failed_uses += 1
             raise SkillError(f"Failed to execute skill '{skill_name}': {e}")
     
-    def get_next_skill(self) -> Optional[str]:
-        """Get the next skill to use based on rotation and priorities"""
-        # If we have an active rotation, use it
-        if self.active_rotation and self.active_rotation in self.rotations:
-            rotation = self.rotations[self.active_rotation]
-            next_skill = rotation.get_next_skill()
-            
-            # Check if the skill from rotation can be used
-            if next_skill and self.can_use_skill(next_skill):
-                return next_skill
-        
-        # Fall back to priority-based selection
-        return self._get_priority_skill()
-    
     def _get_priority_skill(self) -> Optional[str]:
         """Get highest priority skill that can be used"""
         available_skills = []
@@ -346,7 +595,42 @@ class SkillManager:
         else:
             for name in self.usage_stats:
                 self.usage_stats[name] = SkillUsage()
-    
+
+    # ENHANCED get_next_skill method with better logging:
+    def get_next_skill(self) -> Optional[str]:
+        """ENHANCED: Get the next skill to use based on rotation and priorities"""
+        try:
+            # If we have an active rotation, use it
+            if self.active_rotation and self.active_rotation in self.rotations:
+                rotation = self.rotations[self.active_rotation]
+                
+                if hasattr(self, 'logger'):
+                    self.logger.debug(f"Using rotation '{self.active_rotation}' - Index: {rotation.current_index}/{len(rotation.skills)}")
+                
+                if rotation.enabled and rotation.skills:
+                    next_skill = rotation.get_next_skill()
+                    
+                    if hasattr(self, 'logger'):
+                        # Calculate what step we're on (after the skill was used)
+                        step = rotation.current_index
+                        total = len(rotation.skills)
+                        self.logger.debug(f"Rotation returned skill: {next_skill} [Next index will be: {step}/{total}]")
+                    
+                    # Check if the skill from rotation can be used
+                    if next_skill and self.can_use_skill(next_skill):
+                        return next_skill
+                    else:
+                        if hasattr(self, 'logger'):
+                            self.logger.debug(f"Rotation skill '{next_skill}' not available, falling back to priority")
+            
+            # Fall back to priority-based selection
+            return self._get_priority_skill()
+            
+        except Exception as e:
+            if hasattr(self, 'logger'):
+                self.logger.error(f"Error in get_next_skill: {e}")
+            return None
+        
     def export_config(self) -> Dict[str, Any]:
         """Export skill configuration"""
         skills_data = {}
@@ -376,9 +660,40 @@ class SkillManager:
             'active_rotation': self.active_rotation,
             'global_cooldown': self.global_cooldown
         }
-    
+        
+    def debug_rotation_state(self) -> None:
+        """Debug method to log current rotation state"""
+        if not self.active_rotation:
+            self.logger.debug("DEBUG: No active rotation set")
+            return
+        
+        if self.active_rotation not in self.rotations:
+            self.logger.debug(f"DEBUG: Active rotation '{self.active_rotation}' not found in rotations")
+            return
+        
+        rotation = self.rotations[self.active_rotation]
+        status = rotation.get_status()
+        
+        self.logger.debug(f"DEBUG: Rotation Status:")
+        self.logger.debug(f"  Name: {status['name']}")
+        self.logger.debug(f"  Enabled: {status['enabled']}")
+        self.logger.debug(f"  Current Index: {status['current_index']}/{status['total_skills']}")
+        self.logger.debug(f"  Current Skill: {status['current_skill']}")
+        self.logger.debug(f"  Next Skill: {status['next_skill']}")
+        self.logger.debug(f"  All Skills: {status['all_skills']}")
+        
+        # Also check if current skill can be used
+        current_skill = status['current_skill']
+        if current_skill:
+            can_use = self.can_use_skill(current_skill)
+            skill_info = self.get_skill_info(current_skill)
+            self.logger.debug(f"  Current skill '{current_skill}' can be used: {can_use}")
+            if not can_use:
+                self.logger.debug(f"    Cooldown remaining: {skill_info['cooldown_remaining']:.1f}s")
+                self.logger.debug(f"    Enabled: {skill_info['enabled']}")
+
     def import_config(self, config: Dict[str, Any]) -> None:
-        """Import skill configuration"""
+        """FIXED: Import skill configuration with better rotation handling"""
         # Clear existing configuration
         self.skills.clear()
         self.rotations.clear()
@@ -403,16 +718,34 @@ class SkillManager:
         # Import rotations
         rotations_data = config.get('rotations', {})
         for name, rotation_data in rotations_data.items():
-            self.create_rotation(
-                name,
-                rotation_data['skills'],
-                rotation_data.get('repeat', True)
-            )
-            self.rotations[name].enabled = rotation_data.get('enabled', True)
+            try:
+                self.create_rotation(
+                    name,
+                    rotation_data['skills'],
+                    rotation_data.get('repeat', True)
+                )
+                self.rotations[name].enabled = rotation_data.get('enabled', True)
+                self.logger.debug(f"Imported rotation '{name}': {rotation_data['skills']}")
+            except Exception as e:
+                self.logger.error(f"Failed to import rotation '{name}': {e}")
         
-        # Set active rotation
-        self.active_rotation = config.get('active_rotation')
+        # Set active rotation - IMPORTANT FIX
+        active_rotation = config.get('active_rotation')
+        if active_rotation and active_rotation in self.rotations:
+            self.set_active_rotation(active_rotation)
+            self.logger.info(f"Set active rotation from import: {active_rotation}")
+        elif self.rotations:
+            # If no active rotation specified but we have rotations, set the first one
+            first_rotation = list(self.rotations.keys())[0]
+            self.set_active_rotation(first_rotation)
+            self.logger.info(f"Auto-set first available rotation: {first_rotation}")
+        
+        # Set global cooldown
         self.global_cooldown = config.get('global_cooldown', 0.5)
+        
+        self.logger.info(f"Imported {len(self.skills)} skills and {len(self.rotations)} rotations")
+        if self.active_rotation:
+            self.debug_rotation_state()  # Debug the imported rotation
 
 # Predefined skill templates for common Tantra skills
 class TantraSkillTemplates:
@@ -431,17 +764,7 @@ class TantraSkillTemplates:
             Skill("MP Potion", "9", 0.5, SkillType.UTILITY, priority=10,
                   conditions=[{'type': 'mp_below', 'value': 70}]),
             
-            # Function key skills (F1-F10 with default 120 second cooldowns)
-            *[Skill(f"Skill F{i}", f"f{i}", 120.0, SkillType.OFFENSIVE, priority=5)
-              for i in range(1, 11)],
-            
             # Number key skills (1-8)
             Skill("Skill 1", "1", 1.0, SkillType.OFFENSIVE, priority=3),
-            Skill("Skill 2", "2", 1.0, SkillType.OFFENSIVE, priority=3),
-            Skill("Skill 3", "3", 1.0, SkillType.OFFENSIVE, priority=3),
-            Skill("Skill 4", "4", 150.0, SkillType.OFFENSIVE, priority=7),
-            Skill("Skill 5", "5", 1.0, SkillType.OFFENSIVE, priority=3),
-            Skill("Skill 6", "6", 1.0, SkillType.OFFENSIVE, priority=3),
-            Skill("Skill 7", "7", 150.0, SkillType.OFFENSIVE, priority=7),
-            Skill("Skill 8", "8", 600.0, SkillType.OFFENSIVE, priority=9),
+            Skill("Skill 2", "2", 1.0, SkillType.OFFENSIVE, priority=3)
         ]

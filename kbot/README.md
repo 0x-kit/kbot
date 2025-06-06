@@ -7,7 +7,7 @@ Advanced automation bot for Tantra Online with modular architecture.
 - **Intelligent Combat System**: Advanced targeting and skill rotation
 - **OCR Target Recognition**: Smart mob detection and validation
 - **Configurable Skills**: Flexible skill management with priorities and conditions
-- **Auto-Potion System**: Smart health and mana management
+- **Auto-Potion System**: Smart health and mana management00w
 - **Window Management**: Easy game window selection and management
 - **Real-time Monitoring**: Live vitals and statistics tracking
 

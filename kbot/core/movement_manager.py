@@ -24,7 +24,7 @@ class MovementManager:
         
         # Movement state
         self.last_movement_time = 0
-        self.current_pattern = "random_walk"
+        self.current_pattern = "click_movement"
         self.stuck_detection_time = 0
         self.last_position_check = 0
         
