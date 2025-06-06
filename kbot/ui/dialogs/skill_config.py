@@ -631,20 +631,48 @@ class SkillConfigDialog(QDialog):
             pass
     
     def _on_rotation_data_changed(self):
-        """Handle rotation data changes"""
+        """Handle rotation data changes - FIXED VERSION"""
         if not self.current_rotation_name:
             return
         
-        if self.current_rotation_name in self.rotations_data:
-            rotation = self.rotations_data[self.current_rotation_name]
-            rotation["name"] = self.rotation_name_edit.text()
-            rotation["repeat"] = self.rotation_repeat_cb.isChecked()
+        if self.current_rotation_name not in self.rotations_data:
+            return
+        
+        # Get the current rotation data
+        rotation = self.rotations_data[self.current_rotation_name]
+        old_name = rotation["name"]
+        new_name = self.rotation_name_edit.text().strip()
+        
+        # Update basic rotation data
+        rotation["repeat"] = self.rotation_repeat_cb.isChecked()
+        
+        # Update skills list from UI
+        skills = []
+        for i in range(self.rotation_skills_list.count()):
+            skills.append(self.rotation_skills_list.item(i).text())
+        rotation["skills"] = skills
+        
+        # 🔧 CRITICAL FIX: Update dictionary key if name changed
+        if old_name != new_name and new_name:
+            # Update the name in the data
+            rotation["name"] = new_name
             
-            # Update skills list
-            skills = []
-            for i in range(self.rotation_skills_list.count()):
-                skills.append(self.rotation_skills_list.item(i).text())
-            rotation["skills"] = skills
+            # Remove old entry and add with new key
+            del self.rotations_data[old_name]
+            self.rotations_data[new_name] = rotation
+            
+            # Update current tracking
+            self.current_rotation_name = new_name
+            
+            # Update the list item text
+            current_item = self.rotations_list.currentItem()
+            if current_item:
+                current_item.setText(new_name)
+            
+            print(f"Auto-updated rotation name: '{old_name}' -> '{new_name}'")
+        else:
+            # Just update the name in existing data
+            rotation["name"] = new_name
     
     def _add_skill_to_rotation(self):
         """Add selected skill to rotation"""
@@ -680,7 +708,8 @@ class SkillConfigDialog(QDialog):
         super().accept()
     
     def _delayed_rotation_update(self):
-        """Delayed update for rotation name changes"""
+        """Delayed update for rotation name changes - FIXED VERSION"""
+        # Simply call the fixed _on_rotation_data_changed method
         self._on_rotation_data_changed()
     
     def _manual_refresh_rotations(self):
