@@ -240,54 +240,6 @@ class TantraBotMainWindow(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        # Instructions
-        instructions = QLabel("""
-        <b>Skill Configuration:</b><br>
-        • Slots 1-8: Number keys with configurable cooldowns<br>
-        • Slots F1-F10: Function keys with configurable cooldowns<br>
-        • HP Potions: Slot 0 (default)<br>
-        • MP Potions: Slot 9 (default)
-        """)
-        instructions.setWordWrap(True)
-        layout.addWidget(instructions)
-        
-        # Slots 1-8
-        slots_group = QGroupBox("Slots 1-8 (Number Keys)")
-        slots_layout = QGridLayout(slots_group)
-        # Define default values for each slot (index 0-7 for slots 1-8)
-        default_values = [1, 1, 1, 150, 1, 1, 150, 600]  # slots 1,2,3,4,5,6,7,8
-        self.slot_spins = []
-        for i in range(8):
-            label = QLabel(f"Slot {i+1}:")
-            spin = QSpinBox()
-            spin.setRange(1, 3600)  # 1 second to 1 hour
-            spin.setValue(default_values[i])
-            spin.setSuffix(" sec")
-            
-            slots_layout.addWidget(label, i // 4, (i % 4) * 2)
-            slots_layout.addWidget(spin, i // 4, (i % 4) * 2 + 1)
-            self.slot_spins.append(spin)
-        
-        layout.addWidget(slots_group)
-        
-        # F-Key slots
-        f_slots_group = QGroupBox("F-Key Slots (F1-F10)")
-        f_slots_layout = QGridLayout(f_slots_group)
-        
-        self.f_slot_spins = []
-        for i in range(10):
-            label = QLabel(f"F{i+1}:")
-            spin = QSpinBox()
-            spin.setRange(1, 3600)
-            spin.setValue(120)
-            spin.setSuffix(" sec")
-            
-            f_slots_layout.addWidget(label, i // 5, (i % 5) * 2)
-            f_slots_layout.addWidget(spin, i // 5, (i % 5) * 2 + 1)
-            self.f_slot_spins.append(spin)
-        
-        layout.addWidget(f_slots_group)
-        
         # Advanced skill configuration button
         advanced_btn = QPushButton("Advanced Skill Configuration")
         advanced_btn.clicked.connect(self._open_skill_config)
@@ -531,24 +483,6 @@ class TantraBotMainWindow(QMainWindow):
             whitelist = config.get_whitelist()
             self.whitelist_edit.setPlainText('\n'.join(whitelist))
             
-            # Load slots
-            slots = config.get_slots()
-            for i, spin in enumerate(self.slot_spins):
-                slot_key = f'slot{i+1}'
-                if slot_key in slots:
-                    try:
-                        spin.setValue(int(float(slots[slot_key])))
-                    except ValueError:
-                        pass
-            
-            for i, spin in enumerate(self.f_slot_spins):
-                slot_key = f'slotF{i+1}'
-                if slot_key in slots:
-                    try:
-                        spin.setValue(int(float(slots[slot_key])))
-                    except ValueError:
-                        pass
-            
             # Load timing
             timing = config.get_timing()
             self.combat_timing_spin.setValue(int(timing.get('combat_check', 1.0) * 1000))
@@ -573,16 +507,6 @@ class TantraBotMainWindow(QMainWindow):
             whitelist_text = self.whitelist_edit.toPlainText()
             whitelist = [line.strip() for line in whitelist_text.splitlines() if line.strip()]
             config.set_whitelist(whitelist)
-            
-            # Save slots
-            slots = {}
-            for i, spin in enumerate(self.slot_spins):
-                slots[f'slot{i+1}'] = str(spin.value())
-            
-            for i, spin in enumerate(self.f_slot_spins):
-                slots[f'slotF{i+1}'] = str(spin.value())
-            
-            config.set_slots(slots)
             
             # Save timing
             timing = {

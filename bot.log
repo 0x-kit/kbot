@@ -452,3 +452,276 @@ IndexError: list index out of range
 2025-06-06 20:20:15,051 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
 2025-06-06 20:20:15,194 - BotEngine - INFO - Combat manager paused
 2025-06-06 20:20:15,195 - BotEngine - INFO - Bot paused
+2025-06-06 21:11:12,962 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 21:11:12,963 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 21:11:13,189 - Application - INFO - DEBUG: Import successful
+2025-06-06 21:11:13,189 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 21:11:13,192 - BotEngine - INFO - Skills setup completed: 21 skills loaded
+2025-06-06 21:11:13,192 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:11:13,192 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:11:13,192 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:11:13,327 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 21:11:13,327 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 21:11:13,419 - Application - INFO - DEBUG: Main window shown
+2025-06-06 21:11:13,419 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 21:13:43,795 - Application - INFO - Application closed
+2025-06-06 21:13:43,937 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 21:13:43,937 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 21:13:44,189 - Application - INFO - DEBUG: Import successful
+2025-06-06 21:13:44,189 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 21:13:44,199 - BotEngine - INFO - Skills setup completed: 21 skills loaded
+2025-06-06 21:13:44,199 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:13:44,199 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:13:44,199 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:13:45,729 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 21:13:45,729 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 21:13:45,746 - Application - INFO - DEBUG: Main window shown
+2025-06-06 21:13:45,746 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 21:14:32,555 - BotEngine - INFO - Skills configuration updated from dialog
+2025-06-06 21:14:50,487 - BotEngine - INFO - Skills configuration updated from dialog
+2025-06-06 21:14:57,610 - BotEngine - INFO - Target window set:   (0x890D36)
+2025-06-06 21:15:09,054 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:15:09,054 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:15:09,055 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:15:09,055 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:15:09,055 - BotEngine - INFO - Configuration updated successfully
+2025-06-06 21:15:09,061 - BotEngine - INFO - Combat manager started
+2025-06-06 21:15:09,061 - BotEngine - INFO - Bot started successfully
+2025-06-06 21:15:09,844 - BotEngine - INFO - New target: Zlnmon
+2025-06-06 21:15:10,076 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:10,579 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:11,077 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:11,579 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:12,075 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:12,576 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:13,078 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:13,577 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:14,079 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:14,577 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:15,073 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:15,575 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:16,072 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:16,572 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:17,074 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:17,577 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:18,082 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:18,584 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:19,073 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:19,572 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:20,074 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:20,575 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:21,074 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:21,587 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:22,089 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:22,590 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:23,088 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:23,592 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:24,005 - BotEngine - INFO - Combat manager paused
+2025-06-06 21:15:24,005 - BotEngine - INFO - Bot paused
+2025-06-06 21:15:46,354 - BotEngine - INFO - Combat manager resumed
+2025-06-06 21:15:46,354 - BotEngine - INFO - Bot resumed
+2025-06-06 21:15:46,856 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:15:46,981 - BotEngine - INFO - Target defeated: Zlnmon
+2025-06-06 21:15:50,099 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:15:50,382 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:50,882 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:51,382 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:51,872 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:52,373 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:52,876 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:53,378 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:53,869 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:54,196 - BotEngine - INFO - Combat manager stopped
+2025-06-06 21:15:54,899 - BotEngine - INFO - Emergency stop executed - all keys released
+2025-06-06 21:15:54,900 - BotEngine - INFO - Bot stopped successfully
+2025-06-06 21:15:55,931 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:15:55,931 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:15:55,931 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:15:55,932 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:15:55,932 - BotEngine - INFO - Configuration updated successfully
+2025-06-06 21:15:55,936 - BotEngine - INFO - Combat manager started
+2025-06-06 21:15:55,937 - BotEngine - INFO - Bot started successfully
+2025-06-06 21:15:56,439 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:56,942 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:56,963 - BotEngine - INFO - Target defeated: Borangl
+2025-06-06 21:15:57,715 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:15:57,958 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:58,460 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:58,947 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:59,449 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:15:59,958 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:00,463 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:00,965 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:01,482 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:01,980 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:02,479 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:16:02,896 - BotEngine - INFO - Combat manager stopped
+2025-06-06 21:16:03,599 - BotEngine - INFO - Emergency stop executed - all keys released
+2025-06-06 21:16:03,600 - BotEngine - INFO - Bot stopped successfully
+2025-06-06 21:16:57,950 - Application - INFO - Application closed
+2025-06-06 21:17:02,304 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 21:17:02,305 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 21:17:02,546 - Application - INFO - DEBUG: Import successful
+2025-06-06 21:17:02,546 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 21:17:02,548 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:17:02,548 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:17:02,548 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:17:02,548 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:17:02,677 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 21:17:02,677 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 21:17:02,770 - Application - INFO - DEBUG: Main window shown
+2025-06-06 21:17:02,770 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 21:17:12,453 - BotEngine - INFO - Target window set:   (0x890D36)
+2025-06-06 21:17:34,771 - Application - INFO - Application closed
+2025-06-06 21:17:37,939 - Application - INFO - Starting Tantra Bot v2.0.0
+2025-06-06 21:17:37,939 - Application - INFO - DEBUG: Attempting to import TantraBotMainWindow...
+2025-06-06 21:17:38,144 - Application - INFO - DEBUG: Import successful
+2025-06-06 21:17:38,144 - Application - INFO - DEBUG: Creating main window instance...
+2025-06-06 21:17:38,147 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:17:38,147 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku']
+2025-06-06 21:17:38,147 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:17:38,147 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:17:38,279 - Application - INFO - DEBUG: Main window created successfully
+2025-06-06 21:17:38,280 - Application - INFO - DEBUG: Showing main window...
+2025-06-06 21:17:38,374 - Application - INFO - DEBUG: Main window shown
+2025-06-06 21:17:38,374 - Application - INFO - DEBUG: Starting application event loop...
+2025-06-06 21:17:46,637 - BotEngine - INFO - Configuration saved successfully
+2025-06-06 21:17:52,901 - BotEngine - INFO - Target window set:   (0x890D36)
+2025-06-06 21:17:53,484 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:17:53,484 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku', 'Z1nmon']
+2025-06-06 21:17:53,485 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:17:53,485 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:17:53,485 - BotEngine - INFO - Configuration updated successfully
+2025-06-06 21:17:53,488 - BotEngine - INFO - Combat manager started
+2025-06-06 21:17:53,489 - BotEngine - INFO - Bot started successfully
+2025-06-06 21:17:54,240 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:17:54,489 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:54,990 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:55,492 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:55,979 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:56,014 - BotEngine - INFO - Target defeated: Borangl
+2025-06-06 21:17:56,731 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:17:56,982 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:57,485 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:57,612 - BotEngine - INFO - Target defeated: Borangl
+2025-06-06 21:17:59,243 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:17:59,488 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:17:59,988 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:00,229 - BotEngine - INFO - New target: Zlnmon
+2025-06-06 21:18:00,489 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:00,990 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:01,479 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:01,996 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:02,502 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:03,007 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:03,497 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:04,002 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:04,499 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:05,003 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:05,503 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:06,006 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:06,507 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:07,006 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:07,495 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:07,999 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:08,507 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:09,010 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:09,515 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:10,016 - BotEngine - INFO - Detected forbidden target: Zlnmon (skipping)
+2025-06-06 21:18:10,517 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:11,012 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:11,524 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:12,011 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:12,512 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:13,017 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:13,513 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:13,781 - BotEngine - INFO - Combat manager paused
+2025-06-06 21:18:13,782 - BotEngine - INFO - Bot paused
+2025-06-06 21:18:35,243 - BotEngine - INFO - Configuration saved successfully
+2025-06-06 21:18:38,140 - BotEngine - INFO - Combat manager stopped
+2025-06-06 21:18:38,844 - BotEngine - INFO - Emergency stop executed - all keys released
+2025-06-06 21:18:38,845 - BotEngine - INFO - Bot stopped successfully
+2025-06-06 21:18:39,569 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:18:39,569 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku', 'Zlnmon']
+2025-06-06 21:18:39,570 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:18:39,570 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:18:39,570 - BotEngine - INFO - Configuration updated successfully
+2025-06-06 21:18:39,574 - BotEngine - INFO - Combat manager started
+2025-06-06 21:18:39,575 - BotEngine - INFO - Bot started successfully
+2025-06-06 21:18:40,074 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:40,574 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:41,074 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:41,576 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:18:42,075 - BotEngine - INFO - Target acquired: Zlnmon
+2025-06-06 21:18:42,076 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:18:44,072 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:18:45,582 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:18:47,586 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:18:49,572 - BotEngine - INFO - Attacking Zlnmon (HP: 81%)
+2025-06-06 21:18:51,072 - BotEngine - INFO - Attacking Zlnmon (HP: 73%)
+2025-06-06 21:18:52,582 - BotEngine - INFO - Attacking Zlnmon (HP: 54%)
+2025-06-06 21:18:54,579 - BotEngine - INFO - Attacking Zlnmon (HP: 47%)
+2025-06-06 21:18:56,087 - BotEngine - INFO - Attacking Zlnmon (HP: 47%)
+2025-06-06 21:18:58,074 - BotEngine - INFO - Attacking Zlnmon (HP: 29%)
+2025-06-06 21:18:58,176 - BotEngine - INFO - Zlnmon is low health (29%)
+2025-06-06 21:18:59,617 - BotEngine - INFO - Attacking Zlnmon (HP: 21%)
+2025-06-06 21:18:59,719 - BotEngine - INFO - Zlnmon is low health (21%)
+2025-06-06 21:19:01,123 - BotEngine - INFO - Attacking Zlnmon (HP: 12%)
+2025-06-06 21:19:01,225 - BotEngine - INFO - Zlnmon is low health (12%)
+2025-06-06 21:19:01,662 - BotEngine - INFO - Target defeated: Zlnmon
+2025-06-06 21:19:02,118 - BotEngine - INFO - Lost target: Zlnmon
+2025-06-06 21:19:04,563 - BotEngine - INFO - Combat manager paused
+2025-06-06 21:19:04,564 - BotEngine - INFO - Bot paused
+2025-06-06 21:19:27,740 - BotEngine - INFO - Skills configuration updated from dialog
+2025-06-06 21:19:30,618 - BotEngine - INFO - Combat manager stopped
+2025-06-06 21:19:31,323 - BotEngine - INFO - Emergency stop executed - all keys released
+2025-06-06 21:19:31,323 - BotEngine - INFO - Bot stopped successfully
+2025-06-06 21:19:33,969 - BotEngine - INFO - Skills setup completed: 5 skills loaded
+2025-06-06 21:19:33,969 - BotEngine - INFO - Mob whitelist updated: ['Byokbo', 'Zaku', 'Zlnmon']
+2025-06-06 21:19:33,970 - BotEngine - INFO - Potion threshold set to 50%
+2025-06-06 21:19:33,970 - BotEngine - INFO - Bot configured successfully from config file
+2025-06-06 21:19:33,970 - BotEngine - INFO - Configuration updated successfully
+2025-06-06 21:19:33,974 - BotEngine - INFO - Combat manager started
+2025-06-06 21:19:33,974 - BotEngine - INFO - Bot started successfully
+2025-06-06 21:19:34,468 - BotEngine - WARNING - No target for 32.4s - using smart movement
+2025-06-06 21:19:34,469 - BotEngine - INFO - Executing smart anti-stuck movement
+2025-06-06 21:19:34,469 - BotEngine - INFO - Zigzag movement: a -> d -> a
+2025-06-06 21:19:42,681 - BotEngine - INFO - New target: Borangl
+2025-06-06 21:19:42,683 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:19:43,182 - BotEngine - INFO - Detected forbidden target: Borangl (skipping)
+2025-06-06 21:19:43,682 - BotEngine - INFO - New target: Zlnmon
+2025-06-06 21:19:43,683 - BotEngine - INFO - Target acquired: Zlnmon
+2025-06-06 21:19:43,683 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:19:45,683 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:19:47,682 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:19:49,682 - BotEngine - INFO - Attacking Zlnmon (HP: 81%)
+2025-06-06 21:19:51,688 - BotEngine - INFO - Attacking Zlnmon (HP: 75%)
+2025-06-06 21:19:53,680 - BotEngine - INFO - Attacking Zlnmon (HP: 54%)
+2025-06-06 21:19:55,181 - BotEngine - INFO - Attacking Zlnmon (HP: 47%)
+2025-06-06 21:19:56,685 - BotEngine - INFO - Attacking Zlnmon (HP: 28%)
+2025-06-06 21:19:56,787 - BotEngine - INFO - Zlnmon is low health (28%)
+2025-06-06 21:19:58,188 - BotEngine - INFO - Attacking Zlnmon (HP: 18%)
+2025-06-06 21:19:58,289 - BotEngine - INFO - Zlnmon is low health (18%)
+2025-06-06 21:20:00,062 - BotEngine - INFO - Target defeated: Zlnmon
+2025-06-06 21:20:00,062 - BotEngine - INFO - Lost target: Zlnmon
+2025-06-06 21:20:02,198 - BotEngine - INFO - New target: Zlnmon
+2025-06-06 21:20:02,200 - BotEngine - INFO - Target acquired: Zlnmon
+2025-06-06 21:20:02,200 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:20:04,198 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:20:06,197 - BotEngine - INFO - Attacking Zlnmon (HP: 100%)
+2025-06-06 21:20:07,698 - BotEngine - INFO - Attacking Zlnmon (HP: 81%)
+2025-06-06 21:20:09,200 - BotEngine - INFO - Attacking Zlnmon (HP: 73%)
+2025-06-06 21:20:10,750 - BotEngine - INFO - Attacking Zlnmon (HP: 63%)
+2025-06-06 21:20:12,255 - BotEngine - INFO - Attacking Zlnmon (HP: 54%)
+2025-06-06 21:20:13,767 - BotEngine - INFO - Attacking Zlnmon (HP: 44%)
+2025-06-06 21:20:15,272 - BotEngine - INFO - Attacking Zlnmon (HP: 28%)
+2025-06-06 21:20:15,373 - BotEngine - INFO - Zlnmon is low health (28%)
+2025-06-06 21:20:16,883 - BotEngine - INFO - Attacking Zlnmon (HP: 17%)
+2025-06-06 21:20:16,984 - BotEngine - INFO - Zlnmon is low health (17%)
+2025-06-06 21:20:18,879 - BotEngine - INFO - Attacking Zlnmon (HP: 8%)
+2025-06-06 21:20:18,980 - BotEngine - INFO - Zlnmon is low health (8%)
+2025-06-06 21:20:20,163 - BotEngine - INFO - Target defeated: Zlnmon
+2025-06-06 21:20:20,164 - BotEngine - INFO - Lost target: Zlnmon
+2025-06-06 21:20:20,765 - BotEngine - INFO - Combat manager stopped
+2025-06-06 21:20:21,471 - BotEngine - INFO - Emergency stop executed - all keys released
+2025-06-06 21:20:21,472 - BotEngine - INFO - Bot stopped successfully
