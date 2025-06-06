@@ -10,20 +10,29 @@ from PyQt5.QtCore import Qt
 from typing import Dict, Any
 
 class SkillConfigDialog(QDialog):
-    """Advanced skill configuration dialog"""
+    """Advanced skill configuration dialog - FUNCTIONAL VERSION"""
     
-    def __init__(self, skill_manager=None, parent=None):
+    def __init__(self, skill_manager=None, config_manager=None, parent=None):
         super().__init__(parent)
         self.skill_manager = skill_manager
+        self.config_manager = config_manager
         self.setWindowTitle("Advanced Skill Configuration")
-        self.resize(800, 600)
+        self.resize(900, 700)
         
         # Store current skill data
         self.skills_data = {}
         self.rotations_data = {}
+        self.current_skill_name = None
+        self.current_rotation_name = None
+        
+        # Timer for delayed updates
+        from PyQt5.QtCore import QTimer
+        self.update_timer = QTimer()
+        self.update_timer.setSingleShot(True)
+        self.update_timer.timeout.connect(self._delayed_rotation_update)
         
         self._setup_ui()
-        self._load_sample_skills()
+        self._load_current_configuration()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
@@ -38,10 +47,24 @@ class SkillConfigDialog(QDialog):
         self._create_conditions_tab()
         
         # Dialog buttons
+        button_layout = QHBoxLayout()
+        
+        self.save_btn = QPushButton("Save Configuration")
+        self.save_btn.clicked.connect(self._save_configuration)
+        button_layout.addWidget(self.save_btn)
+        
+        self.load_btn = QPushButton("Reload Configuration")
+        self.load_btn.clicked.connect(self._load_current_configuration)
+        button_layout.addWidget(self.load_btn)
+        
+        button_layout.addStretch()
+        
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        button_layout.addWidget(button_box)
+        
+        layout.addLayout(button_layout)
     
     def _create_skills_tab(self):
         """Create the skills management tab"""
@@ -53,7 +76,7 @@ class SkillConfigDialog(QDialog):
         left_layout = QVBoxLayout(left_widget)
         
         self.skill_tree = QTreeWidget()
-        self.skill_tree.setHeaderLabels(["Skill", "Key", "Cooldown", "Type", "Enabled"])
+        self.skill_tree.setHeaderLabels(["Skill", "Key", "Cooldown", "Type", "Priority", "Enabled"])
         self.skill_tree.itemClicked.connect(self._on_skill_selected)
         left_layout.addWidget(self.skill_tree)
         
@@ -64,9 +87,12 @@ class SkillConfigDialog(QDialog):
         self.remove_skill_btn = QPushButton("Remove Skill")
         self.remove_skill_btn.clicked.connect(self._remove_skill)
         self.remove_skill_btn.setEnabled(False)
+        self.refresh_skills_btn = QPushButton("Refresh List")
+        self.refresh_skills_btn.clicked.connect(self._manual_refresh_skills)
         
         skill_buttons.addWidget(self.add_skill_btn)
         skill_buttons.addWidget(self.remove_skill_btn)
+        skill_buttons.addWidget(self.refresh_skills_btn)
         left_layout.addLayout(skill_buttons)
         
         layout.addWidget(left_widget, 1)
@@ -106,11 +132,8 @@ class SkillConfigDialog(QDialog):
         self.skill_desc_edit.setMaximumHeight(100)
         right_layout.addRow("Description:", self.skill_desc_edit)
         
-        # Update button
-        self.update_skill_btn = QPushButton("Update Skill")
-        self.update_skill_btn.clicked.connect(self._update_skill)
-        self.update_skill_btn.setEnabled(False)
-        right_layout.addRow("", self.update_skill_btn)
+        # Connect signals after all widgets are created
+        self._connect_skill_signals()
         
         layout.addWidget(right_widget, 1)
         
@@ -135,9 +158,12 @@ class SkillConfigDialog(QDialog):
         self.add_rotation_btn.clicked.connect(self._add_rotation)
         self.remove_rotation_btn = QPushButton("Remove Rotation")
         self.remove_rotation_btn.clicked.connect(self._remove_rotation)
+        self.refresh_rotations_btn = QPushButton("Refresh List")
+        self.refresh_rotations_btn.clicked.connect(self._manual_refresh_rotations)
         
         rotation_buttons.addWidget(self.add_rotation_btn)
         rotation_buttons.addWidget(self.remove_rotation_btn)
+        rotation_buttons.addWidget(self.refresh_rotations_btn)
         left_layout.addLayout(rotation_buttons)
         
         layout.addWidget(left_widget, 1)
@@ -163,6 +189,7 @@ class SkillConfigDialog(QDialog):
         right_layout.addRow("Available Skills:", QLabel())
         self.available_skills_list = QListWidget()
         self.available_skills_list.setMaximumHeight(150)
+        self.available_skills_list.itemDoubleClicked.connect(self._add_skill_to_rotation)
         right_layout.addRow("", self.available_skills_list)
         
         # Skill movement buttons
@@ -176,12 +203,10 @@ class SkillConfigDialog(QDialog):
         skill_move_layout.addWidget(self.remove_from_rotation_btn)
         right_layout.addRow("", skill_move_layout)
         
-        # Update rotation button
-        self.update_rotation_btn = QPushButton("Update Rotation")
-        self.update_rotation_btn.clicked.connect(self._update_rotation)
-        right_layout.addRow("", self.update_rotation_btn)
-        
         layout.addWidget(right_widget, 1)
+        
+        # Connect signals after all widgets are created
+        self._connect_rotation_signals()
         
         self.tab_widget.addTab(tab, "Rotations")
     
@@ -193,57 +218,127 @@ class SkillConfigDialog(QDialog):
         info_label = QLabel("""
         <b>Skill Conditions:</b><br>
         Configure when skills should be used based on game state.<br>
-        This is an advanced feature for fine-tuning skill behavior.
+        This feature will be implemented in future phases.
         """)
         info_label.setWordWrap(True)
         layout.addWidget(info_label)
         
-        # Placeholder for conditions UI
-        conditions_group = QGroupBox("Condition Templates")
-        conditions_layout = QVBoxLayout(conditions_group)
-        
-        # Common condition presets
-        preset_buttons = QHBoxLayout()
-        
-        hp_low_btn = QPushButton("HP Below 50%")
-        hp_low_btn.clicked.connect(lambda: self._add_condition_preset("hp_below", 50))
-        preset_buttons.addWidget(hp_low_btn)
-        
-        mp_low_btn = QPushButton("MP Below 30%")
-        mp_low_btn.clicked.connect(lambda: self._add_condition_preset("mp_below", 30))
-        preset_buttons.addWidget(mp_low_btn)
-        
-        target_low_btn = QPushButton("Target HP Below 25%")
-        target_low_btn.clicked.connect(lambda: self._add_condition_preset("target_hp_below", 25))
-        preset_buttons.addWidget(target_low_btn)
-        
-        conditions_layout.addLayout(preset_buttons)
-        
-        # Conditions list
-        self.conditions_list = QListWidget()
-        conditions_layout.addWidget(self.conditions_list)
-        
-        layout.addWidget(conditions_group)
         layout.addStretch()
-        
         self.tab_widget.addTab(tab, "Conditions")
     
-    def _load_sample_skills(self):
-        """Load sample skills for demonstration"""
-        sample_skills = [
-            {"name": "Basic Attack", "key": "r", "cooldown": 2, "type": "offensive", "priority": 1, "mana": 0, "enabled": True, "desc": "Basic attack skill"},
-            {"name": "HP Potion", "key": "0", "cooldown": 1, "type": "potion", "priority": 10, "mana": 0, "enabled": True, "desc": "Health potion"},
-            {"name": "MP Potion", "key": "9", "cooldown": 1, "type": "potion", "priority": 10, "mana": 0, "enabled": True, "desc": "Mana potion"},
-            {"name": "Skill 1", "key": "1", "cooldown": 1, "type": "offensive", "priority": 3, "mana": 10, "enabled": True, "desc": "Slot 1 skill"},
-            {"name": "Skill 2", "key": "2", "cooldown": 1, "type": "offensive", "priority": 3, "mana": 15, "enabled": True, "desc": "Slot 2 skill"},
-            {"name": "Skill F1", "key": "f1", "cooldown": 120, "type": "offensive", "priority": 7, "mana": 50, "enabled": True, "desc": "F1 skill"},
-        ]
-        
-        for skill in sample_skills:
-            self.skills_data[skill["name"]] = skill
+    def _load_current_configuration(self):
+        """Load current configuration from skill manager and config"""
+        try:
+            # Clear existing data
+            self.skills_data.clear()
+            self.rotations_data.clear()
+            
+            # Load from skill manager if available
+            if self.skill_manager:
+                skill_config = self.skill_manager.export_config()
+                
+                # Load skills
+                for skill_name, skill_data in skill_config.get('skills', {}).items():
+                    self.skills_data[skill_name] = {
+                        'name': skill_name,
+                        'key': skill_data.get('key', ''),
+                        'cooldown': int(float(skill_data.get('cooldown', 1))),  # Ensure int
+                        'type': skill_data.get('skill_type', 'offensive'),
+                        'priority': int(float(skill_data.get('priority', 1))),  # Ensure int
+                        'mana': int(float(skill_data.get('mana_cost', 0))),  # Ensure int
+                        'enabled': skill_data.get('enabled', True),
+                        'desc': skill_data.get('description', '')
+                    }
+                
+                # Load rotations
+                for rot_name, rot_data in skill_config.get('rotations', {}).items():
+                    self.rotations_data[rot_name] = {
+                        'name': rot_name,
+                        'skills': rot_data.get('skills', []),
+                        'repeat': rot_data.get('repeat', True),
+                        'enabled': rot_data.get('enabled', True)
+                    }
+            
+            # Refresh UI
+            self._refresh_skill_tree()
+            self._refresh_rotations_list()
+            self._update_available_skills()
+            
+            self.logger_info("Configuration loaded successfully")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Load Error", f"Failed to load configuration: {e}")
+    
+    def _save_configuration(self):
+        """Save current configuration to skill manager and config"""
+        try:
+            # Save current form data first
+            if self.current_skill_name:
+                self._save_current_skill_data()
+            if self.current_rotation_name:
+                self._save_current_rotation_data()
+            
+            if not self.skill_manager:
+                QMessageBox.warning(self, "Save Error", "No skill manager available")
+                return
+            
+            print(f"Saving {len(self.skills_data)} skills and {len(self.rotations_data)} rotations")  # Debug
+            
+            # Prepare configuration for skill manager
+            skills_config = {}
+            for skill_name, skill_data in self.skills_data.items():
+                skills_config[skill_name] = {
+                    'key': skill_data['key'],
+                    'cooldown': skill_data['cooldown'],
+                    'skill_type': skill_data['type'],
+                    'priority': skill_data['priority'],
+                    'mana_cost': skill_data['mana'],
+                    'conditions': [],  # TODO: Implement conditions
+                    'description': skill_data['desc'],
+                    'enabled': skill_data['enabled']
+                }
+                print(f"  Skill: {skill_name} -> {skills_config[skill_name]}")  # Debug
+            
+            rotations_config = {}
+            for rot_name, rot_data in self.rotations_data.items():
+                rotations_config[rot_name] = {
+                    'skills': rot_data['skills'],
+                    'repeat': rot_data['repeat'],
+                    'enabled': rot_data.get('enabled', True)
+                }
+                print(f"  Rotation: {rot_name} -> {rotations_config[rot_name]}")  # Debug
+            
+            # Import to skill manager
+            full_config = {
+                'skills': skills_config,
+                'rotations': rotations_config,
+                'active_rotation': None,
+                'global_cooldown': 0.5
+            }
+            
+            self.skill_manager.import_config(full_config)
+            
+            # Save to config file if available
+            if self.config_manager:
+                self.config_manager.set_skills(full_config)
+                self.config_manager.save_config()
+            
+            QMessageBox.information(self, "Success", 
+                f"Configuration saved successfully!\n"
+                f"Skills: {len(skills_config)}\n"
+                f"Rotations: {len(rotations_config)}")
+            
+        except Exception as e:
+            import traceback
+            error_msg = f"Failed to save configuration: {e}\n\nFull error:\n{traceback.format_exc()}"
+            QMessageBox.critical(self, "Save Error", error_msg)
+            print(error_msg)
+    
+    def _refresh_skill_tree(self):
+        """Refresh the skill tree widget"""
+        self.skill_tree.clear()
+        for skill in self.skills_data.values():
             self._add_skill_to_tree(skill)
-        
-        self._update_available_skills()
     
     def _add_skill_to_tree(self, skill):
         """Add skill to the tree widget"""
@@ -252,6 +347,7 @@ class SkillConfigDialog(QDialog):
             skill["key"],
             f"{skill['cooldown']} sec",
             skill["type"],
+            str(skill["priority"]),
             "Yes" if skill["enabled"] else "No"
         ])
         item.setData(0, Qt.UserRole, skill["name"])
@@ -259,87 +355,167 @@ class SkillConfigDialog(QDialog):
     
     def _on_skill_selected(self, item, column):
         """Handle skill selection"""
-        skill_name = item.data(0, Qt.UserRole)
-        if skill_name and skill_name in self.skills_data:
-            skill = self.skills_data[skill_name]
-            
-            # Load skill data into form
+        # Check if item is still valid
+        if not item or not hasattr(item, 'data'):
+            return
+        
+        try:
+            skill_name = item.data(0, Qt.UserRole)
+        except RuntimeError:
+            # Item has been deleted, ignore
+            return
+        
+        if not skill_name or skill_name not in self.skills_data:
+            return
+        
+        # Save current skill first if any
+        if self.current_skill_name and self.current_skill_name != skill_name:
+            self._save_current_skill_data()
+        
+        self.current_skill_name = skill_name
+        skill = self.skills_data[skill_name]
+        
+        # Temporarily disconnect signals to avoid triggering changes
+        self._disconnect_skill_signals()
+        
+        try:
+            # Load skill data into form - CONVERT TO INT
             self.skill_name_edit.setText(skill["name"])
             self.skill_key_edit.setText(skill["key"])
-            self.skill_cooldown_spin.setValue(skill["cooldown"])
+            self.skill_cooldown_spin.setValue(int(skill["cooldown"]))  # Convert to int
             self.skill_type_combo.setCurrentText(skill["type"])
-            self.skill_priority_spin.setValue(skill["priority"])
-            self.skill_mana_spin.setValue(skill["mana"])
+            self.skill_priority_spin.setValue(int(skill["priority"]))  # Convert to int
+            self.skill_mana_spin.setValue(int(skill["mana"]))  # Convert to int
             self.skill_enabled_cb.setChecked(skill["enabled"])
             self.skill_desc_edit.setPlainText(skill["desc"])
+        except Exception as e:
+            print(f"Error loading skill data: {e}")
+        
+        # Reconnect signals
+        self._connect_skill_signals()
+        
+        self.remove_skill_btn.setEnabled(True)
+    
+    def _save_current_skill_data(self):
+        """Save current skill data from form"""
+        if not self.current_skill_name or self.current_skill_name not in self.skills_data:
+            return
+        
+        skill = self.skills_data[self.current_skill_name]
+        old_name = skill["name"]
+        new_name = self.skill_name_edit.text().strip()
+        
+        # Update all fields - ENSURE PROPER TYPES
+        skill["name"] = new_name
+        skill["key"] = self.skill_key_edit.text().strip()
+        skill["cooldown"] = int(self.skill_cooldown_spin.value())  # Ensure int
+        skill["type"] = self.skill_type_combo.currentText()
+        skill["priority"] = int(self.skill_priority_spin.value())  # Ensure int
+        skill["mana"] = int(self.skill_mana_spin.value())  # Ensure int
+        skill["enabled"] = self.skill_enabled_cb.isChecked()
+        skill["desc"] = self.skill_desc_edit.toPlainText()
+        
+        # If name changed, update the dictionary key
+        if old_name != new_name and new_name:
+            del self.skills_data[old_name]
+            self.skills_data[new_name] = skill
+            self.current_skill_name = new_name
+        
+        # Don't refresh tree immediately if we're in the middle of selection
+        # The tree will be refreshed when needed
+    
+    def _connect_skill_signals(self):
+        """Connect skill form signals"""
+        self.skill_name_edit.textChanged.connect(self._on_skill_data_changed)
+        self.skill_key_edit.textChanged.connect(self._on_skill_data_changed)
+        self.skill_cooldown_spin.valueChanged.connect(self._on_skill_data_changed)
+        self.skill_type_combo.currentTextChanged.connect(self._on_skill_data_changed)
+        self.skill_priority_spin.valueChanged.connect(self._on_skill_data_changed)
+        self.skill_mana_spin.valueChanged.connect(self._on_skill_data_changed)
+        self.skill_enabled_cb.stateChanged.connect(self._on_skill_data_changed)
+        self.skill_desc_edit.textChanged.connect(self._on_skill_data_changed)
+    
+    def _disconnect_skill_signals(self):
+        """Disconnect skill form signals"""
+        self.skill_name_edit.textChanged.disconnect()
+        self.skill_key_edit.textChanged.disconnect()
+        self.skill_cooldown_spin.valueChanged.disconnect()
+        self.skill_type_combo.currentTextChanged.disconnect()
+        self.skill_priority_spin.valueChanged.disconnect()
+        self.skill_mana_spin.valueChanged.disconnect()
+        self.skill_enabled_cb.stateChanged.disconnect()
+        self.skill_desc_edit.textChanged.disconnect()
+    
+    def _on_skill_data_changed(self):
+        """Handle skill data changes"""
+        if not self.current_skill_name:
+            return
+        
+        # Update skill data
+        if self.current_skill_name in self.skills_data:
+            skill = self.skills_data[self.current_skill_name]
+            skill["name"] = self.skill_name_edit.text()
+            skill["key"] = self.skill_key_edit.text()
+            skill["cooldown"] = self.skill_cooldown_spin.value()
+            skill["type"] = self.skill_type_combo.currentText()
+            skill["priority"] = self.skill_priority_spin.value()
+            skill["mana"] = self.skill_mana_spin.value()
+            skill["enabled"] = self.skill_enabled_cb.isChecked()
+            skill["desc"] = self.skill_desc_edit.toPlainText()
             
-            self.update_skill_btn.setEnabled(True)
-            self.remove_skill_btn.setEnabled(True)
+            # Refresh tree
+            self._refresh_skill_tree()
+            self._update_available_skills()
     
     def _add_skill(self):
         """Add a new skill"""
-        # Clear form for new skill
-        self.skill_name_edit.setText("New Skill")
-        self.skill_key_edit.setText("")
-        self.skill_cooldown_spin.setValue(1)
-        self.skill_type_combo.setCurrentIndex(0)
-        self.skill_priority_spin.setValue(1)
-        self.skill_mana_spin.setValue(0)
-        self.skill_enabled_cb.setChecked(True)
-        self.skill_desc_edit.setPlainText("")
+        name = f"New Skill {len(self.skills_data) + 1}"
         
-        self.update_skill_btn.setEnabled(True)
-    
-    def _update_skill(self):
-        """Update the selected skill"""
-        name = self.skill_name_edit.text().strip()
-        if not name:
-            QMessageBox.warning(self, "Error", "Skill name cannot be empty")
-            return
-        
-        skill = {
+        new_skill = {
             "name": name,
-            "key": self.skill_key_edit.text().strip(),
-            "cooldown": self.skill_cooldown_spin.value(),
-            "type": self.skill_type_combo.currentText(),
-            "priority": self.skill_priority_spin.value(),
-            "mana": self.skill_mana_spin.value(),
-            "enabled": self.skill_enabled_cb.isChecked(),
-            "desc": self.skill_desc_edit.toPlainText()
+            "key": "",
+            "cooldown": 1,  # int
+            "type": "offensive",
+            "priority": 1,  # int
+            "mana": 0,  # int
+            "enabled": True,
+            "desc": ""
         }
         
-        # Update skills data
-        self.skills_data[name] = skill
-        
-        # Refresh tree
+        self.skills_data[name] = new_skill
         self._refresh_skill_tree()
         self._update_available_skills()
-        
-        QMessageBox.information(self, "Success", f"Skill '{name}' updated successfully!")
     
     def _remove_skill(self):
         """Remove the selected skill"""
-        current_item = self.skill_tree.currentItem()
-        if current_item:
-            skill_name = current_item.data(0, Qt.UserRole)
-            if skill_name in self.skills_data:
-                del self.skills_data[skill_name]
-                self._refresh_skill_tree()
-                self._update_available_skills()
-                self.update_skill_btn.setEnabled(False)
-                self.remove_skill_btn.setEnabled(False)
+        if self.current_skill_name and self.current_skill_name in self.skills_data:
+            del self.skills_data[self.current_skill_name]
+            self.current_skill_name = None
+            self._refresh_skill_tree()
+            self._update_available_skills()
+            self.remove_skill_btn.setEnabled(False)
     
-    def _refresh_skill_tree(self):
-        """Refresh the skill tree widget"""
-        self.skill_tree.clear()
-        for skill in self.skills_data.values():
-            self._add_skill_to_tree(skill)
+    def _refresh_rotations_list(self):
+        """Refresh rotations list"""
+        # Remember current selection
+        current_selection = self.current_rotation_name
+        
+        # Clear and repopulate
+        self.rotations_list.clear()
+        for rotation_name in self.rotations_data.keys():
+            item = QListWidgetItem(rotation_name)
+            self.rotations_list.addItem(item)
+            
+            # Restore selection if it still exists
+            if rotation_name == current_selection:
+                self.rotations_list.setCurrentItem(item)
     
     def _update_available_skills(self):
         """Update the available skills list for rotations"""
         self.available_skills_list.clear()
         for skill_name in self.skills_data.keys():
-            self.available_skills_list.addItem(skill_name)
+            if self.skills_data[skill_name]["enabled"]:
+                self.available_skills_list.addItem(skill_name)
     
     def _add_rotation(self):
         """Add a new rotation"""
@@ -347,24 +523,44 @@ class SkillConfigDialog(QDialog):
         self.rotations_data[name] = {
             "name": name,
             "skills": [],
-            "repeat": True
+            "repeat": True,
+            "enabled": True
         }
-        self.rotations_list.addItem(name)
+        self._refresh_rotations_list()
     
     def _remove_rotation(self):
         """Remove selected rotation"""
-        current_item = self.rotations_list.currentItem()
-        if current_item:
-            name = current_item.text()
-            if name in self.rotations_data:
-                del self.rotations_data[name]
-                self.rotations_list.takeItem(self.rotations_list.row(current_item))
+        if self.current_rotation_name and self.current_rotation_name in self.rotations_data:
+            del self.rotations_data[self.current_rotation_name]
+            self.current_rotation_name = None
+            self._refresh_rotations_list()
     
     def _on_rotation_selected(self, item):
         """Handle rotation selection"""
-        name = item.text()
-        if name in self.rotations_data:
-            rotation = self.rotations_data[name]
+        # Check if item is still valid
+        if not item or not hasattr(item, 'text'):
+            return
+        
+        try:
+            rotation_name = item.text()
+        except RuntimeError:
+            # Item has been deleted, ignore
+            return
+        
+        if not rotation_name or rotation_name not in self.rotations_data:
+            return
+        
+        # Save current rotation first if any and it's different
+        if self.current_rotation_name and self.current_rotation_name != rotation_name:
+            self._save_current_rotation_data()
+        
+        self.current_rotation_name = rotation_name
+        rotation = self.rotations_data[rotation_name]
+        
+        # Temporarily disconnect signals
+        self._disconnect_rotation_signals()
+        
+        try:
             self.rotation_name_edit.setText(rotation["name"])
             self.rotation_repeat_cb.setChecked(rotation["repeat"])
             
@@ -372,68 +568,152 @@ class SkillConfigDialog(QDialog):
             self.rotation_skills_list.clear()
             for skill in rotation["skills"]:
                 self.rotation_skills_list.addItem(skill)
+            
+            print(f"Loaded rotation '{rotation_name}' with {len(rotation['skills'])} skills: {rotation['skills']}")  # Debug
+        except Exception as e:
+            print(f"Error loading rotation data: {e}")
+        
+        # Reconnect signals
+        self._connect_rotation_signals()
+    
+    def _save_current_rotation_data(self):
+        """Save current rotation data from form"""
+        if not self.current_rotation_name or self.current_rotation_name not in self.rotations_data:
+            return
+        
+        rotation = self.rotations_data[self.current_rotation_name]
+        old_name = rotation["name"]
+        new_name = self.rotation_name_edit.text().strip()
+        
+        # Update rotation data
+        rotation["name"] = new_name
+        rotation["repeat"] = self.rotation_repeat_cb.isChecked()
+        
+        # Update skills list from UI
+        skills = []
+        for i in range(self.rotation_skills_list.count()):
+            skill_name = self.rotation_skills_list.item(i).text()
+            skills.append(skill_name)
+        rotation["skills"] = skills
+        
+        # If name changed, update the dictionary key AND the list
+        if old_name != new_name and new_name:
+            # Remove old entry and add new one
+            del self.rotations_data[old_name]
+            self.rotations_data[new_name] = rotation
+            self.current_rotation_name = new_name
+            
+            # Update the list item text
+            current_item = self.rotations_list.currentItem()
+            if current_item:
+                current_item.setText(new_name)
+            
+            print(f"Renamed rotation from '{old_name}' to '{new_name}'")
+        
+        print(f"Saved rotation '{new_name}' with skills: {skills}")  # Debug
+    
+    def _connect_rotation_signals(self):
+        """Connect rotation form signals"""
+        try:
+            # Use timer for name changes to avoid too frequent updates
+            self.rotation_name_edit.textChanged.connect(lambda: self.update_timer.start(500))
+            self.rotation_repeat_cb.stateChanged.connect(self._on_rotation_data_changed)
+        except Exception as e:
+            print(f"Error connecting rotation signals: {e}")
+    
+    def _disconnect_rotation_signals(self):
+        """Disconnect rotation form signals"""
+        try:
+            self.rotation_name_edit.textChanged.disconnect()
+            self.rotation_repeat_cb.stateChanged.disconnect()
+        except Exception as e:
+            # Ignore if already disconnected or error
+            pass
+    
+    def _on_rotation_data_changed(self):
+        """Handle rotation data changes"""
+        if not self.current_rotation_name:
+            return
+        
+        if self.current_rotation_name in self.rotations_data:
+            rotation = self.rotations_data[self.current_rotation_name]
+            rotation["name"] = self.rotation_name_edit.text()
+            rotation["repeat"] = self.rotation_repeat_cb.isChecked()
+            
+            # Update skills list
+            skills = []
+            for i in range(self.rotation_skills_list.count()):
+                skills.append(self.rotation_skills_list.item(i).text())
+            rotation["skills"] = skills
     
     def _add_skill_to_rotation(self):
         """Add selected skill to rotation"""
         current_skill = self.available_skills_list.currentItem()
-        if current_skill:
-            self.rotation_skills_list.addItem(current_skill.text())
+        if current_skill and self.current_rotation_name:
+            skill_name = current_skill.text()
+            
+            # Check if skill is already in rotation
+            existing_skills = []
+            for i in range(self.rotation_skills_list.count()):
+                existing_skills.append(self.rotation_skills_list.item(i).text())
+            
+            if skill_name not in existing_skills:
+                self.rotation_skills_list.addItem(skill_name)
+                self._on_rotation_data_changed()  # Update data
+                print(f"Added '{skill_name}' to rotation '{self.current_rotation_name}'")
+            else:
+                print(f"Skill '{skill_name}' already in rotation")
     
     def _remove_skill_from_rotation(self):
         """Remove selected skill from rotation"""
         current_item = self.rotation_skills_list.currentItem()
-        if current_item:
-            self.rotation_skills_list.takeItem(self.rotation_skills_list.row(current_item))
-    
-    def _update_rotation(self):
-        """Update the selected rotation"""
-        current_item = self.rotations_list.currentItem()
-        if current_item:
-            old_name = current_item.text()
-            new_name = self.rotation_name_edit.text().strip()
-            
-            if not new_name:
-                QMessageBox.warning(self, "Error", "Rotation name cannot be empty")
-                return
-            
-            # Get skills from list
-            skills = []
-            for i in range(self.rotation_skills_list.count()):
-                skills.append(self.rotation_skills_list.item(i).text())
-            
-            # Update rotation data
-            if old_name in self.rotations_data:
-                del self.rotations_data[old_name]
-            
-            self.rotations_data[new_name] = {
-                "name": new_name,
-                "skills": skills,
-                "repeat": self.rotation_repeat_cb.isChecked()
-            }
-            
-            # Update list item
-            current_item.setText(new_name)
-            
-            QMessageBox.information(self, "Success", f"Rotation '{new_name}' updated successfully!")
-    
-    def _add_condition_preset(self, condition_type: str, value: int):
-        """Add a condition preset"""
-        condition_text = f"{condition_type.replace('_', ' ').title()}: {value}%"
-        self.conditions_list.addItem(condition_text)
+        if current_item and self.current_rotation_name:
+            skill_name = current_item.text()
+            row = self.rotation_skills_list.row(current_item)
+            self.rotation_skills_list.takeItem(row)
+            self._on_rotation_data_changed()  # Update data
+            print(f"Removed '{skill_name}' from rotation '{self.current_rotation_name}'")
     
     def accept(self):
-        """Accept dialog and return configuration"""
-        try:
-            # In a complete implementation, this would apply the configuration
-            # to the skill manager
-            QMessageBox.information(self, "Success", "Skill configuration saved!")
-            super().accept()
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save configuration: {e}")
+        """Accept dialog and save configuration"""
+        self._save_configuration()
+        super().accept()
     
-    def get_skills_config(self):
-        """Get the configured skills"""
-        return {
-            "skills": self.skills_data,
-            "rotations": self.rotations_data
-        }
+    def _delayed_rotation_update(self):
+        """Delayed update for rotation name changes"""
+        self._on_rotation_data_changed()
+    
+    def _manual_refresh_rotations(self):
+        """Manually refresh the rotations list"""
+        # Save current selection first
+        if self.current_rotation_name:
+            self._save_current_rotation_data()
+        
+        # Clear selection to avoid conflicts
+        self.rotations_list.clearSelection()
+        self.current_rotation_name = None
+        
+        # Refresh list
+        self._refresh_rotations_list()
+        
+        print("Rotations list refreshed manually")
+    
+    def _manual_refresh_skills(self):
+        """Manually refresh the skills list"""
+        # Save current selection first
+        if self.current_skill_name:
+            self._save_current_skill_data()
+        
+        # Clear selection to avoid conflicts
+        self.skill_tree.clearSelection()
+        self.current_skill_name = None
+        
+        # Refresh tree
+        self._refresh_skill_tree()
+        self._update_available_skills()
+        
+        print("Skills list refreshed manually")
+    
+    def logger_info(self, message):
+        """Helper for logging"""
+        print(f"SkillConfig: {message}")  # Simple logging for now

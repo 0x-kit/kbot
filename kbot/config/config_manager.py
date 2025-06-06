@@ -198,47 +198,65 @@ class ConfigManager:
         for key, value in timing.items():
             self.config['Timing'][key] = str(value)
     
+
     def get_skills(self) -> Dict[str, Any]:
-        """Get skill configurations"""
-        skills = self._defaults['skills'].copy()
-        
-        if self.config.has_section('Skills'):
-            # Load skill rotations
-            if self.config.has_option('Skills', 'rotations'):
-                try:
-                    skills['rotations'] = ast.literal_eval(
-                        self.config['Skills']['rotations']
-                    )
-                except (ValueError, SyntaxError):
-                    pass
+            """Get skill configurations"""
+            skills = {
+                'rotations': {},
+                'priorities': {},
+                'cooldowns': {},
+                'conditions': {},
+                'skills': {},
+                'active_rotation': None,
+                'global_cooldown': 0.5
+            }
             
-            # Load skill priorities
-            if self.config.has_option('Skills', 'priorities'):
-                try:
-                    skills['priorities'] = ast.literal_eval(
-                        self.config['Skills']['priorities']
-                    )
-                except (ValueError, SyntaxError):
-                    pass
+            if self.config.has_section('Skills'):
+                # Load skills data
+                if self.config.has_option('Skills', 'skills'):
+                    try:
+                        skills_data = ast.literal_eval(self.config['Skills']['skills'])
+                        if isinstance(skills_data, dict):
+                            skills['skills'] = skills_data
+                    except (ValueError, SyntaxError) as e:
+                        print(f"Error parsing skills: {e}")
+                
+                # Load rotations
+                if self.config.has_option('Skills', 'rotations'):
+                    try:
+                        rotations_data = ast.literal_eval(self.config['Skills']['rotations'])
+                        if isinstance(rotations_data, dict):
+                            skills['rotations'] = rotations_data
+                    except (ValueError, SyntaxError) as e:
+                        print(f"Error parsing rotations: {e}")
+                
+                # Load active rotation
+                if self.config.has_option('Skills', 'active_rotation'):
+                    skills['active_rotation'] = self.config['Skills']['active_rotation']
+                    if skills['active_rotation'] == 'None':
+                        skills['active_rotation'] = None
+                
+                # Load global cooldown
+                if self.config.has_option('Skills', 'global_cooldown'):
+                    try:
+                        skills['global_cooldown'] = float(self.config['Skills']['global_cooldown'])
+                    except ValueError:
+                        pass
             
-            # Load cooldowns
-            if self.config.has_option('Skills', 'cooldowns'):
-                try:
-                    skills['cooldowns'] = ast.literal_eval(
-                        self.config['Skills']['cooldowns']
-                    )
-                except (ValueError, SyntaxError):
-                    pass
-        
-        return skills
+            return skills
     
     def set_skills(self, skills: Dict[str, Any]) -> None:
         """Set skill configurations"""
         if not self.config.has_section('Skills'):
             self.config.add_section('Skills')
         
-        for key, value in skills.items():
-            self.config['Skills'][key] = str(value)
+        # Save each component
+        self.config['Skills']['skills'] = str(skills.get('skills', {}))
+        self.config['Skills']['rotations'] = str(skills.get('rotations', {}))
+        self.config['Skills']['active_rotation'] = str(skills.get('active_rotation', None))
+        self.config['Skills']['global_cooldown'] = str(skills.get('global_cooldown', 0.5))
+        
+        print(f"ConfigManager: Saved skills config with {len(skills.get('skills', {}))} skills and {len(skills.get('rotations', {}))} rotations")
     
     def _validate_config(self) -> None:
         """Validate loaded configuration"""

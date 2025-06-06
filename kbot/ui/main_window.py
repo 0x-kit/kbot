@@ -761,10 +761,22 @@ class TantraBotMainWindow(QMainWindow):
     def _open_skill_config(self):
         """Open skill configuration dialog"""
         try:
-            dialog = SkillConfigDialog(self.bot_engine.skill_manager, self)
-            dialog.exec_()
+            # Pass both skill_manager and config_manager to the dialog
+            dialog = SkillConfigDialog(
+                skill_manager=self.bot_engine.skill_manager,
+                config_manager=self.bot_engine.config_manager,
+                parent=self
+            )
+            
+            if dialog.exec_() == dialog.Accepted:
+                # Configuration is already saved by the dialog
+                self.status_bar.showMessage("Skills configuration updated", 3000)
+                self.bot_engine.logger.info("Skills configuration updated from dialog")
+                
         except Exception as e:
             QMessageBox.critical(self, "Skill Config Error", f"Failed to configure skills: {e}")
+            import traceback
+            print(f"Skill config error: {traceback.format_exc()}")
 
     def _show_pixel_test_results_optimized(self, vitals, debug_image, regions, window_rect):
         """Show optimized pixel test results"""
