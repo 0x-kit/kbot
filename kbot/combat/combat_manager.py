@@ -45,11 +45,12 @@ class CombatManager:
             
             # Combat timing
             self.timing = {
-                'target_attempt_interval': 0.7,
-                'movement_interval': 5.0,
+                'target_attempt_interval': 1.0,  # Try targeting every 1 second
+                'movement_interval': 8.0,        # Only move every 8 seconds if targeting fails
                 'attack_interval': 1.5,
-                'stuck_detection_time': 8.0  # Time before considering stuck
+                'stuck_detection_time': 20.0     # Consider stuck after 12 seconds
             }
+
             
             # Statistics
             self.combat_stats = {
@@ -392,34 +393,46 @@ class CombatManager:
                 self.combat_stats['stuck_situations'] += 1
                 return
             
-            # Normal targeting behavior
+            # FIXED LOGIC: Try targeting first, only move if targeting fails consistently
             if (current_time - self.last_target_attempt > 
                 self.timing['target_attempt_interval']):
                 
+                # Attempt to target
                 self._attempt_new_target()
                 self.last_target_attempt = current_time
+                
+                # DON'T move immediately - give targeting a chance to work
+                return
             
-            # Regular movement if still no target
+            # Only move if we've been trying to target for a while without success
+            # AND enough time has passed since last movement
             if (self.state == CombatState.TARGETING and 
+                time_stuck > 3.0 and  # Give targeting 3 seconds to work
                 current_time - self.last_movement > self.timing['movement_interval']):
+                
+                self.logger.info("Targeting attempts failed - moving to find targets")
                 self._move_to_find_targets()
                 self.last_movement = current_time
     
     def _attempt_new_target(self) -> bool:
-        """Attempt to acquire a new target"""
-        try:
-            self.combat_stats['targeting_attempts'] += 1
-            
-            # Press 'E' to target nearest mob
-            if self.input_controller.send_key('e'):
+            """Attempt to acquire a new target"""
+            try:
+                self.state = CombatState.TARGETING
+                self.combat_stats['targeting_attempts'] += 1
+                
                 self.logger.debug("Attempting to target nearest mob")
-                return True
-            
-            return False
-            
-        except Exception as e:
-            self.logger.error(f"Error attempting to target: {e}")
-            return False
+                
+                # Press 'E' to target nearest mob
+                if self.input_controller.send_key('e'):
+                    # Give targeting time to work - DON'T move immediately
+                    # The next combat loop will check if we got a target
+                    return True
+                
+                return False
+                
+            except Exception as e:
+                self.logger.error(f"Error attempting to target: {e}")
+                return False
     
 
     def _move_to_find_targets(self) -> None:
