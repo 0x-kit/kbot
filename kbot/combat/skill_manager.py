@@ -630,7 +630,27 @@ class SkillManager:
             if hasattr(self, 'logger'):
                 self.logger.error(f"Error in get_next_skill: {e}")
             return None
+    
+    def get_buffs_to_refresh(self) -> List[str]:
+        """
+        NUEVO MÉTODO: Devuelve una lista de nombres de habilidades de tipo BUFF
+        cuyo cooldown ha expirado, lo que implica que el buff podría haber terminado.
+        """
+        buffs_to_cast = []
+        current_time = time.time()
+
+        for skill_name, skill in self.skills.items():
+            # Comprobamos si es un buff, está habilitado y no se debe usar en combate
+            if skill.skill_type == SkillType.BUFF and skill.enabled:
+                
+                # Comprobamos si su "cooldown" (que usamos como duración del buff) ha pasado
+                usage = self.usage_stats[skill_name]
+                if current_time - usage.last_used >= skill.cooldown:
+                    # ¡Es hora de volver a usar el buff!
+                    buffs_to_cast.append(skill_name)
         
+        return buffs_to_cast
+
     def export_config(self) -> Dict[str, Any]:
         """Export skill configuration"""
         skills_data = {}
