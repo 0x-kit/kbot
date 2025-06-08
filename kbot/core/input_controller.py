@@ -85,7 +85,7 @@ class InputController:
 
             self.input_stats['total_inputs'] += 1
             self.input_stats['successful_inputs'] += 1
-            self.logger.debug(f"Sent key '{key}' to window 0x{hwnd:X} with realistic lParam.")
+            # self.logger.debug(f"Sent key '{key}' to window 0x{hwnd:X} with realistic lParam.")
             return True
         except Exception as e:
             self.input_stats['failed_inputs'] += 1

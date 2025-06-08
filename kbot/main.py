@@ -15,7 +15,7 @@ def main():
     # Create QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("Tantra Bot")
-    app.setApplicationVersion("2.0.0")
+    app.setApplicationVersion("1.0.0")
     app.setOrganizationName("cursebox")
     
     # Set application style

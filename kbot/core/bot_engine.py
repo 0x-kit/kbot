@@ -29,7 +29,7 @@ class BotState(Enum):
 class BotEngine(QObject):
     state_changed = pyqtSignal(str)
     vitals_updated = pyqtSignal(dict)
-    target_changed = pyqtSignal(str)
+    # target_changed = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
     
     def __init__(self):
@@ -144,9 +144,9 @@ class BotEngine(QObject):
             self.combat_manager.set_skill_usage(True)
             self.combat_manager.set_skill_priority_mode("rotation")
             movement_config = {'movement_interval': 4.0, 'max_stuck_time': 12.0, 'click_radius': 150, 'directional_duration': 3.0}
-            self.movement_manager.set_movement_config(movement_config)
+            #self.movement_manager.set_movement_config(movement_config)
             #self.combat_manager.configure_movement_behavior(aggressive_search=True)
-            self.logger.info("Movement manager configured for active mob searching")
+            # self.logger.info("Movement manager configured for active mob searching")
             enhanced_timing = timing.copy()
             enhanced_timing['skill_interval'] = 0.8
             # self.combat_manager.set_timing(enhanced_timing)
@@ -253,6 +253,9 @@ class BotEngine(QObject):
             self.window_manager.update_target_window_rect()
             regions = self.config_manager.get_regions()
             vitals = self.pixel_analyzer.analyze_vitals(regions)
+            #detected_name_in_vitals = vitals.get('target_name')
+            #if detected_name_in_vitals:
+                #self.logger.debug(f"[BotEngine._check_vitals] PixelAnalyzer returned target_name: '{detected_name_in_vitals}'")
             self.skill_manager.update_game_state({
                 'hp': vitals['hp'], 'mp': vitals['mp'], 'target_exists': vitals['target_exists'],
                 'target_hp': vitals['target_health'], 'target_name': vitals.get('target_name', ''),
@@ -267,7 +270,7 @@ class BotEngine(QObject):
                         self.logger.info(f"Target defeated: {old_target}")
                     if self.current_target and self.current_target != old_target:
                         self.logger.info(f"New target: {self.current_target}")
-                    self.target_changed.emit(self.current_target or "")
+                   #  self.target_changed.emit(self.current_target or "")
             auto_pots = self.config_manager.get_option('auto_pots', True)
             if auto_pots:
                 threshold = self.config_manager.get_option('potion_threshold', 70)
@@ -341,15 +344,57 @@ class BotEngine(QObject):
         current_stats = self.stats.copy()
         if self.state == BotState.RUNNING and self.stats['start_time'] > 0: current_stats['current_runtime'] = time.time() - self.stats['start_time']
         else: current_stats['current_runtime'] = 0
-        current_stats.update(self.input_controller.get_input_stats()); current_stats.update(self.combat_manager.get_combat_stats()); current_stats['skill_summary'] = self.combat_manager.get_skill_usage_summary()
+        current_stats.update(self.input_controller.get_input_stats()); current_stats.update(self.combat_manager.get_combat_stats()); 
         return current_stats
     def get_vitals(self) -> Dict[str, Any]: return self.last_vitals.copy()
     def update_config(self) -> None:
-        try: self.config_manager.load_config(); self._setup_from_config(); self.logger.info("Configuration updated successfully")
-        except Exception as e: self.logger.error(f"Failed to update configuration: {e}")
+        """
+        Recarga la configuración DESDE EL DISCO y actualiza los componentes.
+        Se usa al inicio o si se carga un perfil.
+        """
+        try:
+            self.config_manager.load_config()
+            self.update_components_from_config() # Reutilizamos la lógica
+            self.logger.info("Configuration reloaded from file and components updated.")
+        except Exception as e:
+            self.logger.error(f"Failed to update configuration from file: {e}")
+    def update_components_from_config(self):
+        """
+        NUEVO MÉTODO: Actualiza los componentes internos usando la configuración
+        que ya está en memoria en el ConfigManager. NO lee del disco.
+        """
+        try:
+            # Actualizar CombatManager con la nueva whitelist, timings, etc.
+            whitelist = self.config_manager.get_whitelist()
+            self.combat_manager.set_mob_whitelist(whitelist)
+            
+            threshold = self.config_manager.get_option('potion_threshold', 70)
+            self.combat_manager.set_potion_threshold(threshold)
+
+            ocr_tolerance = self.config_manager.get_option('ocr_tolerance', 85)
+            self.combat_manager.set_ocr_tolerance(ocr_tolerance)
+
+            timing = self.config_manager.get_timing()
+            enhanced_timing = timing.copy()
+            enhanced_timing['skill_interval'] = 0.8
+            self.combat_manager.set_timing(enhanced_timing)
+
+            self.logger.info("Bot components updated from in-memory configuration.")
+        except Exception as e:
+            self.logger.error(f"Failed to update components from config: {e}")
     def save_config(self) -> bool:
-        try: self.config_manager.set_skills(self.skill_manager.export_config()); self.config_manager.save_config(); self.logger.info("Configuration saved successfully"); return True
-        except Exception as e: self.logger.error(f"Failed to save configuration: {e}"); return False
+        """
+        Guarda la configuración actual en el disco.
+        La configuración ya debería estar actualizada en memoria.
+        """
+        try:
+            skill_config = self.skill_manager.export_config()
+            self.config_manager.set_skills(skill_config)
+            self.config_manager.save_config()
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to save configuration to file: {e}")
+            return False
     def get_skill_manager(self) -> SkillManager: return self.skill_manager
     def get_combat_manager(self) -> CombatManager: return self.combat_manager
     def toggle_skill_usage(self) -> bool:
@@ -362,4 +407,4 @@ class BotEngine(QObject):
             return True
         except Exception as e: self.logger.error(f"Failed to set active rotation: {e}"); return False
     def get_skills_status(self) -> Dict[str, Any]:
-        return {'skill_usage_enabled': self.combat_manager.use_skills, 'priority_mode': self.combat_manager.skill_priority_mode, 'active_rotation': self.skill_manager.active_rotation, 'total_skills': len(self.skill_manager.skills), 'enabled_skills': len([s for s in self.skill_manager.skills.values() if s.enabled]), 'available_rotations': list(self.skill_manager.rotations.keys()), 'skill_usage_summary': self.combat_manager.get_skill_usage_summary()}
+        return {'skill_usage_enabled': self.combat_manager.use_skills, 'priority_mode': self.combat_manager.skill_priority_mode, 'active_rotation': self.skill_manager.active_rotation, 'total_skills': len(self.skill_manager.skills), 'enabled_skills': len([s for s in self.skill_manager.skills.values() if s.enabled]), 'available_rotations': list(self.skill_manager.rotations.keys())}

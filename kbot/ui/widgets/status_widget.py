@@ -49,7 +49,7 @@ class StatusWidget(QWidget):
         target_layout = QVBoxLayout(target_group)
         
         self.target_name_label = QLabel("No target")
-        self.target_name_label.setFont(QFont("Arial", 10, QFont.Bold))
+        self.target_name_label.setStyleSheet("font-weight: bold;")
         target_layout.addWidget(self.target_name_label)
         
         # Target HP
@@ -71,27 +71,26 @@ class StatusWidget(QWidget):
         layout.addStretch()
     
     def update_vitals(self, vitals: Dict[str, Any]):
-        """Update vitals display"""
+        """Actualiza TODOS los elementos del widget con la información de vitals."""
         hp = vitals.get('hp', 0)
         mp = vitals.get('mp', 0)
+        target_name = vitals.get('target_name', 'No target')
         target_hp = vitals.get('target_health', 0)
-        target_exists = vitals.get('target_exists', False)
         
-        # Update HP
+        # Actualizar HP
         self.hp_bar.setValue(hp)
         self.hp_label.setText(f"{hp}%")
         
-        # Update MP
+        # Actualizar MP
         self.mp_bar.setValue(mp)
         self.mp_label.setText(f"{mp}%")
-        
-        # Update target HP
-        if target_exists:
-            self.target_hp_bar.setValue(target_hp)
-            self.target_hp_label.setText(f"{target_hp}%")
-        else:
-            self.target_hp_bar.setValue(0)
-            self.target_hp_label.setText("0%")
+
+        # Actualizar Target Name
+        self.target_name_label.setText(target_name if target_name else "No target")
+
+        # Actualizar Target HP
+        self.target_hp_bar.setValue(target_hp)
+        self.target_hp_label.setText(f"{target_hp}%")
     
     def update_target(self, target_name: str):
         """Update target name display"""
