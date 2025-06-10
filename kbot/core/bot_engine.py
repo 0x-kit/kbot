@@ -180,8 +180,8 @@ class BotEngine(QObject):
             else:
                 self.logger.info("No saved skills config found, creating basic skills")
                 self._create_basic_skills_fallback()
-            slots = self.config_manager.get_slots()
-            self._update_skill_keybinds(slots)
+            #slots = self.config_manager.get_slots()
+            #self._update_skill_keybinds(slots)
             if skill_config.get('active_rotation') and skill_config['active_rotation'] in self.skill_manager.rotations:
                 self.skill_manager.set_active_rotation(skill_config['active_rotation'])
                 self.logger.info(f"Set active rotation from config: {skill_config['active_rotation']}")

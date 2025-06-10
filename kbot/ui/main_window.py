@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QGroupBox, QLabel, QPushButton, QCheckBox, QSpinBox, QTextEdit,
     QSplitter, QStatusBar, QMenuBar, QAction, QMessageBox,
-    QDialog, QDialogButtonBox
+    QDialog, QDialogButtonBox, QDoubleSpinBox
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
@@ -201,6 +201,18 @@ class TantraBotMainWindow(QMainWindow):
                                             "Lower values are more permissive but might cause errors.\n"
                                             "Higher values are stricter.")
         options_layout.addWidget(self.ocr_tolerance_spin, 2, 1)
+
+
+       # Fila 3: Post Combat Delay
+        options_layout.addWidget(QLabel("Post-Combat Delay:"), 3, 0)
+        self.post_combat_delay_spin = QDoubleSpinBox() # Usamos QDoubleSpinBox para decimales
+        self.post_combat_delay_spin.setRange(0.0, 10.0) # Un rango de 0.5 a 10 segundos
+        self.post_combat_delay_spin.setSingleStep(0.1) # Permite incrementar de 0.1 en 0.1
+        self.post_combat_delay_spin.setValue(2.0) # Valor por defecto
+        self.post_combat_delay_spin.setSuffix(" s")
+        self.post_combat_delay_spin.setToolTip("Time to wait after looting before searching for a new target.")
+        options_layout.addWidget(self.post_combat_delay_spin, 3, 1)
+
         
         parent_layout.addWidget(options_group)
     def _create_mob_whitelist_group(self, parent_layout):
@@ -232,6 +244,11 @@ class TantraBotMainWindow(QMainWindow):
             
             # --- CARGAR EL NUEVO VALOR ---
             self.ocr_tolerance_spin.setValue(config.get_option('ocr_tolerance', 85))
+
+            # --- CARGAR EL NUEVO VALOR ---
+            # Leemos el timing completo y luego el valor específico
+            timing = config.get_timing()
+            self.post_combat_delay_spin.setValue(timing.get('post_combat_delay', 2.0))
 
             whitelist = config.get_whitelist()
             self.whitelist_edit.setPlainText('\n'.join(whitelist))
@@ -278,9 +295,15 @@ class TantraBotMainWindow(QMainWindow):
             
             config.set_option('auto_pots', self.auto_pots_cb.isChecked())
             config.set_option('potion_threshold', self.potion_threshold_spin.value())
-            
-            # --- GUARDAR EL NUEVO VALOR ---
+
             config.set_option('ocr_tolerance', self.ocr_tolerance_spin.value())
+
+            # Leemos todos los timings actuales para no sobrescribir otros valores
+            timing = config.get_timing()
+            # Actualizamos solo el que ha cambiado
+            timing['post_combat_delay'] = round(self.post_combat_delay_spin.value(), 2)
+            # Guardamos el diccionario de timings completo
+            config.set_timing(timing)
 
             whitelist_text = self.whitelist_edit.toPlainText()
             whitelist = [line.strip() for line in whitelist_text.splitlines() if line.strip()]

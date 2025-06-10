@@ -354,76 +354,90 @@ class SkillConfigDialog(QDialog):
         self.skill_tree.addTopLevelItem(item)
     
     def _on_skill_selected(self, item, column):
-        """Handle skill selection"""
-        # Check if item is still valid
-        if not item or not hasattr(item, 'data'):
-            return
-        
-        try:
-            skill_name = item.data(0, Qt.UserRole)
-        except RuntimeError:
-            # Item has been deleted, ignore
-            return
-        
-        if not skill_name or skill_name not in self.skills_data:
-            return
-        
-        # Save current skill first if any
-        if self.current_skill_name and self.current_skill_name != skill_name:
-            self._save_current_skill_data()
-        
-        self.current_skill_name = skill_name
-        skill = self.skills_data[skill_name]
-        
-        # Temporarily disconnect signals to avoid triggering changes
-        self._disconnect_skill_signals()
-        
-        try:
-            # Load skill data into form - CONVERT TO INT
+            """
+            CORREGIDO: Maneja la selección de un skill, asegurando que la
+            selección visual no "salte".
+            """
+            # Si no es un item válido, no hacemos nada.
+            if not item:
+                return
+                
+            new_skill_name = item.data(0, Qt.UserRole)
+            
+            # Si el usuario hace clic en el mismo item, no hacemos nada.
+            if new_skill_name == self.current_skill_name:
+                return
+
+            # 1. Guardar los datos del skill ANTERIOR (si había uno seleccionado).
+            if self.current_skill_name:
+                self._save_current_skill_data()
+
+            # 2. Actualizar la variable al NUEVO skill seleccionado.
+            self.current_skill_name = new_skill_name
+            
+            # Si el nuevo skill no está en nuestros datos (p.ej. se borró), salimos.
+            if new_skill_name not in self.skills_data:
+                self.remove_skill_btn.setEnabled(False)
+                return
+
+            skill = self.skills_data[new_skill_name]
+
+            # 3. Rellenar el formulario con los datos del nuevo skill.
+            #    Desconectamos las señales para evitar bucles.
+            self._disconnect_skill_signals()
             self.skill_name_edit.setText(skill["name"])
             self.skill_key_edit.setText(skill["key"])
-            self.skill_cooldown_spin.setValue(int(skill["cooldown"]))  # Convert to int
+            self.skill_cooldown_spin.setValue(int(skill["cooldown"]))
             self.skill_type_combo.setCurrentText(skill["type"])
-            self.skill_priority_spin.setValue(int(skill["priority"]))  # Convert to int
-            self.skill_mana_spin.setValue(int(skill["mana"]))  # Convert to int
+            self.skill_priority_spin.setValue(int(skill["priority"]))
+            self.skill_mana_spin.setValue(int(skill["mana"]))
             self.skill_enabled_cb.setChecked(skill["enabled"])
             self.skill_desc_edit.setPlainText(skill["desc"])
-        except Exception as e:
-            print(f"Error loading skill data: {e}")
-        
-        # Reconnect signals
-        self._connect_skill_signals()
-        
-        self.remove_skill_btn.setEnabled(True)
+            self._connect_skill_signals()
+            
+            # Habilitar el botón de borrado
+            self.remove_skill_btn.setEnabled(True)
     
     def _save_current_skill_data(self):
-        """Save current skill data from form"""
+        """
+        CORREGIDO: Guarda los datos del formulario en el diccionario de datos,
+        manejando correctamente el cambio de nombre.
+        """
         if not self.current_skill_name or self.current_skill_name not in self.skills_data:
             return
-        
-        skill = self.skills_data[self.current_skill_name]
-        old_name = skill["name"]
+
+        old_name = self.current_skill_name
         new_name = self.skill_name_edit.text().strip()
+
+        # Si el nombre no ha cambiado, simplemente actualizamos los datos.
+        if old_name == new_name:
+            skill_data = self.skills_data[old_name]
+        # Si el nombre ha cambiado...
+        else:
+            # Comprobamos si el nuevo nombre ya existe (y no es el mismo que el antiguo)
+            if new_name in self.skills_data:
+                QMessageBox.warning(self, "Duplicate Name", f"A skill named '{new_name}' already exists.")
+                self.skill_name_edit.setText(old_name) # Revertir el cambio en la UI
+                return
+
+            # Creamos una nueva entrada y eliminamos la antigua
+            skill_data = self.skills_data.pop(old_name)
+            self.skills_data[new_name] = skill_data
+            self.logger_info(f"Skill '{old_name}' renamed to '{new_name}'.")
+
+        # Actualizamos todos los campos del diccionario
+        skill_data["name"] = new_name
+        skill_data["key"] = self.skill_key_edit.text().strip()
+        skill_data["cooldown"] = self.skill_cooldown_spin.value()
+        skill_data["type"] = self.skill_type_combo.currentText()
+        skill_data["priority"] = self.skill_priority_spin.value()
+        skill_data["mana"] = self.skill_mana_spin.value()
+        skill_data["enabled"] = self.skill_enabled_cb.isChecked()
+        skill_data["desc"] = self.skill_desc_edit.toPlainText()
+
+        # Actualizamos el nombre del item actual para reflejar el cambio
+        self.current_skill_name = new_name
         
-        # Update all fields - ENSURE PROPER TYPES
-        skill["name"] = new_name
-        skill["key"] = self.skill_key_edit.text().strip()
-        skill["cooldown"] = int(self.skill_cooldown_spin.value())  # Ensure int
-        skill["type"] = self.skill_type_combo.currentText()
-        skill["priority"] = int(self.skill_priority_spin.value())  # Ensure int
-        skill["mana"] = int(self.skill_mana_spin.value())  # Ensure int
-        skill["enabled"] = self.skill_enabled_cb.isChecked()
-        skill["desc"] = self.skill_desc_edit.toPlainText()
-        
-        # If name changed, update the dictionary key
-        if old_name != new_name and new_name:
-            del self.skills_data[old_name]
-            self.skills_data[new_name] = skill
-            self.current_skill_name = new_name
-        
-        # Don't refresh tree immediately if we're in the middle of selection
-        # The tree will be refreshed when needed
-    
     def _connect_skill_signals(self):
         """Connect skill form signals"""
         self.skill_name_edit.textChanged.connect(self._on_skill_data_changed)
@@ -468,23 +482,35 @@ class SkillConfigDialog(QDialog):
             self._update_available_skills()
     
     def _add_skill(self):
-        """Add a new skill"""
-        name = f"New Skill {len(self.skills_data) + 1}"
-        
-        new_skill = {
-            "name": name,
-            "key": "",
-            "cooldown": 1,  # int
-            "type": "offensive",
-            "priority": 1,  # int
-            "mana": 0,  # int
-            "enabled": True,
-            "desc": ""
-        }
-        
-        self.skills_data[name] = new_skill
-        self._refresh_skill_tree()
-        self._update_available_skills()
+            """
+            Añade un nuevo skill con un nombre único temporal y lo selecciona para su edición.
+            """
+            # Generar un nombre único para la nueva habilidad
+            i = 1
+            while f"New Skill {i}" in self.skills_data:
+                i += 1
+            new_skill_name = f"New Skill {i}"
+
+            # Crear datos por defecto para la nueva habilidad
+            new_skill_data = {
+                'name': new_skill_name, 'key': '', 'cooldown': 1, 'type': 'offensive',
+                'priority': 1, 'mana': 0, 'enabled': True, 'desc': ''
+            }
+            
+            # Añadir al diccionario de datos y al árbol visual
+            self.skills_data[new_skill_name] = new_skill_data
+            self._add_skill_to_tree(new_skill_data)
+
+            # Seleccionar el nuevo item en el árbol para que el usuario pueda editarlo
+            for i in range(self.skill_tree.topLevelItemCount()):
+                item = self.skill_tree.topLevelItem(i)
+                if item.text(0) == new_skill_name:
+                    self.skill_tree.setCurrentItem(item)
+                    self._on_skill_selected(item, 0) # Llama manualmente para rellenar el formulario
+                    break
+            
+            self.skill_name_edit.setFocus() # Pone el foco en el campo de nombre
+            self.skill_name_edit.selectAll() # Selecciona todo el texto para que el usuario pueda sobrescribir
     
     def _remove_skill(self):
         """Remove the selected skill"""

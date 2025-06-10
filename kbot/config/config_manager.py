@@ -17,15 +17,6 @@ class ConfigManager:
     def _get_default_config(self) -> Dict[str, Any]:
         """Define default configuration values"""
         return {
-            'slots': {
-                f'slot{i}': '1' for i in range(1, 9)
-            } | {
-                'slot4': '150',
-                'slot7': '150', 
-                'slot8': '600'
-            } | {
-                f'slotF{i}': '120' for i in range(1, 11)
-            },
             'whitelist': {
                 'mobs': 'Byokbo'
             },
@@ -43,7 +34,8 @@ class ConfigManager:
                 'combat_check': 1.0,
                 'attack': 1.5,
                 'target_switch': 0.7,
-                'potion': 0.5
+                'potion': 0.5,
+                'post_combat_delay': 1.0
             },
             'skills': {
                 'rotations': [],
@@ -73,26 +65,6 @@ class ConfigManager:
         except Exception as e:
             raise ConfigError(f"Failed to save configuration: {e}")
     
-    def get_slots(self) -> Dict[str, str]:
-        """Get slot configurations"""
-        slots = {}
-        if self.config.has_section('Slots'):
-            slots.update(dict(self.config['Slots']))
-        
-        # Fill missing slots with defaults
-        for slot, default in self._defaults['slots'].items():
-            if slot not in slots:
-                slots[slot] = default
-                
-        return slots
-    
-    def set_slots(self, slots: Dict[str, str]) -> None:
-        """Set slot configurations"""
-        if not self.config.has_section('Slots'):
-            self.config.add_section('Slots')
-        
-        for slot, value in slots.items():
-            self.config['Slots'][slot] = value
     
     def get_whitelist(self) -> List[str]:
         """Get mob whitelist"""
@@ -182,7 +154,7 @@ class ConfigManager:
         timing = {}
         
         if self.config.has_section('Timing'):
-            for key in ['combat_check', 'attack', 'target_switch', 'potion']:
+            for key in ['combat_check', 'attack', 'target_switch', 'potion', 'post_combat_delay']:
                 timing[key] = self.config.getfloat('Timing', key, 
                                                  fallback=self._defaults['timing'][key])
         else:
@@ -309,10 +281,6 @@ class ConfigManager:
     
     def _create_default_config(self) -> None:
         """Create configuration file with default values"""
-        # Slots section
-        self.config.add_section('Slots')
-        for slot, value in self._defaults['slots'].items():
-            self.config['Slots'][slot] = value
         
         # Whitelist section
         self.config.add_section('Whitelist')

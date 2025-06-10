@@ -359,7 +359,7 @@ class SkillManager:
         self.rotations: Dict[str, SkillRotation] = {}
         self.usage_stats: Dict[str, SkillUsage] = {}
         self.active_rotation: Optional[str] = None
-        self.global_cooldown = 0.5  # Global cooldown between any skills
+        self.global_cooldown = 0.3  # Global cooldown between any skills
         self.last_skill_used = 0.0
         
         # Condition evaluators
@@ -641,7 +641,7 @@ class SkillManager:
 
         for skill_name, skill in self.skills.items():
             # Comprobamos si es un buff, está habilitado y no se debe usar en combate
-            if skill.skill_type == SkillType.BUFF and skill.enabled:
+            if skill.skill_type in [SkillType.BUFF, SkillType.UTILITY] and skill.enabled:
                 
                 # Comprobamos si su "cooldown" (que usamos como duración del buff) ha pasado
                 usage = self.usage_stats[skill_name]
@@ -767,6 +767,13 @@ class SkillManager:
         if self.active_rotation:
             self.debug_rotation_state()  # Debug the imported rotation
 
+    def reset_active_rotation(self):
+        """
+        NUEVO MÉTODO PÚBLICO: Si hay una rotación activa, la resetea a su estado inicial (índice 0).
+        """
+        if self.active_rotation and self.active_rotation in self.rotations:
+            self.rotations[self.active_rotation].reset()
+            self.logger.info(f"Active rotation '{self.active_rotation}' has been reset.")
 # Predefined skill templates for common Tantra skills
 class TantraSkillTemplates:
     """Common Tantra skill templates"""
