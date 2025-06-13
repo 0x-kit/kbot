@@ -173,48 +173,55 @@ class TantraBotMainWindow(QMainWindow):
         window_group = QGroupBox("Window Management"); window_layout = QVBoxLayout(window_group)
         self.select_window_btn = QPushButton("Select Game Window"); window_layout.addWidget(self.select_window_btn)
         self.current_window_label = QLabel("No window selected"); window_layout.addWidget(self.current_window_label); parent_layout.addWidget(window_group)
+    
     def _create_options_group(self, parent_layout):
-        options_group = QGroupBox("Options")
-        options_layout = QGridLayout(options_group) # Usaremos un GridLayout para alinear todo bien
+            options_group = QGroupBox("Options")
+            # Usamos un GridLayout para tener un control perfecto sobre la alineación.
+            options_layout = QGridLayout(options_group)
 
-        # Fila 0: Auto Potions
-        self.auto_pots_cb = QCheckBox("Auto Potions (HP & MP)")
-        self.auto_pots_cb.setChecked(True)
-        options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2) # Ocupa 2 columnas
+            # Fila 0: Checkbox de Auto Potions
+            self.auto_pots_cb = QCheckBox("Auto Potions (HP & MP)")
+            self.auto_pots_cb.setChecked(True)
+            # Lo colocamos en la fila 0, columna 0, y le decimos que ocupe 2 columnas de ancho.
+            options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2) 
 
-        # Fila 1: Potion Threshold
-        options_layout.addWidget(QLabel("Potion Threshold:"), 1, 0)
-        self.potion_threshold_spin = QSpinBox()
-        self.potion_threshold_spin.setRange(1, 99)
-        self.potion_threshold_spin.setValue(70)
-        self.potion_threshold_spin.setSuffix("%")
-        options_layout.addWidget(self.potion_threshold_spin, 1, 1)
+            # Fila 1: Checkbox de Looteo
+            self.enable_looting_cb = QCheckBox("Enable Looting After Combat")
+            self.enable_looting_cb.setToolTip("If checked, the bot will enter a looting phase after each kill.")
+            self.enable_looting_cb.setChecked(True) # Por defecto activado
+            # Lo colocamos en la fila 1, columna 0, y que ocupe 2 columnas.
+            options_layout.addWidget(self.enable_looting_cb, 1, 0, 1, 2)
 
-        # --- NUEVA OPCIÓN AÑADIDA ---
-        # Fila 2: OCR Match Tolerance
-        options_layout.addWidget(QLabel("OCR Match Tolerance:"), 2, 0)
-        self.ocr_tolerance_spin = QSpinBox()
-        self.ocr_tolerance_spin.setRange(50, 100) # Un rango de 50% a 100% es sensato
-        self.ocr_tolerance_spin.setValue(85) # Valor por defecto
-        self.ocr_tolerance_spin.setSuffix("%")
-        self.ocr_tolerance_spin.setToolTip("Sets how similar the OCR text must be to a whitelist entry.\n"
-                                            "Lower values are more permissive but might cause errors.\n"
-                                            "Higher values are stricter.")
-        options_layout.addWidget(self.ocr_tolerance_spin, 2, 1)
+            # Fila 2: Potion Threshold
+            options_layout.addWidget(QLabel("Potion Threshold:"), 2, 0) # Etiqueta en la columna 0
+            self.potion_threshold_spin = QSpinBox()
+            self.potion_threshold_spin.setRange(1, 99)
+            self.potion_threshold_spin.setValue(70)
+            self.potion_threshold_spin.setSuffix("%")
+            options_layout.addWidget(self.potion_threshold_spin, 2, 1) # SpinBox en la columna 1
+
+            # Fila 3: OCR Match Tolerance
+            options_layout.addWidget(QLabel("OCR Match Tolerance:"), 3, 0) # Etiqueta en la columna 0
+            self.ocr_tolerance_spin = QSpinBox()
+            self.ocr_tolerance_spin.setRange(50, 100)
+            self.ocr_tolerance_spin.setValue(85)
+            self.ocr_tolerance_spin.setSuffix("%")
+            self.ocr_tolerance_spin.setToolTip("How similar OCR text must be to a whitelist entry (e.g., 85%).")
+            options_layout.addWidget(self.ocr_tolerance_spin, 3, 1) # SpinBox en la columna 1
+
+            # Fila 4: Post Combat Delay
+            options_layout.addWidget(QLabel("Post-Combat Delay:"), 4, 0) # Etiqueta en la columna 0
+            self.post_combat_delay_spin = QDoubleSpinBox()
+            self.post_combat_delay_spin.setRange(0.0, 10.0)
+            self.post_combat_delay_spin.setSingleStep(0.1)
+            self.post_combat_delay_spin.setValue(2.0)
+            self.post_combat_delay_spin.setSuffix(" s")
+            self.post_combat_delay_spin.setToolTip("Time to wait after looting before searching for a new target.")
+            options_layout.addWidget(self.post_combat_delay_spin, 4, 1) # SpinBox en la columna 1
+            
+            parent_layout.addWidget(options_group)
 
 
-       # Fila 3: Post Combat Delay
-        options_layout.addWidget(QLabel("Post-Combat Delay:"), 3, 0)
-        self.post_combat_delay_spin = QDoubleSpinBox() # Usamos QDoubleSpinBox para decimales
-        self.post_combat_delay_spin.setRange(0.0, 10.0) # Un rango de 0.5 a 10 segundos
-        self.post_combat_delay_spin.setSingleStep(0.1) # Permite incrementar de 0.1 en 0.1
-        self.post_combat_delay_spin.setValue(2.0) # Valor por defecto
-        self.post_combat_delay_spin.setSuffix(" s")
-        self.post_combat_delay_spin.setToolTip("Time to wait after looting before searching for a new target.")
-        options_layout.addWidget(self.post_combat_delay_spin, 3, 1)
-
-        
-        parent_layout.addWidget(options_group)
     def _create_mob_whitelist_group(self, parent_layout):
         whitelist_group = QGroupBox("Mob Whitelist"); whitelist_layout = QVBoxLayout(whitelist_group)
         whitelist_layout.addWidget(QLabel("Allowed mobs (one per line):")); self.whitelist_edit = QTextEdit(); self.whitelist_edit.setPlainText("Byokbo"); whitelist_layout.addWidget(self.whitelist_edit); parent_layout.addWidget(whitelist_group)
@@ -244,6 +251,9 @@ class TantraBotMainWindow(QMainWindow):
             
             # --- CARGAR EL NUEVO VALOR ---
             self.ocr_tolerance_spin.setValue(config.get_option('ocr_tolerance', 85))
+
+            self.enable_looting_cb.setChecked(config.get_option('enable_looting', True)) # Por defecto activado
+
 
             # --- CARGAR EL NUEVO VALOR ---
             # Leemos el timing completo y luego el valor específico
@@ -295,7 +305,7 @@ class TantraBotMainWindow(QMainWindow):
             
             config.set_option('auto_pots', self.auto_pots_cb.isChecked())
             config.set_option('potion_threshold', self.potion_threshold_spin.value())
-
+            config.set_option('enable_looting', self.enable_looting_cb.isChecked())
             config.set_option('ocr_tolerance', self.ocr_tolerance_spin.value())
 
             # Leemos todos los timings actuales para no sobrescribir otros valores

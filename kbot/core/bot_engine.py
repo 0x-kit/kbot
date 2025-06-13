@@ -148,7 +148,7 @@ class BotEngine(QObject):
             #self.combat_manager.configure_movement_behavior(aggressive_search=True)
             # self.logger.info("Movement manager configured for active mob searching")
             enhanced_timing = timing.copy()
-            enhanced_timing['skill_interval'] = 0.8
+            enhanced_timing['skill_interval'] = 1.8
             # self.combat_manager.set_timing(enhanced_timing)
             self.logger.info("Bot configured successfully with enhanced skills integration")
         except Exception as e:
@@ -374,9 +374,12 @@ class BotEngine(QObject):
             ocr_tolerance = self.config_manager.get_option('ocr_tolerance', 85)
             self.combat_manager.set_ocr_tolerance(ocr_tolerance)
 
+            enable_looting = self.config_manager.get_option('enable_looting', True)
+            self.combat_manager.set_looting_enabled(enable_looting)
+
             timing = self.config_manager.get_timing()
             enhanced_timing = timing.copy()
-            enhanced_timing['skill_interval'] = 0.8
+            enhanced_timing['skill_interval'] = 1.8
             self.combat_manager.set_timing(enhanced_timing)
 
             self.logger.info("Bot components updated from in-memory configuration.")

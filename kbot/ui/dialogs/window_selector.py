@@ -77,7 +77,7 @@ class WindowSelectorDialog(QDialog):
     
     def _rename_window(self):
         """Rename a window"""
-        current_title = self.current_title_edit.text().strip()
+        current_title = self.current_title_edit.text()
         new_title = self.new_title_edit.text().strip()
         
         if not current_title or not new_title:

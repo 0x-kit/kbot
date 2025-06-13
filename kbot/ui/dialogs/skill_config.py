@@ -596,6 +596,8 @@ class SkillConfigDialog(QDialog):
                 self.rotation_skills_list.addItem(skill)
             
             print(f"Loaded rotation '{rotation_name}' with {len(rotation['skills'])} skills: {rotation['skills']}")  # Debug
+            rotation_name = item.data(0, Qt.UserRole)
+
         except Exception as e:
             print(f"Error loading rotation data: {e}")
         
@@ -606,6 +608,9 @@ class SkillConfigDialog(QDialog):
         """Save current rotation data from form"""
         if not self.current_rotation_name or self.current_rotation_name not in self.rotations_data:
             return
+        
+        order_before_saving = [self.rotation_skills_list.item(i).text() for i in range(self.rotation_skills_list.count())]
+        print(f"DEBUG: _save_current_rotation_data -> Orden A PUNTO DE GUARDAR: {order_before_saving}")
         
         rotation = self.rotations_data[self.current_rotation_name]
         old_name = rotation["name"]
@@ -717,6 +722,8 @@ class SkillConfigDialog(QDialog):
                 print(f"Added '{skill_name}' to rotation '{self.current_rotation_name}'")
             else:
                 print(f"Skill '{skill_name}' already in rotation")
+        current_list_order = [self.rotation_skills_list.item(i).text() for i in range(self.rotation_skills_list.count())]
+        print(f"DEBUG: _add_skill_to_rotation -> Orden visual de skills AHORA: {current_list_order}")
     
     def _remove_skill_from_rotation(self):
         """Remove selected skill from rotation"""

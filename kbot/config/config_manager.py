@@ -2,6 +2,7 @@
 import configparser
 import ast
 import os
+import json
 from typing import Dict, Any, Tuple, List
 from utils.exceptions import ConfigError
 
@@ -172,98 +173,72 @@ class ConfigManager:
     
 
     def get_skills(self) -> Dict[str, Any]:
-        """FIXED: Get skill configurations with better parsing"""
-        skills = {
-            'rotations': {},
-            'priorities': {},
-            'cooldowns': {},
-            'conditions': {},
-            'skills': {},
-            'active_rotation': None,
-            'global_cooldown': 0.5
-        }
-        
-        if self.config.has_section('Skills'):
-            print("DEBUG: Skills section found in config")
+            """
+            Get skill configurations using robust JSON parsing for each key.
+            """
+            # Tu diccionario base está perfecto, lo mantenemos.
+            skills = {
+                'rotations': {}, 'skills': {},
+                'active_rotation': None, 'global_cooldown': 0.5
+            }
             
-            # Load skills data with better error handling
-            if self.config.has_option('Skills', 'skills'):
-                try:
-                    skills_str = self.config['Skills']['skills']
-                    print(f"DEBUG: Raw skills string: {skills_str[:200]}...")  # Show first 200 chars
-                    
-                    skills_data = ast.literal_eval(skills_str)
-                    if isinstance(skills_data, dict):
-                        skills['skills'] = skills_data
-                        print(f"DEBUG: Parsed {len(skills_data)} skills from config")
-                        
-                        # Debug: Show which skills were loaded
-                        for skill_name, skill_data in skills_data.items():
-                            enabled = skill_data.get('enabled', False)
-                            key = skill_data.get('key', '')
-                            print(f"DEBUG: Skill {skill_name}: enabled={enabled}, key={key}")
-                    else:
-                        print("DEBUG: Skills data is not a dict")
-                except (ValueError, SyntaxError) as e:
-                    print(f"DEBUG: Error parsing skills: {e}")
-            else:
-                print("DEBUG: No 'skills' option found in Skills section")
-            
-            # Load rotations with better error handling
-            if self.config.has_option('Skills', 'rotations'):
-                try:
-                    rotations_str = self.config['Skills']['rotations']
-                    print(f"DEBUG: Raw rotations string: {rotations_str[:200]}...")
-                    
-                    rotations_data = ast.literal_eval(rotations_str)
-                    if isinstance(rotations_data, dict):
-                        skills['rotations'] = rotations_data
-                        print(f"DEBUG: Parsed {len(rotations_data)} rotations from config")
-                        
-                        # Debug: Show which rotations were loaded
-                        for rot_name, rot_data in rotations_data.items():
-                            rot_skills = rot_data.get('skills', [])
-                            print(f"DEBUG: Rotation {rot_name}: skills={rot_skills}")
-                    else:
-                        print("DEBUG: Rotations data is not a dict")
-                except (ValueError, SyntaxError) as e:
-                    print(f"DEBUG: Error parsing rotations: {e}")
-            else:
-                print("DEBUG: No 'rotations' option found in Skills section")
-            
-            # Load active rotation
-            if self.config.has_option('Skills', 'active_rotation'):
-                active_rot = self.config['Skills']['active_rotation']
+            if self.config.has_section('Skills'):
+                # --- Lógica de carga con JSON ---
+                
+                # Cargar skills
+                if self.config.has_option('Skills', 'skills'):
+                    try:
+                        skills_str = self.config.get('Skills', 'skills')
+                        skills['skills'] = json.loads(skills_str)
+                    except (json.JSONDecodeError, TypeError) as e:
+                        print(f"DEBUG: Error parsing 'skills' with JSON: {e}")
+
+                # Cargar rotations
+                if self.config.has_option('Skills', 'rotations'):
+                    try:
+                        rotations_str = self.config.get('Skills', 'rotations')
+                        skills['rotations'] = json.loads(rotations_str)
+                    except (json.JSONDecodeError, TypeError) as e:
+                        print(f"DEBUG: Error parsing 'rotations' with JSON: {e}")
+
+                # Cargar active_rotation (es un string simple, no necesita JSON)
+                # Usamos .get() que devuelve None si no existe, es más limpio.
+                active_rot = self.config.get('Skills', 'active_rotation', fallback=None)
                 if active_rot and active_rot != 'None':
                     skills['active_rotation'] = active_rot
-                    print(f"DEBUG: Active rotation: {active_rot}")
-                else:
-                    print("DEBUG: No active rotation set")
+
+                # Cargar global_cooldown (es un float, no necesita JSON)
+                skills['global_cooldown'] = self.config.getfloat(
+                    'Skills', 
+                    'global_cooldown', 
+                    fallback=0.5
+                )
             
-            # Load global cooldown
-            if self.config.has_option('Skills', 'global_cooldown'):
-                try:
-                    skills['global_cooldown'] = float(self.config['Skills']['global_cooldown'])
-                except ValueError:
-                    pass
-        else:
-            print("DEBUG: No Skills section found in config")
-        
-        print(f"DEBUG: Final skills config: {len(skills['skills'])} skills, {len(skills['rotations'])} rotations")
-        return skills
+            print(f"DEBUG: Final skills config loaded: {len(skills.get('skills', {}))} skills, {len(skills.get('rotations', {}))} rotations")
+            return skills
     
-    def set_skills(self, skills: Dict[str, Any]) -> None:
-        """Set skill configurations"""
+    def set_skills(self, skills_config: Dict[str, Any]) -> None:
+        """
+        Set skill configurations using robust JSON serialization for each key.
+        """
         if not self.config.has_section('Skills'):
             self.config.add_section('Skills')
         
-        # Save each component
-        self.config['Skills']['skills'] = str(skills.get('skills', {}))
-        self.config['Skills']['rotations'] = str(skills.get('rotations', {}))
-        self.config['Skills']['active_rotation'] = str(skills.get('active_rotation', None))
-        self.config['Skills']['global_cooldown'] = str(skills.get('global_cooldown', 0.5))
+        # --- Lógica de guardado con JSON ---
+
+        # Guardar skills (diccionario complejo)
+        self.config.set('Skills', 'skills', json.dumps(skills_config.get('skills', {})))
         
-        print(f"ConfigManager: Saved skills config with {len(skills.get('skills', {}))} skills and {len(skills.get('rotations', {}))} rotations")
+        # Guardar rotations (diccionario complejo)
+        self.config.set('Skills', 'rotations', json.dumps(skills_config.get('rotations', {})))
+        
+        # Guardar active_rotation (string simple)
+        self.config.set('Skills', 'active_rotation', str(skills_config.get('active_rotation', 'None')))
+        
+        # Guardar global_cooldown (float simple)
+        self.config.set('Skills', 'global_cooldown', str(skills_config.get('global_cooldown', 0.5)))
+        
+        print(f"ConfigManager: Saved skills config with {len(skills_config.get('skills', {}))} skills and {len(skills_config.get('rotations', {}))} rotations")
     
     def _validate_config(self) -> None:
         """Validate loaded configuration"""

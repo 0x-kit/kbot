@@ -25,7 +25,7 @@ class CombatManager:
         self.looting_config = {"enabled": True, "duration": 1, "initial_delay": 0.2, "loot_attempts": 2, "attempt_interval": 0.3, "loot_key": "f"}
         self.looting_state_tracker = {"start_time": 0, "_attempts_made": 0}
         self.last_kill_time = 0; self.mob_whitelist: List[str] = []; self.potion_threshold = 70; self.use_skills = True;  self.use_basic_attack_fallback = True; self.skill_priority_mode = "rotation"
-        self.timing = {'combat_log_interval': 2.0,'target_attempt_interval': 1.0, 'movement_interval_searching': 4.0, 'stuck_detection_searching': 10.0, 'attack_interval': 1.5, 'skill_interval': 0.3, 'post_combat_delay': 3.0}
+        self.timing = {'combat_log_interval': 2.0,'target_attempt_interval': 1.0, 'movement_interval_searching': 4.0, 'stuck_detection_searching': 10.0, 'attack_interval': 0.5, 'skill_interval': 2.25, 'post_combat_delay': 3.0}
         self.combat_stats = {'targets_acquired': 0, 'targets_lost': 0, 'skills_used': 0, 'attacks_made': 0, 'stuck_in_combat': 0, 'stuck_searching': 0}
         self.ocr_tolerance_threshold = 80
         self.last_combat_log_time = 0
@@ -90,7 +90,7 @@ class CombatManager:
             target_exists = game_state.get('target_exists', False)
             target_hp = game_state.get('target_hp', 0)
 
-            if not target_exists or target_hp <= 0:
+            if not target_exists or target_hp <= 0 and self.looting_config['enabled']:
                 self._transition_to_looting(current_time)
                 return
 
@@ -104,33 +104,46 @@ class CombatManager:
             self._perform_attack_routine(current_time)
 
     def _handle_looting_state(self, current_time: float):
-        time_in_state = current_time - self.looting_state_tracker["start_time"]
-        
-        if time_in_state > self.looting_config["duration"]: 
-            self.logger.info("Looting phase finished. Resuming search.")
-            # En lugar de ir a buscar, transicionamos al estado de espera.
-            self.state = CombatState.POST_COMBAT
-            # Guardamos el tiempo actual para saber cuándo empezó el delay.
-            self.last_kill_time = current_time 
-            return
-        
-        if time_in_state < self.looting_config["initial_delay"]: 
-            return
-        
-        attempts_made = self.looting_state_tracker.get("_attempts_made", 0)
-        
-        if attempts_made < self.looting_config["loot_attempts"]:
-            next_attempt_time = self.looting_config["initial_delay"] + (attempts_made * self.looting_config["attempt_interval"])
+            """
+            Lógica que se ejecuta mientras se está en el estado LOOTING.
+            Al finalizar, desactiva el modo caminar.
+            """
+            time_in_state = current_time - self.looting_state_tracker["start_time"]
+
+            # Si el tiempo total de looteo ha pasado...
+            if time_in_state > self.looting_config["duration"]:
+                self.logger.info("Looting phase finished.")
+                
+                # --- NUEVA LÓGICA ---
+                # 2. Desactivamos el modo caminar para volver a correr.
+                self.logger.debug("Switching back to run mode.")
+                # self.input_controller.send_key('z')
+                # --------------------
+                
+                # Transicionamos al estado de espera post-combate.
+                self.state = CombatState.POST_COMBAT
+                self.last_kill_time = current_time # Guardamos el tiempo para el delay
+                return
+
+            # El resto de la lógica de looteo permanece igual.
+            if time_in_state < self.looting_config["initial_delay"]: return
             
-            if time_in_state >= next_attempt_time:
-                self.input_controller.send_key(self.looting_config["loot_key"])
-                self.looting_state_tracker["_attempts_made"] = attempts_made + 1
+            attempts_made = self.looting_state_tracker.get("_attempts_made", 0)
+            if attempts_made < self.looting_config["loot_attempts"]:
+                next_attempt_time = self.looting_config["initial_delay"] + (attempts_made * self.looting_config["attempt_interval"])
+                if time_in_state >= next_attempt_time:
+                    self.logger.debug(f"Looting attempt #{attempts_made + 1}")
+                    self.input_controller.send_key(self.looting_config["loot_key"])
+                    self.looting_state_tracker["_attempts_made"] = attempts_made + 1
 
     def _handle_post_combat_state(self, current_time: float):
         """
         NUEVO MÉTODO: Simplemente espera a que pase el 'post_combat_delay'.
         """
         time_since_last_kill = current_time - self.last_kill_time
+
+        #elf._simple_unstuck_movement("Cancel potential not owed loot")
+
         
         # Comprobamos si el tiempo de espera ha terminado.
         if time_since_last_kill >= self.timing['post_combat_delay']:
@@ -189,9 +202,23 @@ class CombatManager:
                 return True
         return False
     def _transition_to_looting(self, current_time: float):
+        """
+        Prepara e inicia el estado de looteo, activando el modo caminar.
+        """
         self.logger.info(f"Target '{self.current_target}' defeated. Transitioning to LOOTING.")
-        self.combat_stats['targets_lost'] += 1; self.current_target = None; self.state = CombatState.LOOTING
-        self.looting_state_tracker["start_time"] = current_time; self.looting_state_tracker["_attempts_made"] = 0; self.last_kill_time = current_time
+        self.combat_stats['targets_lost'] += 1
+        self.current_target = None
+        
+        # --- NUEVA LÓGICA ---
+        # 1. Activamos el modo caminar ANTES de empezar a lootear.
+        # self.logger.debug("Switching to walk mode for safe looting.")
+        # self.input_controller.send_key('z')
+        # --------------------
+        
+        self.state = CombatState.LOOTING
+        self.looting_state_tracker["start_time"] = current_time
+        self.looting_state_tracker["_attempts_made"] = 0
+
     def _reset_stuck_detectors(self, current_time: float):
         """Reinicia los contadores de atasco Y el log de combate para un nuevo objetivo."""
         self.stuck_detector["hp_unchanged_since"] = current_time
@@ -265,3 +292,7 @@ class CombatManager:
         # Asegurarse de que el valor está en un rango razonable
         self.ocr_tolerance_threshold = max(50, min(100, tolerance))
         self.logger.info(f"OCR match tolerance set to {self.ocr_tolerance_threshold}%.")
+    def set_looting_enabled(self, enabled: bool):
+        """NUEVO MÉTODO: Permite al BotEngine activar/desactivar el looteo."""
+        self.looting_config['enabled'] = enabled
+        self.logger.info(f"Looting after combat set to: {enabled}")
