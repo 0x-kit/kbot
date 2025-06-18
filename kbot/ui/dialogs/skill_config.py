@@ -144,6 +144,7 @@ class SkillConfigDialog(QDialog):
                 "hp_potion",
                 "mp_potion",
                 "auto_attack",
+                "assist",
             ]
         )
         right_layout.addRow("Type:", self.skill_type_combo)

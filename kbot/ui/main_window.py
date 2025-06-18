@@ -1,6 +1,7 @@
 # kbot/ui/main_window.py
 
 import sys
+import os
 import traceback
 from typing import Dict, Any
 import os
@@ -51,6 +52,18 @@ class TantraBotMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Tantra Bot v1.0.0 - by 0xkit")
+        # 1. Obtener la ruta al directorio donde se encuentra ESTE archivo (main_window.py)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # 2. Construir la ruta completa y correcta al icono
+        icon_path = os.path.join(script_dir, "resources", "app_icon.ico")
+
+        # 3. Comprobar si el icono existe antes de establecerlo (buena práctica)
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        else:
+            print(f"ADVERTENCIA: No se encontró el icono en la ruta: {icon_path}")
+
         self.setMinimumSize(700, 400)
 
         from utils.logger import BotLogger

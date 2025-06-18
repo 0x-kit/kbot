@@ -57,10 +57,14 @@ class CombatManager:
         self.looting_config = {
             "enabled": True,
             "duration": 1,
-            "initial_delay": 0.2,
+            "initial_delay": 0.0,
             "loot_attempts": 2,
-            "attempt_interval": 0.3,
+            "attempt_interval": 0.05,
             "loot_key": "f",
+            "cancel_movement": True,  # Activar/desactivar la cancelación
+            "cancel_delay": 0.1,  # Cuánto esperar DESPUÉS de pulsar loot antes de cancelar (tiempo para recoger)
+            "cancel_key": "d",  # Tecla para cancelar el movimiento (un pequeño giro)
+            "cancel_hold_duration": 5.0,  # Duración en segundos para mantener presionada la tecla de cancelación.
         }
         self.looting_state_tracker = {"start_time": 0, "_attempts_made": 0}
         self.last_kill_time = 0
@@ -68,6 +72,8 @@ class CombatManager:
         self.potion_threshold = 70
         self.use_skills = True
         self.use_basic_attack_fallback = True
+        self.assist_mode_enabled = False
+        self.last_assist_attempt = 0
         self.skill_priority_mode = "rotation"
         self.timing = {
             "combat_log_interval": 2.0,
@@ -214,38 +220,56 @@ class CombatManager:
 
     def _handle_looting_state(self, current_time: float):
         """
-        Lógica que se ejecuta mientras se está en el estado LOOTING.
-        Al finalizar, desactiva el modo caminar.
+        Lógica de looteo MEJORADA que incluye una cancelación de movimiento
+        para evitar que el personaje se aleje de la zona.
         """
         time_in_state = current_time - self.looting_state_tracker["start_time"]
 
-        # Si el tiempo total de looteo ha pasado...
+        # Si la fase de looteo ha terminado, pasamos a la siguiente etapa.
         if time_in_state > self.looting_config["duration"]:
             self.logger.info("Looting phase finished.")
-
-            # --- NUEVA LÓGICA ---
-            # 2. Desactivamos el modo caminar para volver a correr.
-            self.logger.debug("Switching back to run mode.")
-            # self.input_controller.send_key('z')
-            # --------------------
-
-            # Transicionamos al estado de espera post-combate.
             self.state = CombatState.POST_COMBAT
-            self.last_kill_time = current_time  # Guardamos el tiempo para el delay
+            self.last_kill_time = current_time
             return
 
-        # El resto de la lógica de looteo permanece igual.
+        # Esperamos el delay inicial antes de hacer nada.
         if time_in_state < self.looting_config["initial_delay"]:
             return
 
         attempts_made = self.looting_state_tracker.get("_attempts_made", 0)
+
+        # Comprobamos si todavía nos quedan intentos de looteo por hacer.
         if attempts_made < self.looting_config["loot_attempts"]:
+            # Calculamos cuándo debe ocurrir el próximo intento.
             next_attempt_time = self.looting_config["initial_delay"] + (
                 attempts_made * self.looting_config["attempt_interval"]
             )
+
+            # Si ya es hora del siguiente intento...
             if time_in_state >= next_attempt_time:
-                self.logger.debug(f"Looting attempt #{attempts_made + 1}")
+                self.logger.debug(f"Looting attempt #{attempts_made + 1}...")
+
+                # 1. Pulsamos la tecla de loot.
                 self.input_controller.send_key(self.looting_config["loot_key"])
+
+                if self.looting_config["cancel_movement"]:
+                    # 3. Esperamos el 'cancel_delay'.
+                    time.sleep(self.looting_config["cancel_delay"])
+
+                    # 4. Enviamos la tecla de cancelación para interrumpir el movimiento.
+                    cancel_key = self.looting_config["cancel_key"]
+                    hold_duration = self.looting_config["cancel_hold_duration"]
+
+                    self.logger.debug(
+                        f"Holding '{cancel_key}' for {hold_duration}s to cancel loot movement."
+                    )
+
+                    # --- LÍNEA MODIFICADA ---
+                    # Usamos hold_key en lugar de send_key para una cancelación más fiable.
+                    self.input_controller.hold_key(cancel_key, hold_duration)
+                    # --- FIN DE LA MODIFICACIÓN ---
+
+                # 5. Incrementamos el contador de intentos.
                 self.looting_state_tracker["_attempts_made"] = attempts_made + 1
 
     def _handle_post_combat_state(self, current_time: float):
