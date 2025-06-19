@@ -314,7 +314,7 @@ class SkillConfigDialog(QDialog):
             )
 
     def _save_configuration(self):
-        """Save current configuration to skill manager and config"""
+        """✅ ARREGLADO - Save current configuration with dynamic name handling"""
         try:
             # Save current form data first
             if self.current_skill_name:
@@ -328,7 +328,10 @@ class SkillConfigDialog(QDialog):
 
             print(
                 f"Saving {len(self.skills_data)} skills and {len(self.rotations_data)} rotations"
-            )  # Debug
+            )
+
+            # ✅ ARREGLO CLAVE: Actualizar nombres de skills en rotaciones
+            self._update_rotation_skill_names()
 
             # Prepare configuration for skill manager
             skills_config = {}
@@ -343,7 +346,7 @@ class SkillConfigDialog(QDialog):
                     "description": skill_data["desc"],
                     "enabled": skill_data["enabled"],
                 }
-                print(f"  Skill: {skill_name} -> {skills_config[skill_name]}")  # Debug
+                print(f"  Skill: {skill_name} -> {skills_config[skill_name]}")
 
             rotations_config = {}
             for rot_name, rot_data in self.rotations_data.items():
@@ -352,9 +355,7 @@ class SkillConfigDialog(QDialog):
                     "repeat": rot_data["repeat"],
                     "enabled": rot_data.get("enabled", True),
                 }
-                print(
-                    f"  Rotation: {rot_name} -> {rotations_config[rot_name]}"
-                )  # Debug
+                print(f"  Rotation: {rot_name} -> {rotations_config[rot_name]}")
 
             # Import to skill manager
             full_config = {
@@ -366,9 +367,21 @@ class SkillConfigDialog(QDialog):
 
             self.skill_manager.import_config(full_config)
 
-            # Save to config file if available
+            # ✅ ARREGLO: Usar el método correcto para guardar
             if self.config_manager:
-                self.config_manager.set_skills(full_config)
+                # Use the compatibility method or the correct unified method
+                if hasattr(self.config_manager, "set_skills_config"):
+                    unified_config = {
+                        "global_cooldown": full_config.get("global_cooldown", 0.15),
+                        "active_rotation": full_config.get("active_rotation"),
+                        "definitions": full_config.get("skills", {}),
+                        "rotations": full_config.get("rotations", {}),
+                    }
+                    self.config_manager.set_skills_config(unified_config)
+                else:
+                    # Fallback to old method if available
+                    self.config_manager.set_skills(full_config)
+
                 self.config_manager.save_config()
 
             QMessageBox.information(
@@ -385,6 +398,82 @@ class SkillConfigDialog(QDialog):
             error_msg = f"Failed to save configuration: {e}\n\nFull error:\n{traceback.format_exc()}"
             QMessageBox.critical(self, "Save Error", error_msg)
             print(error_msg)
+
+    def _update_rotation_skill_names(self):
+        """✅ NUEVO - Actualizar nombres de skills en rotaciones cuando se renombran"""
+        # Create a mapping of old names to new names
+        skill_name_mapping = {}
+
+        # Check if we have skills that were renamed
+        for current_name, skill_data in self.skills_data.items():
+            # If the skill name in data is different from the key, it was renamed
+            if (
+                skill_data.get("original_name")
+                and skill_data["original_name"] != current_name
+            ):
+                skill_name_mapping[skill_data["original_name"]] = current_name
+
+        # Update all rotations with the new skill names
+        for rotation_name, rotation_data in self.rotations_data.items():
+            updated_skills = []
+
+            for skill_name in rotation_data["skills"]:
+                # Check if this skill was renamed
+                if skill_name in skill_name_mapping:
+                    new_name = skill_name_mapping[skill_name]
+                    updated_skills.append(new_name)
+                    print(
+                        f"Updated rotation '{rotation_name}': '{skill_name}' -> '{new_name}'"
+                    )
+                else:
+                    # Check if the skill still exists (might have been renamed without tracking)
+                    if skill_name in self.skills_data:
+                        updated_skills.append(skill_name)
+                    else:
+                        # Try to find the skill by key or other properties
+                        found_skill = self._find_skill_by_properties(skill_name)
+                        if found_skill:
+                            updated_skills.append(found_skill)
+                            print(
+                                f"Updated rotation '{rotation_name}': '{skill_name}' -> '{found_skill}' (found by properties)"
+                            )
+                        else:
+                            print(
+                                f"WARNING: Skill '{skill_name}' in rotation '{rotation_name}' not found, removing from rotation"
+                            )
+
+            # Update the rotation with the corrected skill names
+            rotation_data["skills"] = updated_skills
+
+    def _find_skill_by_properties(self, old_skill_name: str) -> str:
+        """✅ NUEVO - Find a skill by its properties when name lookup fails"""
+        # Try to match by common patterns
+        skill_patterns = {
+            "Skill 1": ["1"],
+            "Skill 2": ["2", "3"],  # Key might have changed
+            "Basic Attack": ["r"],
+            "HP Potion": ["0"],
+            "MP Potion": ["9"],
+            "Assist": ["q"],
+        }
+
+        # If we know the pattern for this skill, try to find it
+        if old_skill_name in skill_patterns:
+            expected_keys = skill_patterns[old_skill_name]
+
+            for skill_name, skill_data in self.skills_data.items():
+                if skill_data["key"] in expected_keys:
+                    return skill_name
+
+        # If no pattern match, try partial name matching
+        for skill_name in self.skills_data.keys():
+            if (
+                old_skill_name.lower() in skill_name.lower()
+                or skill_name.lower() in old_skill_name.lower()
+            ):
+                return skill_name
+
+        return None
 
     def _refresh_skill_tree(self):
         """Refresh the skill tree widget"""
@@ -453,10 +542,7 @@ class SkillConfigDialog(QDialog):
         self.remove_skill_btn.setEnabled(True)
 
     def _save_current_skill_data(self):
-        """
-        CORREGIDO: Guarda los datos del formulario en el diccionario de datos,
-        manejando correctamente el cambio de nombre.
-        """
+        """✅ ARREGLADO - Guarda los datos del formulario con tracking de nombres"""
         if (
             not self.current_skill_name
             or self.current_skill_name not in self.skills_data
@@ -466,27 +552,31 @@ class SkillConfigDialog(QDialog):
         old_name = self.current_skill_name
         new_name = self.skill_name_edit.text().strip()
 
-        # Si el nombre no ha cambiado, simplemente actualizamos los datos.
+        # Si el nombre no ha cambiado, simplemente actualizamos los datos
         if old_name == new_name:
             skill_data = self.skills_data[old_name]
-        # Si el nombre ha cambiado...
         else:
-            # Comprobamos si el nuevo nombre ya existe (y no es el mismo que el antiguo)
-            if new_name in self.skills_data:
+            # Si el nombre ha cambiado...
+            if new_name in self.skills_data and new_name != old_name:
                 QMessageBox.warning(
                     self,
                     "Duplicate Name",
                     f"A skill named '{new_name}' already exists.",
                 )
-                self.skill_name_edit.setText(old_name)  # Revertir el cambio en la UI
+                self.skill_name_edit.setText(old_name)
                 return
 
-            # Creamos una nueva entrada y eliminamos la antigua
+            # Crear nueva entrada y eliminar la antigua
             skill_data = self.skills_data.pop(old_name)
             self.skills_data[new_name] = skill_data
+
+            # ✅ TRACK del nombre original para rotaciones
+            if "original_name" not in skill_data:
+                skill_data["original_name"] = old_name
+
             self.logger_info(f"Skill '{old_name}' renamed to '{new_name}'.")
 
-        # Actualizamos todos los campos del diccionario
+        # Actualizar todos los campos del diccionario
         skill_data["name"] = new_name
         skill_data["key"] = self.skill_key_edit.text().strip()
         skill_data["cooldown"] = self.skill_cooldown_spin.value()
@@ -496,7 +586,7 @@ class SkillConfigDialog(QDialog):
         skill_data["enabled"] = self.skill_enabled_cb.isChecked()
         skill_data["desc"] = self.skill_desc_edit.toPlainText()
 
-        # Actualizamos el nombre del item actual para reflejar el cambio
+        # Actualizar el nombre del item actual
         self.current_skill_name = new_name
 
     def _connect_skill_signals(self):
@@ -543,9 +633,7 @@ class SkillConfigDialog(QDialog):
             self._update_available_skills()
 
     def _add_skill(self):
-        """
-        Añade un nuevo skill con un nombre único temporal y lo selecciona para su edición.
-        """
+        """✅ ARREGLADO - Añade skill con tracking de nombres originales"""
         # Generar un nombre único para la nueva habilidad
         i = 1
         while f"New Skill {i}" in self.skills_data:
@@ -562,24 +650,23 @@ class SkillConfigDialog(QDialog):
             "mana": 0,
             "enabled": True,
             "desc": "",
+            "original_name": new_skill_name,  # ✅ Track original name
         }
 
-        # Añadir al diccionario de datos y al árbol visual
+        # Añadir al diccionario y al árbol
         self.skills_data[new_skill_name] = new_skill_data
         self._add_skill_to_tree(new_skill_data)
 
-        # Seleccionar el nuevo item en el árbol para que el usuario pueda editarlo
+        # Seleccionar el nuevo item
         for i in range(self.skill_tree.topLevelItemCount()):
             item = self.skill_tree.topLevelItem(i)
             if item.text(0) == new_skill_name:
                 self.skill_tree.setCurrentItem(item)
-                self._on_skill_selected(
-                    item, 0
-                )  # Llama manualmente para rellenar el formulario
+                self._on_skill_selected(item, 0)
                 break
 
-        self.skill_name_edit.setFocus()  # Pone el foco en el campo de nombre
-        self.skill_name_edit.selectAll()  # Selecciona todo el texto para que el usuario pueda sobrescribir
+        self.skill_name_edit.setFocus()
+        self.skill_name_edit.selectAll()
 
     def _remove_skill(self):
         """Remove the selected skill"""

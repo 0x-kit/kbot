@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional, Callable
 from enum import Enum
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from config.config_manager import ConfigManager
+from config.unified_config_manager import UnifiedConfigManager as ConfigManager
 from core.pixel_analyzer import PixelAnalyzer
 from core.window_manager import WindowManager
 from core.input_controller import InputController
@@ -120,28 +120,78 @@ class BotEngine(QObject):
             self.error_occurred.emit(str(e))
             return False
 
-    # El resto del archivo es idéntico al que me proporcionaste.
-    # Pego todo para que sea un reemplazo completo.
     def _setup_from_config(self) -> None:
         """
-        Configura los componentes del bot usando los valores del ConfigManager.
-        Este método se llama una sola vez durante la inicialización.
+        ✅ VERSIÓN ACTUALIZADA - Configura los componentes usando el sistema unificado
         """
         try:
-            self.logger.info("Setting up bot components from configuration...")
+            self.logger.info("Setting up bot components from unified configuration...")
 
-            # --- LÓGICA UNIFICADA ---
-            # Reutilizamos el método de actualización para evitar duplicar código.
+            # Aplicar configuración usando métodos especializados
             self.update_components_from_config()
 
-            # Configuraciones que solo se hacen una vez al inicio.
-            self._setup_enhanced_skills()
+            # Configurar skills desde la nueva estructura
+            self._setup_enhanced_skills_unified()
 
-            self.logger.info("Bot configured successfully at startup.")
+            self.logger.info("Bot configured successfully with unified config system.")
 
         except Exception as e:
-            self.logger.error(f"Failed to setup from config: {e}")
-            raise BotError(f"Configuration setup failed: {e}")
+            self.logger.error(f"Failed to setup from unified config: {e}")
+            raise BotError(f"Unified configuration setup failed: {e}")
+
+    def _setup_enhanced_skills_unified(self) -> None:
+        """✅ NUEVO - Setup skills usando configuración unificada"""
+        try:
+            # Limpiar skills existentes
+            self.skill_manager.skills.clear()
+            self.skill_manager.usage_stats.clear()
+            self.skill_manager.rotations.clear()
+
+            # Obtener configuración de skills del sistema unificado
+            skills_config = self.config_manager.get_skills_config()
+
+            self.logger.info(
+                f"Loading skills config: {len(skills_config.get('definitions', {}))} skills found"
+            )
+
+            if skills_config and skills_config.get("definitions"):
+                self.logger.info("Loading skills from unified configuration")
+                try:
+                    # Preparar configuración en formato esperado por SkillManager
+                    unified_skill_config = {
+                        "skills": skills_config.get("definitions", {}),
+                        "rotations": skills_config.get("rotations", {}),
+                        "active_rotation": skills_config.get("active_rotation"),
+                        "global_cooldown": skills_config.get("global_cooldown", 0.15),
+                    }
+
+                    self.skill_manager.import_config(unified_skill_config)
+                    self.logger.info(
+                        f"Imported {len(self.skill_manager.skills)} skills from unified config"
+                    )
+
+                except Exception as e:
+                    self.logger.error(f"Failed to import unified skills config: {e}")
+                    self._create_basic_skills_fallback()
+            else:
+                self.logger.info("No saved skills config found, creating basic skills")
+                self._create_basic_skills_fallback()
+
+            # Configurar rotación activa si existe
+            if (
+                skills_config.get("active_rotation")
+                and skills_config["active_rotation"] in self.skill_manager.rotations
+            ):
+                self.skill_manager.set_active_rotation(skills_config["active_rotation"])
+                self.logger.info(
+                    f"Set active rotation from unified config: {skills_config['active_rotation']}"
+                )
+
+        except Exception as e:
+            self.logger.error(f"Failed to setup unified skills: {e}")
+            import traceback
+
+            self.logger.error(traceback.format_exc())
 
     def _create_basic_skills_fallback(self) -> None:
         try:
@@ -596,55 +646,72 @@ class BotEngine(QObject):
 
     def update_components_from_config(self):
         """
-        Actualiza los componentes internos usando la configuración
-        que ya está en memoria en el ConfigManager.
-        Este método ahora es la ÚNICA fuente de verdad para la configuración dinámica.
+        ✅ VERSIÓN ACTUALIZADA - Usa métodos especializados del sistema unificado
         """
         try:
-            # Cargar y aplicar whitelist
+            # Obtener configuraciones usando métodos especializados
+            behavior = self.config_manager.get_combat_behavior()
+            timing = self.config_manager.get_combat_timing()
             whitelist = self.config_manager.get_whitelist()
+
+            # Aplicar configuración de comportamiento
             self.combat_manager.set_mob_whitelist(whitelist)
+            self.combat_manager.set_potion_threshold(
+                behavior.get("potion_threshold", 70)
+            )
+            self.combat_manager.set_ocr_tolerance(behavior.get("ocr_tolerance", 85))
+            self.combat_manager.set_looting_enabled(
+                behavior.get("enable_looting", True)
+            )
+            self.combat_manager.set_assist_mode(behavior.get("assist_mode", False))
+            self.combat_manager.set_skill_usage(behavior.get("use_skills", True))
 
-            # Cargar y aplicar umbral de poción
-            threshold = self.config_manager.get_option("potion_threshold", 70)
-            self.combat_manager.set_potion_threshold(threshold)
-
-            # Cargar y aplicar tolerancia de OCR
-            ocr_tolerance = self.config_manager.get_option("ocr_tolerance", 85)
-            self.combat_manager.set_ocr_tolerance(ocr_tolerance)
-
-            # Cargar y aplicar looteo
-            enable_looting = self.config_manager.get_option("enable_looting", True)
-            self.combat_manager.set_looting_enabled(enable_looting)
-
-            assist_mode = self.config_manager.get_option("assist_mode", False)
-            self.combat_manager.set_assist_mode(assist_mode)
-
-            # --- LÓGICA CORREGIDA Y FINAL ---
-            # Leemos el diccionario de timing COMPLETO del config manager.
-            # Este diccionario ya contiene el 'skill_interval' que la UI añadió.
-            timing = self.config_manager.get_timing()
-
-            # Pasamos el diccionario completo al CombatManager.
+            # Aplicar configuración de timing
             self.combat_manager.set_timing(timing)
-            # --------------------------------
 
-            self.logger.info("Bot components updated from in-memory configuration.")
+            # Actualizar configuración de looteo
+            loot_config = {
+                "duration": behavior.get("loot_duration", 0.8),
+                "initial_delay": behavior.get("loot_initial_delay", 0.1),
+                "loot_attempts": behavior.get("loot_attempts", 2),
+                "attempt_interval": behavior.get("loot_attempt_interval", 0.2),
+                "loot_key": behavior.get("loot_key", "f"),
+            }
+
+            # Aplicar configuración de looteo al CombatManager
+            if hasattr(self.combat_manager, "looting_config"):
+                self.combat_manager.looting_config.update(loot_config)
+
+            self.logger.info("Bot components updated from unified configuration.")
+
         except Exception as e:
-            self.logger.error(f"Failed to update components from config: {e}")
+            self.logger.error(f"Failed to update components from unified config: {e}")
 
     def save_config(self) -> bool:
         """
-        Guarda la configuración actual en el disco.
-        La configuración ya debería estar actualizada en memoria.
+        ✅ VERSIÓN ACTUALIZADA - Guarda usando sistema unificado
         """
         try:
+            # Exportar configuración de skills
             skill_config = self.skill_manager.export_config()
-            self.config_manager.set_skills(skill_config)
+
+            # Guardar configuración de skills en el sistema unificado
+            unified_skills_config = {
+                "global_cooldown": skill_config.get("global_cooldown", 0.15),
+                "active_rotation": skill_config.get("active_rotation"),
+                "definitions": skill_config.get("skills", {}),
+                "rotations": skill_config.get("rotations", {}),
+            }
+
+            self.config_manager.set_skills_config(unified_skills_config)
+
+            # Guardar archivo
             self.config_manager.save_config()
+
             return True
+
         except Exception as e:
-            self.logger.error(f"Failed to save configuration to file: {e}")
+            self.logger.error(f"Failed to save unified configuration: {e}")
             return False
 
     def get_skill_manager(self) -> SkillManager:

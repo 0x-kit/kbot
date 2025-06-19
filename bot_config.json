@@ -1,0 +1,154 @@
+{
+  "version": "2.0",
+  "combat": {
+    "timing": {
+      "skill_interval": 1.0,
+      "attack_interval": 1.2,
+      "target_attempt_interval": 0.3,
+      "post_combat_delay": 1.5,
+      "assist_interval": 0.8,
+      "stuck_detection_searching": 15.0,
+      "stuck_in_combat_timeout": 8.0,
+      "unstuck_cooldown": 2.5,
+      "combat_log_interval": 3.5,
+      "vitals_check_interval": 0.5,
+      "stats_update_interval": 5.0
+    },
+    "behavior": {
+      "auto_potions": true,
+      "potion_threshold": 70,
+      "enable_looting": true,
+      "assist_mode": false,
+      "use_skills": true,
+      "ocr_tolerance": 82,
+      "fuzzy_match_threshold": 80,
+      "loot_duration": 0.8,
+      "loot_initial_delay": 0.1,
+      "loot_attempts": 2,
+      "loot_attempt_interval": 0.2,
+      "loot_key": "f",
+      "auto_pots": true
+    },
+    "whitelist": [
+      "*"
+    ]
+  },
+  "regions": {
+    "hp": [
+      4,
+      20,
+      168,
+      36
+    ],
+    "mp": [
+      4,
+      36,
+      168,
+      51
+    ],
+    "target": [
+      4,
+      66,
+      168,
+      75
+    ],
+    "target_name": [
+      4,
+      55,
+      168,
+      70
+    ]
+  },
+  "skills": {
+    "global_cooldown": 0.2,
+    "definitions": {
+      "Basic Attack": {
+        "key": "r",
+        "cooldown": 1,
+        "skill_type": "auto_attack",
+        "priority": 1,
+        "mana_cost": 0,
+        "conditions": [],
+        "description": "Basic attack skill",
+        "enabled": true
+      },
+      "HP Potion": {
+        "key": "0",
+        "cooldown": 0,
+        "skill_type": "hp_potion",
+        "priority": 10,
+        "mana_cost": 0,
+        "conditions": [],
+        "description": "Emergency HP potion",
+        "enabled": true
+      },
+      "MP Potion": {
+        "key": "9",
+        "cooldown": 0,
+        "skill_type": "mp_potion",
+        "priority": 10,
+        "mana_cost": 0,
+        "conditions": [],
+        "description": "Emergency MP potion",
+        "enabled": true
+      },
+      "Assist": {
+        "key": "q",
+        "cooldown": 1,
+        "skill_type": "assist",
+        "priority": 1,
+        "mana_cost": 0,
+        "conditions": [],
+        "description": "Assist party leader",
+        "enabled": true
+      },
+      "Amada": {
+        "key": "2",
+        "cooldown": 1,
+        "skill_type": "offensive",
+        "priority": 3,
+        "mana_cost": 10,
+        "conditions": [],
+        "description": "Offensive skill slot 1",
+        "enabled": true
+      },
+      "Biz": {
+        "key": "3",
+        "cooldown": 1,
+        "skill_type": "offensive",
+        "priority": 3,
+        "mana_cost": 15,
+        "conditions": [],
+        "description": "Offensive skill slot 2",
+        "enabled": true
+      }
+    },
+       "rotations": {
+      "BasicCombo": {
+        "skills": ["Basic Attack", "Amada", "Bizs"],
+        "repeat": true,
+        "enabled": true
+      }
+    },
+    "active_rotation": "BasicCombo"
+  },
+  "ui": {
+    "refresh_interval": 1000,
+    "log_max_lines": 1000,
+    "auto_scroll_logs": true,
+    "window_size": [
+      1200,
+      800
+    ],
+    "window_position": [
+      100,
+      100
+    ]
+  },
+  "debug": {
+    "log_level": "INFO",
+    "save_screenshots": false,
+    "performance_monitoring": true,
+    "verbose_combat_logs": false
+  }
+}

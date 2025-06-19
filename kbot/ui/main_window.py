@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
     QFileDialog,
+    QFrame,
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot, QThread, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
@@ -51,47 +52,28 @@ class TantraBotMainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Tantra Bot v1.0.0 - by 0xkit")
-        # 1. Obtener la ruta al directorio donde se encuentra ESTE archivo (main_window.py)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # 2. Construir la ruta completa y correcta al icono
-        icon_path = os.path.join(script_dir, "resources", "app_icon.ico")
-
-        # 3. Comprobar si el icono existe antes de establecerlo (buena práctica)
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
-        else:
-            print(f"ADVERTENCIA: No se encontró el icono en la ruta: {icon_path}")
-
+        self.setWindowTitle("Tantra Bot v2.0.0 - by 0xkit (Unified Config)")
         self.setMinimumSize(700, 400)
 
         from utils.logger import BotLogger
 
         self.logger = BotLogger("MainWindow")
 
-        # --- LÓGICA DE HILOS ---
+        # --- LÓGICA DE HILOS (sin cambios) ---
         self.bot_thread = QThread()
         self.bot_worker = BotWorker()
-
-        # Mueve el worker al hilo. Esto es crucial.
         self.bot_worker.moveToThread(self.bot_thread)
-
-        # El bot_engine ahora vive dentro del worker.
         self.bot_engine = self.bot_worker.bot_engine
-        # ---------------------
 
         self._setup_ui()
         self._setup_menu_bar()
         self._setup_status_bar()
-        self._connect_signals()  # Conectará las señales al worker
-        self._load_configuration()
+        self._connect_signals()
+        self._load_configuration()  # Usa el sistema unificado
 
-        # Inicia el hilo. Ahora está esperando señales.
         self.bot_thread.started.connect(self.bot_worker.initialize_in_thread)
         self.bot_thread.start()
 
-        # El refresh timer para la UI se queda en el hilo principal, lo cual es correcto.
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._update_ui)
         self.refresh_timer.start(1000)
@@ -328,13 +310,14 @@ class TantraBotMainWindow(QMainWindow):
         parent_layout.addWidget(window_group)
 
     def _create_options_group(self, parent_layout):
+        """✅ MODIFICADO - Grupo de opciones con botón avanzado"""
         options_group = QGroupBox("Options")
         options_layout = QGridLayout(options_group)
 
         # Fila 0: Checkbox de Auto Potions
         self.auto_pots_cb = QCheckBox("Auto Potions (HP / MP)")
         self.auto_pots_cb.setChecked(True)
-        options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2)  # Ocupa 2 columnas
+        options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2)
 
         # Fila 1: Checkbox de Looteo
         self.enable_looting_cb = QCheckBox("Enable Looting")
@@ -342,15 +325,15 @@ class TantraBotMainWindow(QMainWindow):
             "If checked, the bot will press the loot key after each kill."
         )
         self.enable_looting_cb.setChecked(True)
-        options_layout.addWidget(self.enable_looting_cb, 1, 0, 1, 2)  # Ocupa 2 columnas
+        options_layout.addWidget(self.enable_looting_cb, 1, 0, 1, 2)
 
         # Fila 2: Checkbox de Modo Asistir
         self.assist_mode_cb = QCheckBox("Assist Mode")
         self.assist_mode_cb.setToolTip(
             "If checked, the bot will not search for targets and will use the 'Assist' skill instead."
         )
-        self.assist_mode_cb.setChecked(False)  # Por defecto desactivado
-        options_layout.addWidget(self.assist_mode_cb, 2, 0, 1, 2)  # Ocupa 2 columnas
+        self.assist_mode_cb.setChecked(False)
+        options_layout.addWidget(self.assist_mode_cb, 2, 0, 1, 2)
 
         # Fila 3: Potion Threshold
         options_layout.addWidget(QLabel("Potion Threshold:"), 3, 0)
@@ -376,7 +359,7 @@ class TantraBotMainWindow(QMainWindow):
         self.skill_interval_spin = QDoubleSpinBox()
         self.skill_interval_spin.setRange(0.5, 5.0)
         self.skill_interval_spin.setSingleStep(0.1)
-        self.skill_interval_spin.setValue(1.8)
+        self.skill_interval_spin.setValue(1.0)
         self.skill_interval_spin.setSuffix(" s")
         self.skill_interval_spin.setToolTip(
             "Global Cooldown (GCD). Time to wait between using skills."
@@ -394,6 +377,40 @@ class TantraBotMainWindow(QMainWindow):
             "Time to wait after looting before searching for a new target."
         )
         options_layout.addWidget(self.post_combat_delay_spin, 6, 1)
+
+        # ✅ NUEVO - Separador visual
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        separator.setStyleSheet("color: #cccccc;")
+        options_layout.addWidget(separator, 7, 0, 1, 2)
+
+        # ✅ NUEVO - Botón de configuración avanzada
+        self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
+        self.advanced_config_btn.setToolTip(
+            "Open advanced timing and behavior configuration dialog"
+        )
+        self.advanced_config_btn.clicked.connect(self._open_advanced_config)
+        self.advanced_config_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #e8f4ff;
+                border: 2px solid #4CAF50;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #d0e8ff;
+                border-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #b8dcff;
+            }
+        """
+        )
+        options_layout.addWidget(self.advanced_config_btn, 8, 0, 1, 2)
 
         parent_layout.addWidget(options_group)
 
@@ -429,7 +446,10 @@ class TantraBotMainWindow(QMainWindow):
 
     def _setup_menu_bar(self):
         menubar = self.menuBar()
+
+        # File Menu
         file_menu = menubar.addMenu("File")
+
         load_profile_action = QAction("Load Profile...", self)
         load_profile_action.triggered.connect(self._load_profile)
         file_menu.addAction(load_profile_action)
@@ -437,28 +457,53 @@ class TantraBotMainWindow(QMainWindow):
         save_profile_as_action = QAction("Save Profile As...", self)
         save_profile_as_action.triggered.connect(self._save_profile_as)
         file_menu.addAction(save_profile_as_action)
+
         save_action = QAction("Save All Changes", self)
         save_action.triggered.connect(self._save_configuration)
         file_menu.addAction(save_action)
+
         file_menu.addSeparator()
+
         exit_action = QAction("Exit", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+
+        # Tools Menu - MODIFICADO
         tools_menu = menubar.addMenu("Tools")
+
+        # Configuraciones existentes
         regions_action = QAction("Configure Regions", self)
         regions_action.triggered.connect(self._configure_regions)
         tools_menu.addAction(regions_action)
+
         skills_action = QAction("Configure Skills", self)
         skills_action.triggered.connect(self._open_skill_config)
         tools_menu.addAction(skills_action)
+
+        # ✅ NUEVO - Configuración avanzada
         tools_menu.addSeparator()
+        advanced_config_action = QAction("⚙️ Advanced Configuration", self)
+        advanced_config_action.setToolTip(
+            "Open advanced timing and behavior configuration"
+        )
+        advanced_config_action.triggered.connect(self._open_advanced_config)
+        tools_menu.addAction(advanced_config_action)
+
+        # Separador antes de tests
+        tools_menu.addSeparator()
+
+        # Tests existentes
         test_pixels_action = QAction("Test Pixel Accuracy", self)
         test_pixels_action.triggered.connect(self._test_pixels)
         tools_menu.addAction(test_pixels_action)
+
         test_ocr_action = QAction("Test OCR", self)
         test_ocr_action.triggered.connect(self._test_ocr)
         tools_menu.addAction(test_ocr_action)
+
+        # Help Menu
         help_menu = menubar.addMenu("Help")
+
         about_action = QAction("About", self)
         about_action.triggered.connect(self._show_about)
         help_menu.addAction(about_action)
@@ -489,56 +534,404 @@ class TantraBotMainWindow(QMainWindow):
         self.select_window_btn.clicked.connect(self._select_window)
         self.save_changes_btn.clicked.connect(self._save_configuration)
 
+    def _setup_menu_bar(self):
+        menubar = self.menuBar()
+
+        # File Menu
+        file_menu = menubar.addMenu("File")
+
+        load_profile_action = QAction("Load Profile...", self)
+        load_profile_action.triggered.connect(self._load_profile)
+        file_menu.addAction(load_profile_action)
+
+        save_profile_as_action = QAction("Save Profile As...", self)
+        save_profile_as_action.triggered.connect(self._save_profile_as)
+        file_menu.addAction(save_profile_as_action)
+
+        save_action = QAction("Save All Changes", self)
+        save_action.triggered.connect(self._save_configuration)
+        file_menu.addAction(save_action)
+
+        file_menu.addSeparator()
+
+        exit_action = QAction("Exit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+
+        # Tools Menu - MODIFICADO
+        tools_menu = menubar.addMenu("Tools")
+
+        # Configuraciones existentes
+        regions_action = QAction("Configure Regions", self)
+        regions_action.triggered.connect(self._configure_regions)
+        tools_menu.addAction(regions_action)
+
+        skills_action = QAction("Configure Skills", self)
+        skills_action.triggered.connect(self._open_skill_config)
+        tools_menu.addAction(skills_action)
+
+        # ✅ NUEVO - Configuración avanzada
+        tools_menu.addSeparator()
+        advanced_config_action = QAction("⚙️ Advanced Configuration", self)
+        advanced_config_action.setToolTip(
+            "Open advanced timing and behavior configuration"
+        )
+        advanced_config_action.triggered.connect(self._open_advanced_config)
+        tools_menu.addAction(advanced_config_action)
+
+        # Separador antes de tests
+        tools_menu.addSeparator()
+
+        # Tests existentes
+        test_pixels_action = QAction("Test Pixel Accuracy", self)
+        test_pixels_action.triggered.connect(self._test_pixels)
+        tools_menu.addAction(test_pixels_action)
+
+        test_ocr_action = QAction("Test OCR", self)
+        test_ocr_action.triggered.connect(self._test_ocr)
+        tools_menu.addAction(test_ocr_action)
+
+        # Help Menu
+        help_menu = menubar.addMenu("Help")
+
+        about_action = QAction("About", self)
+        about_action.triggered.connect(self._show_about)
+        help_menu.addAction(about_action)
+
+    def _create_options_group(self, parent_layout):
+        """✅ MODIFICADO - Grupo de opciones con botón avanzado"""
+        options_group = QGroupBox("Options")
+        options_layout = QGridLayout(options_group)
+
+        # Fila 0: Checkbox de Auto Potions
+        self.auto_pots_cb = QCheckBox("Auto Potions (HP / MP)")
+        self.auto_pots_cb.setChecked(True)
+        options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2)
+
+        # Fila 1: Checkbox de Looteo
+        self.enable_looting_cb = QCheckBox("Enable Looting")
+        self.enable_looting_cb.setToolTip(
+            "If checked, the bot will press the loot key after each kill."
+        )
+        self.enable_looting_cb.setChecked(True)
+        options_layout.addWidget(self.enable_looting_cb, 1, 0, 1, 2)
+
+        # Fila 2: Checkbox de Modo Asistir
+        self.assist_mode_cb = QCheckBox("Assist Mode")
+        self.assist_mode_cb.setToolTip(
+            "If checked, the bot will not search for targets and will use the 'Assist' skill instead."
+        )
+        self.assist_mode_cb.setChecked(False)
+        options_layout.addWidget(self.assist_mode_cb, 2, 0, 1, 2)
+
+        # Fila 3: Potion Threshold
+        options_layout.addWidget(QLabel("Potion Threshold:"), 3, 0)
+        self.potion_threshold_spin = QSpinBox()
+        self.potion_threshold_spin.setRange(1, 99)
+        self.potion_threshold_spin.setValue(70)
+        self.potion_threshold_spin.setSuffix("%")
+        options_layout.addWidget(self.potion_threshold_spin, 3, 1)
+
+        # Fila 4: OCR Match Tolerance
+        options_layout.addWidget(QLabel("OCR Match Tolerance:"), 4, 0)
+        self.ocr_tolerance_spin = QSpinBox()
+        self.ocr_tolerance_spin.setRange(50, 100)
+        self.ocr_tolerance_spin.setValue(85)
+        self.ocr_tolerance_spin.setSuffix("%")
+        self.ocr_tolerance_spin.setToolTip(
+            "How similar OCR text must be to a whitelist entry (e.g., 85%)."
+        )
+        options_layout.addWidget(self.ocr_tolerance_spin, 4, 1)
+
+        # Fila 5: Skill Interval
+        options_layout.addWidget(QLabel("Skill Interval:"), 5, 0)
+        self.skill_interval_spin = QDoubleSpinBox()
+        self.skill_interval_spin.setRange(0.5, 5.0)
+        self.skill_interval_spin.setSingleStep(0.1)
+        self.skill_interval_spin.setValue(1.0)
+        self.skill_interval_spin.setSuffix(" s")
+        self.skill_interval_spin.setToolTip(
+            "Global Cooldown (GCD). Time to wait between using skills."
+        )
+        options_layout.addWidget(self.skill_interval_spin, 5, 1)
+
+        # Fila 6: Post Combat Delay
+        options_layout.addWidget(QLabel("Post-Combat Delay:"), 6, 0)
+        self.post_combat_delay_spin = QDoubleSpinBox()
+        self.post_combat_delay_spin.setRange(0.0, 10.0)
+        self.post_combat_delay_spin.setSingleStep(0.1)
+        self.post_combat_delay_spin.setValue(1.5)
+        self.post_combat_delay_spin.setSuffix(" s")
+        self.post_combat_delay_spin.setToolTip(
+            "Time to wait after looting before searching for a new target."
+        )
+        options_layout.addWidget(self.post_combat_delay_spin, 6, 1)
+
+        # ✅ NUEVO - Separador visual
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        separator.setStyleSheet("color: #cccccc;")
+        options_layout.addWidget(separator, 7, 0, 1, 2)
+
+        # ✅ NUEVO - Botón de configuración avanzada
+        self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
+        self.advanced_config_btn.setToolTip(
+            "Open advanced timing and behavior configuration dialog"
+        )
+        self.advanced_config_btn.clicked.connect(self._open_advanced_config)
+        self.advanced_config_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #e8f4ff;
+                border: 2px solid #4CAF50;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #d0e8ff;
+                border-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #b8dcff;
+            }
+        """
+        )
+        options_layout.addWidget(self.advanced_config_btn, 8, 0, 1, 2)
+
+        parent_layout.addWidget(options_group)
+
     def _load_configuration(self):
+        """✅ ACTUALIZADO - Carga desde sistema unificado"""
         try:
-            config = self.bot_engine.config_manager
-            self.auto_pots_cb.setChecked(config.get_option("auto_pots", True))
-            self.potion_threshold_spin.setValue(
-                config.get_option("potion_threshold", 70)
-            )
+            # Verificar que el config manager esté disponible
+            if not hasattr(self.bot_engine, "config_manager"):
+                self.logger.warning("Config manager not available yet, skipping load")
+                return
 
-            self.ocr_tolerance_spin.setValue(config.get_option("ocr_tolerance", 85))
+            # Obtener configuraciones usando métodos especializados del sistema unificado
+            behavior = self.bot_engine.config_manager.get_combat_behavior()
+            timing = self.bot_engine.config_manager.get_combat_timing()
+            whitelist = self.bot_engine.config_manager.get_whitelist()
 
-            self.enable_looting_cb.setChecked(
-                config.get_option("enable_looting", True)
-            )  # Por defecto activado
-            self.assist_mode_cb.setChecked(config.get_option("assist_mode", False))
+            # Configurar controles de comportamiento
+            self.auto_pots_cb.setChecked(behavior.get("auto_potions", True))
+            self.potion_threshold_spin.setValue(behavior.get("potion_threshold", 70))
+            self.ocr_tolerance_spin.setValue(behavior.get("ocr_tolerance", 85))
+            self.enable_looting_cb.setChecked(behavior.get("enable_looting", True))
+            self.assist_mode_cb.setChecked(behavior.get("assist_mode", False))
 
-            # Leemos el timing completo y luego el valor específico
-            timing = config.get_timing()
-            self.skill_interval_spin.setValue(timing.get("skill_interval", 1.8))
-            self.post_combat_delay_spin.setValue(timing.get("post_combat_delay", 2.0))
+            # Configurar controles de timing
+            self.skill_interval_spin.setValue(timing.get("skill_interval", 1.0))
+            self.post_combat_delay_spin.setValue(timing.get("post_combat_delay", 1.5))
 
-            whitelist = config.get_whitelist()
+            # Configurar whitelist
             self.whitelist_edit.setPlainText("\n".join(whitelist))
-            self.status_bar.showMessage("Configuration loaded", 2000)
+
+            self.status_bar.showMessage(
+                "Unified configuration loaded successfully", 2000
+            )
+            self.logger.info("Configuration loaded from unified JSON system")
+
         except Exception as e:
+            self.logger.error(f"Failed to load unified configuration: {e}")
             QMessageBox.warning(
-                self, "Load Error", f"Failed to load configuration: {e}"
+                self, "Load Error", f"Failed to load unified configuration:\n{e}"
             )
 
     def _save_configuration(self):
-        """
-        Aplica los cambios de la UI a la configuración en memoria Y LUEGO la guarda en el disco.
-        """
+        """✅ ACTUALIZADO - Guarda usando sistema unificado"""
         try:
-            # 1. Aplicamos los cambios de la UI al BotEngine.
-            self._apply_ui_settings()
+            # Aplicar cambios de la UI al sistema unificado
+            self._apply_ui_settings_unified()
 
-            # 2. Le pedimos al BotEngine que guarde su estado de configuración actual.
+            # Guardar usando el BotEngine (que usa el sistema unificado)
             if self.bot_engine.save_config():
                 QMessageBox.information(
-                    self, "Success", "Configuration saved successfully!"
+                    self, "Success", "✅ Configuration saved successfully!"
                 )
-                self.logger.info("Configuration saved successfully via Save button.")
+                self.status_bar.showMessage(
+                    "Configuration saved to bot_config.json", 3000
+                )
+                self.logger.info(
+                    "Unified configuration saved successfully via Save button."
+                )
             else:
                 QMessageBox.critical(
-                    self, "Save Error", "Failed to save configuration."
+                    self, "Save Error", "❌ Failed to save configuration."
                 )
+
         except Exception as e:
+            self.logger.error(f"Failed to save unified configuration: {e}")
             QMessageBox.critical(
-                self, "Save Error", f"An unexpected error occurred while saving: {e}"
+                self, "Save Error", f"An unexpected error occurred while saving:\n{e}"
             )
+
+    def _apply_ui_settings_unified(self):
+        """✅ NUEVO - Aplica configuración UI usando sistema unificado"""
+        try:
+            # Preparar configuración de comportamiento
+            behavior_updates = {
+                "auto_potions": self.auto_pots_cb.isChecked(),
+                "potion_threshold": self.potion_threshold_spin.value(),
+                "enable_looting": self.enable_looting_cb.isChecked(),
+                "assist_mode": self.assist_mode_cb.isChecked(),
+                "ocr_tolerance": self.ocr_tolerance_spin.value(),
+            }
+
+            # Preparar configuración de timing
+            timing_updates = {
+                "skill_interval": round(self.skill_interval_spin.value(), 2),
+                "post_combat_delay": round(self.post_combat_delay_spin.value(), 2),
+            }
+
+            # Preparar whitelist
+            whitelist_text = self.whitelist_edit.toPlainText()
+            whitelist = [
+                line.strip() for line in whitelist_text.splitlines() if line.strip()
+            ]
+
+            # Aplicar configuraciones usando métodos especializados
+            self.bot_engine.config_manager.set_combat_behavior(behavior_updates)
+            self.bot_engine.config_manager.set_combat_timing(timing_updates)
+            self.bot_engine.config_manager.set_whitelist(whitelist)
+
+            # Aplicar cambios a los componentes del bot
+            self.bot_engine.update_components_from_config()
+
+            self.logger.info("UI settings applied to unified config system.")
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply UI settings to unified config: {e}")
+            QMessageBox.critical(
+                self, "Apply Settings Error", f"Could not apply settings:\n{e}"
+            )
+
+    @pyqtSlot()
+    def _open_advanced_config(self):
+        """✅ NUEVO - Abrir diálogo de configuración avanzada"""
+        try:
+            # Verificar que tenemos el config manager
+            if not hasattr(self.bot_engine, "config_manager"):
+                QMessageBox.warning(
+                    self,
+                    "Not Ready",
+                    "Configuration system not ready yet. Please wait a moment and try again.",
+                )
+                return
+
+            # Importar el diálogo de configuración avanzada
+            try:
+                from ui.dialogs.advanced_config_dialog import AdvancedConfigDialog
+            except ImportError as ie:
+                QMessageBox.critical(
+                    self,
+                    "Import Error",
+                    f"Advanced configuration dialog not available:\n{ie}\n\n"
+                    "Please ensure the advanced_config_dialog.py file is in ui/dialogs/",
+                )
+                return
+
+            # Crear y mostrar el diálogo
+            self.logger.info("Opening advanced configuration dialog...")
+
+            dialog = AdvancedConfigDialog(self.bot_engine.config_manager, self)
+
+            # Conectar señal de cambios en tiempo real (opcional)
+            dialog.config_changed.connect(self._on_advanced_config_changed)
+
+            # Mostrar el diálogo
+            result = dialog.exec_()
+
+            if result == QDialog.Accepted:
+                # Recargar configuración básica en la UI principal
+                self._load_configuration()
+
+                # Aplicar cambios a los componentes del bot
+                self.bot_engine.update_components_from_config()
+
+                self.status_bar.showMessage(
+                    "✅ Advanced configuration updated successfully!", 5000
+                )
+                self.logger.info("Advanced configuration applied successfully")
+
+                # Mostrar mensaje de confirmación
+                QMessageBox.information(
+                    self,
+                    "Configuration Updated",
+                    "✅ Advanced configuration has been applied successfully!\n\n"
+                    "All timing and behavior settings have been updated.",
+                )
+            else:
+                self.logger.info("Advanced configuration dialog cancelled")
+
+        except Exception as e:
+            self.logger.error(f"Failed to open advanced configuration: {e}")
+            QMessageBox.critical(
+                self,
+                "Configuration Error",
+                f"Failed to open advanced configuration:\n\n{e}\n\n"
+                "Please check the logs for more details.",
+            )
+
+    @pyqtSlot(dict)
+    def _on_advanced_config_changed(self, config_changes):
+        """✅ NUEVO - Manejar cambios de configuración en tiempo real"""
+        try:
+            self.logger.debug("Applying real-time configuration changes...")
+
+            # Aplicar cambios de timing si están presentes
+            if "timing" in config_changes:
+                timing_changes = config_changes["timing"]
+                self.bot_engine.config_manager.set_combat_timing(timing_changes)
+
+                # Actualizar controles básicos si es necesario
+                if "skill_interval" in timing_changes:
+                    self.skill_interval_spin.setValue(timing_changes["skill_interval"])
+                if "post_combat_delay" in timing_changes:
+                    self.post_combat_delay_spin.setValue(
+                        timing_changes["post_combat_delay"]
+                    )
+
+                self.logger.debug(f"Applied timing changes: {timing_changes}")
+
+            # Aplicar cambios de comportamiento si están presentes
+            if "behavior" in config_changes:
+                behavior_changes = config_changes["behavior"]
+                self.bot_engine.config_manager.set_combat_behavior(behavior_changes)
+
+                # Actualizar controles básicos si es necesario
+                if "auto_potions" in behavior_changes:
+                    self.auto_pots_cb.setChecked(behavior_changes["auto_potions"])
+                if "potion_threshold" in behavior_changes:
+                    self.potion_threshold_spin.setValue(
+                        behavior_changes["potion_threshold"]
+                    )
+                if "enable_looting" in behavior_changes:
+                    self.enable_looting_cb.setChecked(
+                        behavior_changes["enable_looting"]
+                    )
+                if "assist_mode" in behavior_changes:
+                    self.assist_mode_cb.setChecked(behavior_changes["assist_mode"])
+                if "ocr_tolerance" in behavior_changes:
+                    self.ocr_tolerance_spin.setValue(behavior_changes["ocr_tolerance"])
+
+                self.logger.debug(f"Applied behavior changes: {behavior_changes}")
+
+            # Aplicar todos los cambios a los componentes del bot
+            self.bot_engine.update_components_from_config()
+
+            # Actualizar la barra de estado para mostrar que se aplicaron cambios
+            self.status_bar.showMessage("⚡ Configuration updated in real-time", 2000)
+
+            self.logger.debug("Real-time configuration changes applied successfully")
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply real-time config changes: {e}")
+            # No mostrar mensaje de error aquí para no interrumpir la experiencia del usuario
+            # El error se loguea para depuración
 
     @pyqtSlot()
     def _pause_resume_bot(self):
@@ -675,85 +1068,100 @@ class TantraBotMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _load_profile(self):
-        """
-        Abre un diálogo para que el usuario seleccione un archivo .ini
-        y carga su configuración en el bot.
-        """
+        """✅ ACTUALIZADO - Cargar perfil usando sistema unificado"""
         self.logger.info("Attempting to load a profile...")
-        # Abre un diálogo de archivo, filtrando por archivos .ini
+
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(
             self,
             "Load Profile",
-            "",  # Directorio inicial (vacío para default)
-            "INI Files (*.ini);;All Files (*)",
+            "",
+            "JSON Files (*.json);;All Files (*)",
             options=options,
         )
 
         if file_name:
             try:
                 self.logger.info(f"Loading profile from: {file_name}")
-                # 1. Le decimos al ConfigManager que importe el nuevo archivo.
-                #    Esto reemplazará la configuración en memoria.
+
+                # Usar el método de importación del sistema unificado
                 self.bot_engine.config_manager.import_config(file_name)
 
-                # 2. Le decimos al BotEngine que aplique esta nueva configuración
-                #    a todos sus componentes (CombatManager, SkillManager, etc.).
-                #    Esto también recargará los skills.
-                self.bot_engine._setup_from_config()
+                # Reconfigurar el bot con la nueva configuración
+                self.bot_engine.update_components_from_config()
 
-                # 3. Refrescamos la UI para que muestre los nuevos valores cargados.
+                # Refrescar la UI para mostrar los nuevos valores
                 self._load_configuration()
 
                 self.status_bar.showMessage(
                     f"Profile '{os.path.basename(file_name)}' loaded successfully!",
                     5000,
                 )
+
                 QMessageBox.information(
                     self,
                     "Profile Loaded",
-                    "The new configuration has been loaded.\nDon't forget to save if you want to make it the new default.",
+                    f"✅ Profile loaded successfully!\n\n"
+                    f"File: {os.path.basename(file_name)}\n"
+                    f"Don't forget to save if you want to make it the new default.",
                 )
+
             except Exception as e:
                 self.logger.error(f"Failed to load profile: {e}")
                 QMessageBox.critical(
-                    self, "Load Profile Error", f"Could not load the profile file:\n{e}"
+                    self,
+                    "Load Profile Error",
+                    f"Could not load the profile file:\n\n{e}",
                 )
 
     @pyqtSlot()
     def _save_profile_as(self):
-        """
-        Abre un diálogo para que el usuario guarde la configuración actual
-        en un nuevo archivo .ini (perfil).
-        """
+        """✅ ACTUALIZADO - Guardar perfil usando sistema unificado"""
         self.logger.info("Attempting to save a profile...")
-        # Primero, nos aseguramos de que la configuración en memoria refleja el estado actual de la UI.
-        self._apply_ui_settings()
+
+        # Primero aplicar configuración actual de la UI
+        self._apply_ui_settings_unified()
 
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(
             self,
             "Save Profile As...",
-            "",  # Directorio inicial
-            "INI Files (*.ini);;All Files (*)",
+            "",
+            "JSON Files (*.json);;All Files (*)",
             options=options,
         )
 
         if file_name:
             try:
+                # Asegurar extensión .json
+                if not file_name.endswith(".json"):
+                    file_name += ".json"
+
                 self.logger.info(
                     f"Saving current configuration to profile: {file_name}"
                 )
-                # Le pedimos al ConfigManager que exporte la configuración actual
-                # (que ya hemos actualizado desde la UI) a un nuevo archivo.
+
+                # Usar el método de exportación del sistema unificado
                 self.bot_engine.config_manager.export_config(file_name)
+
                 self.status_bar.showMessage(
                     f"Profile saved to '{os.path.basename(file_name)}'!", 5000
                 )
+
+                QMessageBox.information(
+                    self,
+                    "Profile Saved",
+                    f"✅ Profile saved successfully!\n\n"
+                    f"File: {os.path.basename(file_name)}\n"
+                    f"You can load this profile later using 'Load Profile'.",
+                )
+
             except Exception as e:
                 self.logger.error(f"Failed to save profile: {e}")
                 QMessageBox.critical(
-                    self, "Save Profile Error", f"Could not save the profile file:\n{e}"
+                    self,
+                    "Save Profile Error",
+                    f"Could not save the profile file:\n\n{e}",
                 )
 
 
