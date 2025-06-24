@@ -1,5 +1,5 @@
 """Configuration management module for Tantra Bot"""
 
-from .config_manager import ConfigManager
+from .unified_config_manager import UnifiedConfigManager
 
-__all__ = ['ConfigManager']
+__all__ = ['UnifiedConfigManager']

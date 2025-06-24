@@ -26,8 +26,7 @@
       "loot_initial_delay": 0.1,
       "loot_attempts": 2,
       "loot_attempt_interval": 0.2,
-      "loot_key": "f",
-      "auto_pots": true
+      "loot_key": "f"
     },
     "whitelist": [
       "Sinkiu"
@@ -151,8 +150,6 @@
   },
   "debug": {
     "log_level": "INFO",
-    "save_screenshots": false,
-    "performance_monitoring": true,
-    "verbose_combat_logs": false
+    "performance_monitoring": true
   }
 }

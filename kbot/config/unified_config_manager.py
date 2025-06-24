@@ -3,8 +3,29 @@
 import json
 import os
 from typing import Dict, Any, List, Tuple
-from utils.exceptions import ConfigError
-from utils.logger import BotLogger
+try:
+    from utils.exceptions import ConfigError
+    from utils.logger import BotLogger
+except ImportError:
+    # Define basic exceptions and logger if not available
+    class ConfigError(Exception):
+        pass
+    
+    class BotLogger:
+        def __init__(self, name):
+            self.name = name
+        
+        def info(self, msg):
+            print(f"[INFO] {self.name}: {msg}")
+        
+        def debug(self, msg):
+            print(f"[DEBUG] {self.name}: {msg}")
+        
+        def error(self, msg):
+            print(f"[ERROR] {self.name}: {msg}")
+        
+        def warning(self, msg):
+            print(f"[WARNING] {self.name}: {msg}")
 
 
 class UnifiedConfigManager:
@@ -268,24 +289,6 @@ class UnifiedConfigManager:
         self.config_data["skills"] = skills_config
         self.logger.info(f"Updated skills configuration")
 
-    # ✅ MÉTODOS DE COMPATIBILIDAD CON EL SISTEMA ANTIGUO
-
-    def get_option(self, option: str, default: Any = None) -> Any:
-        """Compatibility method for old ConfigManager"""
-        behavior = self.get_combat_behavior()
-        return behavior.get(option, default)
-
-    def set_option(self, option: str, value: Any):
-        """Compatibility method for old ConfigManager"""
-        self.set_combat_behavior({option: value})
-
-    def get_timing(self) -> Dict[str, float]:
-        """Compatibility method for old ConfigManager"""
-        return self.get_combat_timing()
-
-    def set_timing(self, timing: Dict[str, float]):
-        """Compatibility method for old ConfigManager"""
-        self.set_combat_timing(timing)
 
     # ✅ UTILIDADES
 
@@ -354,14 +357,3 @@ class UnifiedConfigManager:
             "assist_mode": self.get_combat_behavior().get("assist_mode"),
         }
 
-    def set_skills(self, skills_config: Dict[str, Any]):
-        """Compatibility method for old skill config format"""
-        unified_skills_config = {
-            "global_cooldown": skills_config.get("global_cooldown", 0.15),
-            "active_rotation": skills_config.get("active_rotation"),
-            "definitions": skills_config.get("skills", {}),
-            "rotations": skills_config.get("rotations", {}),
-        }
-
-        self.set_skills_config(unified_skills_config)
-        self.logger.info("Skills configuration updated via compatibility method")

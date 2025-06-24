@@ -334,20 +334,25 @@ class BotEngine(QObject):
                     )
 
     def _setup_timers(self) -> None:
+        """Setup optimized timers with consolidated high-frequency operations"""
         timing = self.config_manager.get_timing()
+        
+        # High-frequency main loop timer that consolidates vitals and combat
+        # This reduces the overhead of multiple 500ms timers
+        main_loop_interval = min(timing.get("potion", 0.5), timing.get("combat_check", 0.5))
         self.timer_manager.create_timer(
-            "vitals_check", timing.get("potion", 0.5), self._check_vitals
+            "main_loop", main_loop_interval, self._optimized_main_loop
         )
-        self.timer_manager.create_timer(
-            "combat_loop", timing.get("combat_check", 0.5), self._combat_loop
-        )
+        
+        # Medium-frequency timers for maintenance tasks
         self.timer_manager.create_timer("stats_update", 5.0, self._update_stats)
         self.timer_manager.create_timer(
-            "skills_maintenance", 2.0, self._maintain_skills
+            "maintenance_loop", 3.0, self._optimized_maintenance_loop
         )
-        self.timer_manager.create_timer(
-            "buffs_maintenance", 5.0, self._maintain_skills_and_buffs
-        )
+        
+        # Track timer intervals for optimization logic
+        self._main_loop_counter = 0
+        self._maintenance_counter = 0
 
     def stop(self) -> bool:
         if self.state == BotState.STOPPED:
@@ -518,7 +523,43 @@ class BotEngine(QObject):
             self.logger.error(f"Error checking vitals: {e}")
             self.stats["errors_occurred"] += 1
 
+    def _optimized_main_loop(self) -> None:
+        """Consolidated high-frequency loop for vitals and combat processing"""
+        if self.state != BotState.RUNNING:
+            return
+            
+        try:
+            self._main_loop_counter += 1
+            
+            # Always check vitals and run combat on every iteration
+            self._check_vitals()
+            self.combat_manager.process_combat()
+            
+        except Exception as e:
+            self.logger.error(f"Error in optimized main loop: {e}")
+            self.stats["errors_occurred"] += 1
+
+    def _optimized_maintenance_loop(self) -> None:
+        """Consolidated maintenance loop for less frequent operations"""
+        if self.state != BotState.RUNNING:
+            return
+            
+        try:
+            self._maintenance_counter += 1
+            
+            # Run skills maintenance every iteration (3s)
+            self._maintain_skills()
+            
+            # Run buffs maintenance every other iteration (6s)
+            if self._maintenance_counter % 2 == 0:
+                self._maintain_skills_and_buffs()
+                
+        except Exception as e:
+            self.logger.error(f"Error in maintenance loop: {e}")
+            self.stats["errors_occurred"] += 1
+
     def _combat_loop(self) -> None:
+        """Legacy method - replaced by _optimized_main_loop"""
         if self.state == BotState.RUNNING:
             try:
                 self.combat_manager.process_combat()
@@ -751,83 +792,130 @@ class BotEngine(QObject):
         }
 
 
+class ComponentFactory:
+    """Thread-safe factory for creating bot components with proper dependencies"""
+    
+    @staticmethod
+    def create_components(logger: BotLogger) -> Dict[str, Any]:
+        """Create all bot components in the correct order with proper dependencies"""
+        components = {}
+        
+        # Create components in dependency order
+        components['timer_manager'] = TimerManager()
+        components['window_manager'] = WindowManager(logger=logger)
+        components['pixel_analyzer'] = PixelAnalyzer(logger=logger)
+        components['input_controller'] = InputController(
+            window_manager=components['window_manager'], 
+            logger=logger
+        )
+        components['movement_manager'] = MovementManager(
+            input_controller=components['input_controller'],
+            window_manager=components['window_manager'],
+            logger=logger,
+        )
+        components['skill_manager'] = SkillManager(
+            input_controller=components['input_controller'],
+            logger=logger,
+        )
+        components['combat_manager'] = CombatManager(
+            pixel_analyzer=components['pixel_analyzer'],
+            skill_manager=components['skill_manager'],
+            input_controller=components['input_controller'],
+            movement_manager=components['movement_manager'],
+            logger=logger,
+        )
+        
+        return components
+
+
 class BotWorker(QObject):
     """
-    Encapsula el BotEngine y gestiona su ciclo de vida y timers en un hilo separado.
-    CRUCIAL: Ahora es responsable de INSTANCIAR los componentes en el hilo correcto.
+    Thread-safe bot worker that manages BotEngine lifecycle in a separate thread.
+    Uses ComponentFactory to ensure proper initialization without race conditions.
     """
+    
+    initialization_complete = pyqtSignal()
+    initialization_failed = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
-        # El engine se crea vacío
-        self.bot_engine = BotEngine()
+        self.bot_engine = None
+        self._initialized = False
+        self._initialization_lock = False
 
     @pyqtSlot()
     def initialize_in_thread(self):
         """
-        Este es el nuevo método clave. Se llama UNA VEZ que el worker
-        ya ha sido movido al nuevo hilo. Aquí creamos todos los objetos
-        que dependen de un hilo.
+        Thread-safe initialization method. Creates all components exactly once
+        in the correct thread context using the ComponentFactory pattern.
         """
-        self.bot_engine.logger.info(
-            "Initializing bot components inside the worker thread..."
-        )
+        # Prevent double initialization
+        if self._initialized or self._initialization_lock:
+            self.bot_engine.logger.warning("Components already initialized or initialization in progress")
+            return
+            
+        self._initialization_lock = True
+        
+        try:
+            # Create BotEngine with thread-safe component initialization
+            self.bot_engine = BotEngine()
+            self.bot_engine.logger.info("Initializing bot components inside the worker thread...")
 
-        # Ahora creamos el TimerManager DENTRO del nuevo hilo.
-        self.bot_engine.timer_manager = TimerManager()
+            # Use factory to create all components thread-safely
+            components = ComponentFactory.create_components(self.bot_engine.logger)
+            
+            # Assign components to bot engine
+            for name, component in components.items():
+                setattr(self.bot_engine, name, component)
 
-        # Y el resto de componentes.
-        self.bot_engine.window_manager = WindowManager(logger=self.bot_engine.logger)
-        self.bot_engine.pixel_analyzer = PixelAnalyzer(logger=self.bot_engine.logger)
-        self.bot_engine.input_controller = InputController(
-            window_manager=self.bot_engine.window_manager, logger=self.bot_engine.logger
-        )
-        self.bot_engine.movement_manager = MovementManager(
-            input_controller=self.bot_engine.input_controller,
-            window_manager=self.bot_engine.window_manager,
-            logger=self.bot_engine.logger,
-        )
-        self.bot_engine.skill_manager = SkillManager(
-            input_controller=self.bot_engine.input_controller,
-            logger=self.bot_engine.logger,
-        )
-        self.bot_engine.combat_manager = CombatManager(
-            pixel_analyzer=self.bot_engine.pixel_analyzer,
-            skill_manager=self.bot_engine.skill_manager,
-            input_controller=self.bot_engine.input_controller,
-            movement_manager=self.bot_engine.movement_manager,
-            logger=self.bot_engine.logger,
-        )
+            # Setup configuration and timers after all components exist
+            self.bot_engine._setup_from_config()
+            self.bot_engine._setup_timers()
+            
+            # Connect logger signals
+            self.bot_engine.logger.log_message.connect(self.bot_engine._on_log_message)
+            
+            self._initialized = True
+            self.bot_engine.logger.info("Bot components initialized successfully in thread.")
+            self.initialization_complete.emit()
+            
+        except Exception as e:
+            error_msg = f"Failed to initialize bot components: {e}"
+            if self.bot_engine and self.bot_engine.logger:
+                self.bot_engine.logger.error(error_msg)
+            self.initialization_failed.emit(error_msg)
+        finally:
+            self._initialization_lock = False
 
-        # Ahora que todo existe, configuramos el bot desde el config y creamos los timers.
-        self.bot_engine._setup_from_config()
-        self.bot_engine._setup_timers()
-        self.bot_engine.logger.info(
-            "Bot components initialized successfully in thread."
-        )
-
-        # Conectamos las señales del logger a nuestro slot interno
-        self.bot_engine.logger.log_message.connect(self.bot_engine._on_log_message)
-
-    # Los métodos start/stop/pause no cambian y funcionarán correctamente ahora.
     @pyqtSlot()
     def start_bot(self):
+        """Thread-safe bot start with initialization check"""
+        if not self._initialized or not self.bot_engine:
+            self.bot_engine.logger.error("Cannot start bot: components not initialized")
+            return
+            
         if self.bot_engine.start():
             self.bot_engine.logger.info("Starting bot timers in worker thread...")
             self.bot_engine.timer_manager.start_all_timers()
         else:
-            self.bot_engine.logger.error(
-                "Bot engine failed to prepare, timers not started."
-            )
+            self.bot_engine.logger.error("Bot engine failed to prepare, timers not started.")
 
     @pyqtSlot()
     def stop_bot(self):
+        """Thread-safe bot stop with initialization check"""
+        if not self._initialized or not self.bot_engine:
+            return
+            
         self.bot_engine.logger.info("Stopping bot timers in worker thread...")
         self.bot_engine.timer_manager.stop_all_timers()
         self.bot_engine.stop()
 
     @pyqtSlot()
     def pause_resume_bot(self):
+        """Thread-safe pause/resume with initialization check"""
+        if not self._initialized or not self.bot_engine:
+            return
+            
         state = self.bot_engine.get_state()
         if state == "running":
             self.bot_engine.logger.info("Pausing timers...")
