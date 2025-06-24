@@ -84,6 +84,9 @@ class TantraBotMainWindow(QMainWindow):
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._update_ui)
         self.refresh_timer.start(1000)
+        
+        # Reference to active advanced dialog for bidirectional sync
+        self._active_advanced_dialog = None
 
     def _is_bot_ready(self):
         """Helper method to check if bot engine is initialized and ready"""
@@ -546,7 +549,7 @@ class TantraBotMainWindow(QMainWindow):
         self.save_changes_btn.clicked.connect(self._save_configuration)
 
     def _load_configuration(self):
-        """✅ ACTUALIZADO - Carga desde sistema unificado"""
+        """✅ ACTUALIZADO - Carga desde sistema unificado (solo controles básicos)"""
         try:
             # Verificar que el config manager esté disponible
             if not hasattr(self.bot_engine, "config_manager"):
@@ -555,32 +558,25 @@ class TantraBotMainWindow(QMainWindow):
 
             # Obtener configuraciones usando métodos especializados del sistema unificado
             behavior = self.bot_engine.config_manager.get_combat_behavior()
-            timing = self.bot_engine.config_manager.get_combat_timing()
             whitelist = self.bot_engine.config_manager.get_whitelist()
 
-            # Configurar controles de comportamiento
+            # Configurar SOLO los controles básicos que están en la ventana principal
             self.auto_pots_cb.setChecked(behavior.get("auto_potions", True))
-            self.potion_threshold_spin.setValue(behavior.get("potion_threshold", 70))
-            self.ocr_tolerance_spin.setValue(behavior.get("ocr_tolerance", 85))
             self.enable_looting_cb.setChecked(behavior.get("enable_looting", True))
             self.assist_mode_cb.setChecked(behavior.get("assist_mode", False))
-
-            # Configurar controles de timing
-            self.skill_interval_spin.setValue(timing.get("skill_interval", 1.0))
-            self.post_combat_delay_spin.setValue(timing.get("post_combat_delay", 1.5))
 
             # Configurar whitelist
             self.whitelist_edit.setPlainText("\n".join(whitelist))
 
             self.status_bar.showMessage(
-                "Unified configuration loaded successfully", 2000
+                "Basic configuration loaded successfully", 2000
             )
-            self.logger.info("Configuration loaded from unified JSON system")
+            self.logger.info("Basic configuration loaded from unified JSON system")
 
         except Exception as e:
-            self.logger.error(f"Failed to load unified configuration: {e}")
+            self.logger.error(f"Failed to load basic configuration: {e}")
             QMessageBox.warning(
-                self, "Load Error", f"Failed to load unified configuration:\n{e}"
+                self, "Load Error", f"Failed to load basic configuration:\n{e}"
             )
 
     def _save_configuration(self):
@@ -616,21 +612,13 @@ class TantraBotMainWindow(QMainWindow):
             )
 
     def _apply_ui_settings_unified(self):
-        """✅ NUEVO - Aplica configuración UI usando sistema unificado"""
+        """✅ NUEVO - Aplica configuración UI usando sistema unificado (solo controles básicos)"""
         try:
-            # Preparar configuración de comportamiento
+            # Preparar configuración de comportamiento (SOLO controles básicos)
             behavior_updates = {
                 "auto_potions": self.auto_pots_cb.isChecked(),
-                "potion_threshold": self.potion_threshold_spin.value(),
                 "enable_looting": self.enable_looting_cb.isChecked(),
                 "assist_mode": self.assist_mode_cb.isChecked(),
-                "ocr_tolerance": self.ocr_tolerance_spin.value(),
-            }
-
-            # Preparar configuración de timing
-            timing_updates = {
-                "skill_interval": round(self.skill_interval_spin.value(), 2),
-                "post_combat_delay": round(self.post_combat_delay_spin.value(), 2),
             }
 
             # Preparar whitelist
@@ -641,19 +629,35 @@ class TantraBotMainWindow(QMainWindow):
 
             # Aplicar configuraciones usando métodos especializados
             self.bot_engine.config_manager.set_combat_behavior(behavior_updates)
-            self.bot_engine.config_manager.set_combat_timing(timing_updates)
             self.bot_engine.config_manager.set_whitelist(whitelist)
 
             # Aplicar cambios a los componentes del bot
             self.bot_engine.update_components_from_config()
+            
+            # Sync changes to advanced dialog if it's open
+            self._sync_to_advanced_dialog()
 
-            self.logger.info("UI settings applied to unified config system.")
+            self.logger.info("Basic UI settings applied to unified config system.")
 
         except Exception as e:
-            self.logger.error(f"Failed to apply UI settings to unified config: {e}")
+            self.logger.error(f"Failed to apply basic UI settings to unified config: {e}")
             QMessageBox.critical(
                 self, "Apply Settings Error", f"Could not apply settings:\n{e}"
             )
+
+    def _sync_to_advanced_dialog(self):
+        """Sync changes from main window to advanced dialog if it's open"""
+        if self._active_advanced_dialog and hasattr(self._active_advanced_dialog, 'whitelist_edit'):
+            try:
+                # Get current whitelist from config manager
+                current_whitelist = self.bot_engine.config_manager.get_whitelist()
+                
+                # Update advanced dialog whitelist display
+                self._active_advanced_dialog.whitelist_edit.setPlainText("\n".join(current_whitelist))
+                
+                self.logger.debug("Synced whitelist changes to advanced dialog")
+            except Exception as e:
+                self.logger.error(f"Failed to sync to advanced dialog: {e}")
 
     @pyqtSlot()
     def _open_advanced_config(self):
@@ -682,6 +686,9 @@ class TantraBotMainWindow(QMainWindow):
 
             # Conectar señal de cambios en tiempo real (opcional)
             dialog.config_changed.connect(self._on_advanced_config_changed)
+            
+            # Store dialog reference for bidirectional sync
+            self._active_advanced_dialog = dialog
 
             # Mostrar el diálogo
             result = dialog.exec_()
@@ -707,6 +714,9 @@ class TantraBotMainWindow(QMainWindow):
                 )
             else:
                 self.logger.info("Advanced configuration dialog cancelled")
+            
+            # Clean up dialog reference
+            self._active_advanced_dialog = None
 
         except Exception as e:
             self.logger.error(f"Failed to open advanced configuration: {e}")
@@ -745,6 +755,16 @@ class TantraBotMainWindow(QMainWindow):
                     self.assist_mode_cb.setChecked(behavior_changes["assist_mode"])
 
                 self.logger.debug(f"Applied behavior changes: {behavior_changes}")
+
+            # Apply whitelist changes if present
+            if "whitelist" in config_changes:
+                whitelist_changes = config_changes["whitelist"]
+                self.bot_engine.config_manager.set_whitelist(whitelist_changes)
+                
+                # Update main window whitelist display to reflect changes from advanced dialog
+                self.whitelist_edit.setPlainText("\n".join(whitelist_changes))
+                
+                self.logger.debug(f"Applied whitelist changes: {whitelist_changes}")
 
             # Aplicar todos los cambios a los componentes del bot
             self.bot_engine.update_components_from_config()

@@ -638,6 +638,10 @@ class AdvancedConfigDialog(QDialog):
             elif isinstance(widget, QLineEdit):
                 widget.textChanged.connect(self._on_behavior_changed)
 
+        # Connect whitelist widget for real-time updates
+        if hasattr(self, "whitelist_edit"):
+            self.whitelist_edit.textChanged.connect(self._on_whitelist_changed)
+
         # Connect preset buttons
         self.preset_aggressive_btn.clicked.connect(self._apply_aggressive_preset)
         self.preset_conservative_btn.clicked.connect(self._apply_conservative_preset)
@@ -664,6 +668,10 @@ class AdvancedConfigDialog(QDialog):
 
     def _on_behavior_changed(self):
         """Handle behavior parameter changes"""
+        self._emit_config_change()
+
+    def _on_whitelist_changed(self):
+        """Handle whitelist changes for real-time updates"""
         self._emit_config_change()
 
     def _update_performance_indicator(self):
@@ -744,6 +752,14 @@ class AdvancedConfigDialog(QDialog):
             elif isinstance(widget, QLineEdit):
                 behavior[param] = widget.text()
         config["behavior"] = behavior
+
+        # Whitelist
+        if hasattr(self, "whitelist_edit"):
+            whitelist_text = self.whitelist_edit.toPlainText()
+            whitelist = [
+                line.strip() for line in whitelist_text.splitlines() if line.strip()
+            ]
+            config["whitelist"] = whitelist
 
         return config
 
