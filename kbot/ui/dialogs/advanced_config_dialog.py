@@ -165,13 +165,9 @@ class AdvancedConfigDialog(QDialog):
 
             self.timing_widgets[param] = widget
 
-            # Create label with description
+            # Create compact label with tooltip (remove extra description labels)
             full_label = f"{label}:"
-            desc_label = QLabel(f"<small>{tooltip}</small>")
-            desc_label.setStyleSheet("color: gray;")
-
             combat_layout.addRow(full_label, widget)
-            combat_layout.addRow("", desc_label)
 
         scroll_layout.addWidget(combat_group)
 
@@ -221,11 +217,7 @@ class AdvancedConfigDialog(QDialog):
 
             self.timing_widgets[param] = widget
 
-            desc_label = QLabel(f"<small>{tooltip}</small>")
-            desc_label.setStyleSheet("color: gray;")
-
             stuck_layout.addRow(f"{label}:", widget)
-            stuck_layout.addRow("", desc_label)
 
         scroll_layout.addWidget(stuck_group)
 
@@ -275,11 +267,7 @@ class AdvancedConfigDialog(QDialog):
 
             self.timing_widgets[param] = widget
 
-            desc_label = QLabel(f"<small>{tooltip}</small>")
-            desc_label.setStyleSheet("color: gray;")
-
             monitor_layout.addRow(f"{label}:", widget)
-            monitor_layout.addRow("", desc_label)
 
         scroll_layout.addWidget(monitor_group)
 
@@ -314,7 +302,7 @@ class AdvancedConfigDialog(QDialog):
         combat_group = QGroupBox("⚔️ Combat Behavior")
         combat_layout = QFormLayout(combat_group)
 
-        # Boolean options
+        # Boolean options (including basic options moved from main window)
         bool_params = [
             ("auto_potions", "Auto Potions", "Automatically use HP/MP potions"),
             ("enable_looting", "Enable Looting", "Loot items after killing targets"),
@@ -331,11 +319,7 @@ class AdvancedConfigDialog(QDialog):
             widget.setToolTip(tooltip)
             self.behavior_widgets[param] = widget
 
-            desc_label = QLabel(f"<small>{tooltip}</small>")
-            desc_label.setStyleSheet("color: gray;")
-
             combat_layout.addRow(f"{label}:", widget)
-            combat_layout.addRow("", desc_label)
 
         scroll_layout.addWidget(combat_group)
 
@@ -520,56 +504,289 @@ class AdvancedConfigDialog(QDialog):
         self.tab_widget.addTab(tab, "🔧 Advanced")
 
     def _create_debug_tab(self):
-        """✅ Tab para configuración de debug"""
+        """✅ Enhanced Debug Tab - Bot Behavior Diagnostics"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # Debug Options
-        debug_group = QGroupBox("🐛 Debug & Monitoring")
-        debug_layout = QFormLayout(debug_group)
+        # Debug Configuration
+        debug_config_group = QGroupBox("🐛 Debug Configuration")
+        debug_config_layout = QFormLayout(debug_config_group)
 
         # Log level
         self.debug_widgets["log_level"] = QComboBox()
         self.debug_widgets["log_level"].addItems(["DEBUG", "INFO", "WARNING", "ERROR"])
         self.debug_widgets["log_level"].setToolTip("Set logging verbosity level")
-        debug_layout.addRow("Log Level:", self.debug_widgets["log_level"])
+        debug_config_layout.addRow("Log Level:", self.debug_widgets["log_level"])
 
-        # Debug options
-        debug_bool_params = [
-            ("save_screenshots", "Save Screenshots", "Save screenshots for debugging"),
-            (
-                "performance_monitoring",
-                "Performance Monitoring",
-                "Monitor and log performance metrics",
-            ),
-            (
-                "verbose_combat_logs",
-                "Verbose Combat Logs",
-                "Enable detailed combat logging",
-            ),
-        ]
+        # Performance monitoring toggle
+        self.debug_widgets["performance_monitoring"] = QCheckBox()
+        self.debug_widgets["performance_monitoring"].setToolTip("Enable real-time performance tracking")
+        debug_config_layout.addRow("Performance Monitoring:", self.debug_widgets["performance_monitoring"])
 
-        for param, label, tooltip in debug_bool_params:
-            widget = QCheckBox()
-            widget.setToolTip(tooltip)
-            self.debug_widgets[param] = widget
-            debug_layout.addRow(f"{label}:", widget)
+        layout.addWidget(debug_config_group)
 
-        layout.addWidget(debug_group)
+        # Bot Behavior Diagnostics
+        behavior_group = QGroupBox("🤖 Bot Behavior Diagnostics")
+        behavior_layout = QVBoxLayout(behavior_group)
 
-        # Performance Monitor
-        perf_group = QGroupBox("📈 Performance Monitor")
-        perf_layout = QVBoxLayout(perf_group)
+        # Real-time bot state display
+        state_frame = QFrame()
+        state_frame.setFrameStyle(QFrame.StyledPanel)
+        state_layout = QHBoxLayout(state_frame)
 
-        self.performance_monitor = QTextEdit()
-        self.performance_monitor.setReadOnly(True)
-        self.performance_monitor.setMaximumHeight(200)
-        perf_layout.addWidget(self.performance_monitor)
+        state_layout.addWidget(QLabel("<b>Current State:</b>"))
+        self.current_state_label = QLabel("Not Connected")
+        self.current_state_label.setStyleSheet("padding: 4px; background-color: #f0f0f0; border-radius: 3px;")
+        state_layout.addWidget(self.current_state_label)
 
-        layout.addWidget(perf_group)
-        layout.addStretch()
+        state_layout.addWidget(QLabel("<b>Combat State:</b>"))
+        self.combat_state_label = QLabel("Unknown")
+        self.combat_state_label.setStyleSheet("padding: 4px; background-color: #f0f0f0; border-radius: 3px;")
+        state_layout.addWidget(self.combat_state_label)
+
+        state_layout.addStretch()
+        behavior_layout.addWidget(state_frame)
+
+        # Bot behavior metrics
+        metrics_layout = QHBoxLayout()
+
+        # Left metrics
+        left_metrics = QGroupBox("📊 Performance Metrics")
+        left_metrics_layout = QFormLayout(left_metrics)
+
+        self.ocr_accuracy_label = QLabel("N/A")
+        self.targeting_success_label = QLabel("N/A") 
+        self.skill_execution_label = QLabel("N/A")
+
+        left_metrics_layout.addRow("OCR Accuracy:", self.ocr_accuracy_label)
+        left_metrics_layout.addRow("Targeting Success:", self.targeting_success_label)
+        left_metrics_layout.addRow("Skill Execution:", self.skill_execution_label)
+
+        # Right metrics  
+        right_metrics = QGroupBox("⚠️ Error Tracking")
+        right_metrics_layout = QFormLayout(right_metrics)
+
+        self.error_count_label = QLabel("0")
+        self.stuck_count_label = QLabel("0")
+        self.failed_targets_label = QLabel("0")
+
+        right_metrics_layout.addRow("Total Errors:", self.error_count_label)
+        right_metrics_layout.addRow("Stuck Events:", self.stuck_count_label)
+        right_metrics_layout.addRow("Failed Targets:", self.failed_targets_label)
+
+        metrics_layout.addWidget(left_metrics)
+        metrics_layout.addWidget(right_metrics)
+        behavior_layout.addLayout(metrics_layout)
+
+        layout.addWidget(behavior_group)
+
+        # Real-time Diagnostic Log
+        log_group = QGroupBox("📝 Diagnostic Log")
+        log_layout = QVBoxLayout(log_group)
+
+        # Log controls
+        log_controls = QHBoxLayout()
+        
+        self.diagnostic_filter = QComboBox()
+        self.diagnostic_filter.addItems(["All Events", "Errors Only", "State Changes", "Combat Events", "Performance Issues"])
+        self.diagnostic_filter.setToolTip("Filter diagnostic messages")
+        log_controls.addWidget(QLabel("Filter:"))
+        log_controls.addWidget(self.diagnostic_filter)
+
+        self.clear_log_btn = QPushButton("🗑️ Clear Log")
+        self.export_log_btn = QPushButton("💾 Export Log")
+        log_controls.addStretch()
+        log_controls.addWidget(self.clear_log_btn)
+        log_controls.addWidget(self.export_log_btn)
+
+        log_layout.addLayout(log_controls)
+
+        # Diagnostic log display
+        self.diagnostic_log = QTextEdit()
+        self.diagnostic_log.setReadOnly(True)
+        self.diagnostic_log.setMaximumHeight(250)
+        self.diagnostic_log.setStyleSheet("QTextEdit { font-family: 'Courier New', monospace; font-size: 10px; }")
+        log_layout.addWidget(self.diagnostic_log)
+
+        layout.addWidget(log_group)
+
+        # Initialize diagnostic data
+        self._init_diagnostic_system()
 
         self.tab_widget.addTab(tab, "🐛 Debug")
+
+    def _init_diagnostic_system(self):
+        """Initialize the diagnostic monitoring system"""
+        try:
+            # Connect diagnostic log controls
+            if hasattr(self, 'clear_log_btn'):
+                self.clear_log_btn.clicked.connect(self._clear_diagnostic_log)
+            if hasattr(self, 'export_log_btn'):
+                self.export_log_btn.clicked.connect(self._export_diagnostic_log)
+            if hasattr(self, 'diagnostic_filter'):
+                self.diagnostic_filter.currentTextChanged.connect(self._filter_diagnostic_log)
+            
+            # Initialize diagnostic data
+            self.diagnostic_data = {
+                'total_errors': 0,
+                'stuck_events': 0,
+                'failed_targets': 0,
+                'ocr_accuracy': 0.0,
+                'targeting_success': 0.0,
+                'skill_execution': 0.0,
+                'log_entries': []
+            }
+            
+            # Add initial diagnostic message
+            self._add_diagnostic_message("Debug", "Diagnostic system initialized")
+            
+        except Exception as e:
+            print(f"Error initializing diagnostic system: {e}")
+
+    def _add_diagnostic_message(self, category, message):
+        """Add a message to the diagnostic log"""
+        try:
+            if hasattr(self, 'diagnostic_log'):
+                timestamp = __import__('datetime').datetime.now().strftime("%H:%M:%S")
+                formatted_message = f"[{timestamp}] [{category}] {message}"
+                
+                # Store in data
+                self.diagnostic_data['log_entries'].append({
+                    'timestamp': timestamp,
+                    'category': category,
+                    'message': message,
+                    'formatted': formatted_message
+                })
+                
+                # Keep only last 500 entries
+                if len(self.diagnostic_data['log_entries']) > 500:
+                    self.diagnostic_data['log_entries'] = self.diagnostic_data['log_entries'][-500:]
+                
+                # Update display based on current filter
+                self._update_diagnostic_display()
+                
+        except Exception as e:
+            print(f"Error adding diagnostic message: {e}")
+
+    def _update_diagnostic_display(self):
+        """Update the diagnostic log display based on current filter"""
+        try:
+            if not hasattr(self, 'diagnostic_log') or not hasattr(self, 'diagnostic_filter'):
+                return
+                
+            current_filter = self.diagnostic_filter.currentText()
+            filtered_entries = []
+            
+            for entry in self.diagnostic_data['log_entries']:
+                if current_filter == "All Events":
+                    filtered_entries.append(entry['formatted'])
+                elif current_filter == "Errors Only" and entry['category'] in ['Error', 'Critical']:
+                    filtered_entries.append(entry['formatted'])
+                elif current_filter == "State Changes" and entry['category'] in ['State', 'Combat']:
+                    filtered_entries.append(entry['formatted'])
+                elif current_filter == "Combat Events" and entry['category'] in ['Combat', 'Skill', 'Target']:
+                    filtered_entries.append(entry['formatted'])
+                elif current_filter == "Performance Issues" and entry['category'] in ['Performance', 'OCR', 'Timing']:
+                    filtered_entries.append(entry['formatted'])
+            
+            # Update display
+            self.diagnostic_log.setText('\n'.join(filtered_entries[-100:]))  # Show last 100 entries
+            
+            # Auto-scroll to bottom
+            cursor = self.diagnostic_log.textCursor()
+            cursor.movePosition(cursor.End)
+            self.diagnostic_log.setTextCursor(cursor)
+            
+        except Exception as e:
+            print(f"Error updating diagnostic display: {e}")
+
+    def _clear_diagnostic_log(self):
+        """Clear the diagnostic log"""
+        try:
+            self.diagnostic_data['log_entries'] = []
+            if hasattr(self, 'diagnostic_log'):
+                self.diagnostic_log.clear()
+            self._add_diagnostic_message("Debug", "Diagnostic log cleared")
+        except Exception as e:
+            print(f"Error clearing diagnostic log: {e}")
+
+    def _export_diagnostic_log(self):
+        """Export diagnostic log to file"""
+        try:
+            from PyQt5.QtWidgets import QFileDialog
+            import os
+            
+            filename, _ = QFileDialog.getSaveFileName(
+                self, 
+                "Export Diagnostic Log", 
+                "diagnostic_log.txt", 
+                "Text Files (*.txt);;All Files (*)"
+            )
+            
+            if filename:
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write("KBot Diagnostic Log\n")
+                    f.write("=" * 50 + "\n\n")
+                    for entry in self.diagnostic_data['log_entries']:
+                        f.write(entry['formatted'] + '\n')
+                
+                self._add_diagnostic_message("Debug", f"Log exported to {os.path.basename(filename)}")
+                
+        except Exception as e:
+            self._add_diagnostic_message("Error", f"Failed to export log: {e}")
+
+    def _filter_diagnostic_log(self):
+        """Handle filter change"""
+        self._update_diagnostic_display()
+
+    def update_diagnostic_metrics(self, metrics_data):
+        """Update diagnostic metrics from external source"""
+        try:
+            if not hasattr(self, 'diagnostic_data'):
+                return
+                
+            # Update error tracking
+            if 'total_errors' in metrics_data:
+                self.diagnostic_data['total_errors'] = metrics_data['total_errors']
+                if hasattr(self, 'error_count_label'):
+                    self.error_count_label.setText(str(metrics_data['total_errors']))
+            
+            if 'stuck_events' in metrics_data:
+                self.diagnostic_data['stuck_events'] = metrics_data['stuck_events']
+                if hasattr(self, 'stuck_count_label'):
+                    self.stuck_count_label.setText(str(metrics_data['stuck_events']))
+            
+            if 'failed_targets' in metrics_data:
+                self.diagnostic_data['failed_targets'] = metrics_data['failed_targets']
+                if hasattr(self, 'failed_targets_label'):
+                    self.failed_targets_label.setText(str(metrics_data['failed_targets']))
+            
+            # Update performance metrics
+            if 'ocr_accuracy' in metrics_data:
+                accuracy = metrics_data['ocr_accuracy']
+                self.diagnostic_data['ocr_accuracy'] = accuracy
+                if hasattr(self, 'ocr_accuracy_label'):
+                    color = "#00aa00" if accuracy > 90 else "#ff8800" if accuracy > 70 else "#dd0000"
+                    self.ocr_accuracy_label.setText(f"{accuracy:.1f}%")
+                    self.ocr_accuracy_label.setStyleSheet(f"color: {color}; font-weight: bold;")
+            
+            # Update bot states
+            if 'bot_state' in metrics_data:
+                state = metrics_data['bot_state']
+                if hasattr(self, 'current_state_label'):
+                    self.current_state_label.setText(state.title())
+                    color = "#00aa00" if state == "running" else "#ff8800" if state == "paused" else "#666666"
+                    self.current_state_label.setStyleSheet(f"padding: 4px; background-color: {color}; color: white; border-radius: 3px; font-weight: bold;")
+            
+            if 'combat_state' in metrics_data:
+                combat_state = metrics_data['combat_state']
+                if hasattr(self, 'combat_state_label'):
+                    self.combat_state_label.setText(combat_state.title())
+                    color = "#dd0000" if combat_state == "fighting" else "#00aa00" if combat_state == "searching" else "#666666"
+                    self.combat_state_label.setStyleSheet(f"padding: 4px; background-color: {color}; color: white; border-radius: 3px; font-weight: bold;")
+                    
+        except Exception as e:
+            print(f"Error updating diagnostic metrics: {e}")
 
     def _load_current_values(self):
         """✅ Cargar valores actuales desde la configuración"""
@@ -711,18 +928,70 @@ class AdvancedConfigDialog(QDialog):
             self.performance_label.setText("⚡ Performance Impact: Error calculating")
 
     def _update_config_summary(self):
-        """✅ Actualizar resumen de configuración"""
+        """✅ Enhanced configuration summary with ALL settings"""
         try:
             if hasattr(self, "config_summary"):
-                summary = self.config_manager.get_summary()
-                summary_text = []
-                for key, value in summary.items():
-                    summary_text.append(f"{key}: {value}")
-
-                self.config_summary.setPlainText("\n".join(summary_text))
+                summary_html = self._generate_comprehensive_summary()
+                self.config_summary.setHtml(summary_html)
         except Exception as e:
             if hasattr(self, "config_summary"):
                 self.config_summary.setPlainText(f"Error loading summary: {e}")
+
+    def _generate_comprehensive_summary(self) -> str:
+        """Generate comprehensive HTML summary of all configuration settings"""
+        try:
+            html_parts = []
+            html_parts.append("<h3 style='color: #2e86de; margin: 0;'>📋 Configuration Overview</h3>")
+            
+            # Basic Info
+            version = self.config_manager.config_data.get("version", "Unknown")
+            html_parts.append(f"<p><b>Version:</b> {version}</p>")
+            
+            # Combat Behavior
+            behavior = self.config_manager.get_combat_behavior()
+            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>⚔️ Combat Behavior</h4>")
+            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
+            html_parts.append(f"<li>Auto Potions: <b>{'✅' if behavior.get('auto_potions') else '❌'}</b> ({behavior.get('potion_threshold', 'N/A')}%)</li>")
+            html_parts.append(f"<li>Enable Looting: <b>{'✅' if behavior.get('enable_looting') else '❌'}</b></li>")
+            html_parts.append(f"<li>Assist Mode: <b>{'✅' if behavior.get('assist_mode') else '❌'}</b></li>")
+            html_parts.append(f"<li>Use Skills: <b>{'✅' if behavior.get('use_skills') else '❌'}</b></li>")
+            html_parts.append(f"<li>OCR Tolerance: <b>{behavior.get('ocr_tolerance', 'N/A')}%</b></li>")
+            html_parts.append("</ul>")
+            
+            # Timing Settings
+            timing = self.config_manager.get_combat_timing()
+            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>⏱️ Key Timings</h4>")
+            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
+            html_parts.append(f"<li>Skill Interval: <b>{timing.get('skill_interval', 'N/A')}s</b></li>")
+            html_parts.append(f"<li>Attack Interval: <b>{timing.get('attack_interval', 'N/A')}s</b></li>")
+            html_parts.append(f"<li>Post-Combat Delay: <b>{timing.get('post_combat_delay', 'N/A')}s</b></li>")
+            html_parts.append(f"<li>Stuck Detection: <b>{timing.get('stuck_detection_searching', 'N/A')}s</b></li>")
+            html_parts.append("</ul>")
+            
+            # Skills Info
+            skills_config = self.config_manager.get_skills_config()
+            skills_count = len(skills_config.get("definitions", {}))
+            rotations_count = len(skills_config.get("rotations", {}))
+            active_rotation = skills_config.get("active_rotation", "None")
+            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>🎯 Skills & Rotations</h4>")
+            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
+            html_parts.append(f"<li>Total Skills: <b>{skills_count}</b></li>")
+            html_parts.append(f"<li>Rotations: <b>{rotations_count}</b></li>")
+            html_parts.append(f"<li>Active Rotation: <b>{active_rotation}</b></li>")
+            html_parts.append(f"<li>Global Cooldown: <b>{skills_config.get('global_cooldown', 'N/A')}s</b></li>")
+            html_parts.append("</ul>")
+            
+            # Whitelist
+            whitelist = self.config_manager.get_whitelist()
+            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>📋 Targets</h4>")
+            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
+            html_parts.append(f"<li>Whitelisted Mobs: <b>{len(whitelist)}</b> ({', '.join(whitelist[:3])}{'...' if len(whitelist) > 3 else ''})</li>")
+            html_parts.append("</ul>")
+            
+            return "".join(html_parts)
+            
+        except Exception as e:
+            return f"<p style='color: red;'>Error generating summary: {e}</p>"
 
     def _emit_config_change(self):
         """Emit configuration change signal"""

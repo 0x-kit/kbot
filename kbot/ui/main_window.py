@@ -316,10 +316,8 @@ class TantraBotMainWindow(QMainWindow):
         left_layout.setAlignment(Qt.AlignTop)
         self._create_main_control_buttons(left_layout)
         self._create_window_management_group(left_layout)
-        self._create_options_group(left_layout)
         self._create_mob_whitelist_group(left_layout)
-        self.save_changes_btn = QPushButton("Save All Changes")
-        left_layout.addWidget(self.save_changes_btn)
+        self._create_quick_actions_group(left_layout)
         left_layout.addStretch(1)
         main_splitter.addWidget(left_panel_widget)
         right_panel_widget = QWidget()
@@ -335,8 +333,9 @@ class TantraBotMainWindow(QMainWindow):
         self.log_widget = LogWidget()
         right_splitter.addWidget(self.log_widget)
         main_splitter.addWidget(right_panel_widget)
-        main_splitter.setSizes([350, 850])
-        right_splitter.setSizes([200, 600])
+        # Optimized layout proportions for status/monitoring focus
+        main_splitter.setSizes([300, 900])  # Reduced left panel, expanded right panel
+        right_splitter.setSizes([350, 450])  # Expanded status area, reduced logs
 
     def _create_main_control_buttons(self, parent_layout):
         control_group = QGroupBox("Bot Control")
@@ -364,69 +363,6 @@ class TantraBotMainWindow(QMainWindow):
         window_layout.addWidget(self.current_window_label)
         parent_layout.addWidget(window_group)
 
-    def _create_options_group(self, parent_layout):
-        """✅ STREAMLINED - Essential options only with advanced config button"""
-        options_group = QGroupBox("Basic Options")
-        options_layout = QGridLayout(options_group)
-
-        # Row 0: Auto Potions checkbox
-        self.auto_pots_cb = QCheckBox("Auto Potions (HP / MP)")
-        self.auto_pots_cb.setChecked(True)
-        self.auto_pots_cb.setToolTip("Automatically use potions when HP/MP is low")
-        options_layout.addWidget(self.auto_pots_cb, 0, 0, 1, 2)
-
-        # Row 1: Enable Looting checkbox
-        self.enable_looting_cb = QCheckBox("Enable Looting")
-        self.enable_looting_cb.setToolTip(
-            "Automatically loot items after killing targets"
-        )
-        self.enable_looting_cb.setChecked(True)
-        options_layout.addWidget(self.enable_looting_cb, 1, 0, 1, 2)
-
-        # Row 2: Assist Mode checkbox
-        self.assist_mode_cb = QCheckBox("Assist Mode")
-        self.assist_mode_cb.setToolTip(
-            "Use assist skill instead of searching for targets independently"
-        )
-        self.assist_mode_cb.setChecked(False)
-        options_layout.addWidget(self.assist_mode_cb, 2, 0, 1, 2)
-
-        # Row 3: Visual separator
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Sunken)
-        separator.setStyleSheet("color: #cccccc; margin: 5px 0px;")
-        options_layout.addWidget(separator, 3, 0, 1, 2)
-
-        # Row 4: Advanced Configuration button
-        self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
-        self.advanced_config_btn.setToolTip(
-            "Open advanced timing, behavior, and OCR configuration dialog"
-        )
-        self.advanced_config_btn.clicked.connect(self._open_advanced_config)
-        self.advanced_config_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #e8f4ff;
-                border: 2px solid #4CAF50;
-                border-radius: 6px;
-                padding: 10px 15px;
-                font-weight: bold;
-                font-size: 12px;
-                min-height: 30px;
-            }
-            QPushButton:hover {
-                background-color: #d0e8ff;
-                border-color: #45a049;
-            }
-            QPushButton:pressed {
-                background-color: #b8dcff;
-            }
-        """
-        )
-        options_layout.addWidget(self.advanced_config_btn, 4, 0, 1, 2)
-
-        parent_layout.addWidget(options_group)
 
     def _create_mob_whitelist_group(self, parent_layout):
         whitelist_group = QGroupBox("Mob Whitelist")
@@ -437,24 +373,86 @@ class TantraBotMainWindow(QMainWindow):
         whitelist_layout.addWidget(self.whitelist_edit)
         parent_layout.addWidget(whitelist_group)
 
+    def _create_quick_actions_group(self, parent_layout):
+        """Quick actions and configuration access"""
+        actions_group = QGroupBox("Configuration & Actions")
+        actions_layout = QVBoxLayout(actions_group)
+        
+        # Advanced Configuration button - prominent access
+        self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
+        self.advanced_config_btn.setToolTip(
+            "Open advanced timing, behavior, and settings configuration"
+        )
+        self.advanced_config_btn.clicked.connect(self._open_advanced_config)
+        self.advanced_config_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #4a90e2;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+                min-height: 30px;
+            }
+            QPushButton:hover {
+                background-color: #357abd;
+            }
+            QPushButton:pressed {
+                background-color: #2a5d87;
+            }
+            """
+        )
+        actions_layout.addWidget(self.advanced_config_btn)
+        
+        # Save configuration button
+        self.save_changes_btn = QPushButton("💾 Save Configuration")
+        self.save_changes_btn.setToolTip("Save all current settings to configuration file")
+        self.save_changes_btn.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-weight: bold;
+                min-height: 25px;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+            QPushButton:pressed {
+                background-color: #1e7e34;
+            }
+            """
+        )
+        actions_layout.addWidget(self.save_changes_btn)
+        
+        parent_layout.addWidget(actions_group)
+
     def _create_stats_group(self, parent_layout):
+        """Enhanced session statistics focused on essential monitoring metrics"""
         stats_group = QGroupBox("Session Statistics")
         stats_layout = QGridLayout(stats_group)
+        
+        # Essential metrics only - Runtime and Targets
         stats_layout.addWidget(QLabel("Runtime:"), 0, 0)
         self.runtime_label = QLabel("00:00:00")
+        self.runtime_label.setStyleSheet("font-weight: bold; color: #0066cc;")
         stats_layout.addWidget(self.runtime_label, 0, 1)
+        
         stats_layout.addWidget(QLabel("Targets Killed:"), 1, 0)
         self.targets_killed_label = QLabel("0")
+        self.targets_killed_label.setStyleSheet("font-weight: bold; color: #00aa00;")
         stats_layout.addWidget(self.targets_killed_label, 1, 1)
-        stats_layout.addWidget(QLabel("Skills Used:"), 2, 0)
-        self.skills_used_label = QLabel("0")
-        stats_layout.addWidget(self.skills_used_label, 2, 1)
-        stats_layout.addWidget(QLabel("Stuck (Combat):"), 3, 0)
-        self.stuck_combat_label = QLabel("0")
-        stats_layout.addWidget(self.stuck_combat_label, 3, 1)
-        stats_layout.addWidget(QLabel("Stuck (Search):"), 4, 0)
-        self.stuck_search_label = QLabel("0")
-        stats_layout.addWidget(self.stuck_search_label, 4, 1)
+        
+        # Bot state indicator
+        stats_layout.addWidget(QLabel("Bot State:"), 2, 0)
+        self.bot_state_label = QLabel("Stopped")
+        self.bot_state_label.setStyleSheet("font-weight: bold; padding: 2px;")
+        stats_layout.addWidget(self.bot_state_label, 2, 1)
+        
         stats_layout.setColumnStretch(1, 1)
         parent_layout.addWidget(stats_group, 1)
 
@@ -560,18 +558,13 @@ class TantraBotMainWindow(QMainWindow):
             behavior = self.bot_engine.config_manager.get_combat_behavior()
             whitelist = self.bot_engine.config_manager.get_whitelist()
 
-            # Configurar SOLO los controles básicos que están en la ventana principal
-            self.auto_pots_cb.setChecked(behavior.get("auto_potions", True))
-            self.enable_looting_cb.setChecked(behavior.get("enable_looting", True))
-            self.assist_mode_cb.setChecked(behavior.get("assist_mode", False))
-
-            # Configurar whitelist
+            # Configure whitelist (main window now only handles whitelist and actions)
             self.whitelist_edit.setPlainText("\n".join(whitelist))
 
             self.status_bar.showMessage(
-                "Basic configuration loaded successfully", 2000
+                "Configuration loaded successfully", 2000
             )
-            self.logger.info("Basic configuration loaded from unified JSON system")
+            self.logger.info("Main window configuration loaded from unified JSON system")
 
         except Exception as e:
             self.logger.error(f"Failed to load basic configuration: {e}")
@@ -612,23 +605,15 @@ class TantraBotMainWindow(QMainWindow):
             )
 
     def _apply_ui_settings_unified(self):
-        """✅ NUEVO - Aplica configuración UI usando sistema unificado (solo controles básicos)"""
+        """✅ UPDATED - Apply main window settings (whitelist only, no basic options)"""
         try:
-            # Preparar configuración de comportamiento (SOLO controles básicos)
-            behavior_updates = {
-                "auto_potions": self.auto_pots_cb.isChecked(),
-                "enable_looting": self.enable_looting_cb.isChecked(),
-                "assist_mode": self.assist_mode_cb.isChecked(),
-            }
-
-            # Preparar whitelist
+            # Prepare whitelist only (basic options moved to advanced dialog)
             whitelist_text = self.whitelist_edit.toPlainText()
             whitelist = [
                 line.strip() for line in whitelist_text.splitlines() if line.strip()
             ]
 
-            # Aplicar configuraciones usando métodos especializados
-            self.bot_engine.config_manager.set_combat_behavior(behavior_updates)
+            # Apply whitelist configuration
             self.bot_engine.config_manager.set_whitelist(whitelist)
 
             # Aplicar cambios a los componentes del bot
@@ -637,7 +622,7 @@ class TantraBotMainWindow(QMainWindow):
             # Sync changes to advanced dialog if it's open
             self._sync_to_advanced_dialog()
 
-            self.logger.info("Basic UI settings applied to unified config system.")
+            self.logger.info("Main window settings (whitelist) applied to unified config system.")
 
         except Exception as e:
             self.logger.error(f"Failed to apply basic UI settings to unified config: {e}")
@@ -744,15 +729,7 @@ class TantraBotMainWindow(QMainWindow):
                 behavior_changes = config_changes["behavior"]
                 self.bot_engine.config_manager.set_combat_behavior(behavior_changes)
 
-                # Update essential controls if necessary
-                if "auto_potions" in behavior_changes:
-                    self.auto_pots_cb.setChecked(behavior_changes["auto_potions"])
-                if "enable_looting" in behavior_changes:
-                    self.enable_looting_cb.setChecked(
-                        behavior_changes["enable_looting"]
-                    )
-                if "assist_mode" in behavior_changes:
-                    self.assist_mode_cb.setChecked(behavior_changes["assist_mode"])
+                # No need to update main window controls - basic options moved to advanced dialog
 
                 self.logger.debug(f"Applied behavior changes: {behavior_changes}")
 
@@ -806,20 +783,12 @@ class TantraBotMainWindow(QMainWindow):
 
     def _apply_ui_settings(self):
         """
-        Apply essential UI settings to bot engine using unified config system.
+        Apply main window UI settings (whitelist only) to bot engine using unified config system.
         """
         try:
             config = self.bot_engine.config_manager
 
-            # Apply essential behavior settings
-            behavior_updates = {
-                "auto_potions": self.auto_pots_cb.isChecked(),
-                "enable_looting": self.enable_looting_cb.isChecked(),
-                "assist_mode": self.assist_mode_cb.isChecked(),
-            }
-            config.set_combat_behavior(behavior_updates)
-
-            # Apply whitelist
+            # Apply whitelist only (basic options moved to advanced dialog)
             whitelist_text = self.whitelist_edit.toPlainText()
             whitelist = [
                 line.strip() for line in whitelist_text.splitlines() if line.strip()
@@ -828,7 +797,7 @@ class TantraBotMainWindow(QMainWindow):
 
             # Apply changes to bot components
             self.bot_engine.update_components_from_config()
-            self.logger.info("Essential UI settings applied to bot engine.")
+            self.logger.info("Main window UI settings (whitelist) applied to bot engine.")
         except Exception as e:
             self.logger.error(f"Failed to apply UI settings: {e}")
             QMessageBox.critical(
@@ -880,9 +849,18 @@ class TantraBotMainWindow(QMainWindow):
             minutes, seconds = divmod(remainder, 60)
             self.runtime_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
             self.targets_killed_label.setText(str(stats.get("targets_lost", 0)))
-            self.skills_used_label.setText(str(stats.get("skills_used", 0)))
-            self.stuck_combat_label.setText(str(stats.get("stuck_in_combat", 0)))
-            self.stuck_search_label.setText(str(stats.get("stuck_searching", 0)))
+            
+            # Update bot state with color coding
+            state = self.bot_engine.get_state()
+            self.bot_state_label.setText(state.title())
+            if state == "running":
+                self.bot_state_label.setStyleSheet("font-weight: bold; color: #00aa00; padding: 2px;")
+            elif state == "error":
+                self.bot_state_label.setStyleSheet("font-weight: bold; color: #dd0000; padding: 2px;")
+            elif state == "paused":
+                self.bot_state_label.setStyleSheet("font-weight: bold; color: #ff8800; padding: 2px;")
+            else:
+                self.bot_state_label.setStyleSheet("font-weight: bold; color: #666666; padding: 2px;")
         except Exception as e:
             print(f"Error updating UI: {e}")
 
