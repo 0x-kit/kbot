@@ -68,15 +68,55 @@ class TantraBotMainWindow(QMainWindow):
         self._setup_ui()
         self._setup_menu_bar()
         self._setup_status_bar()
-        self._connect_signals()
-        self._load_configuration()  # Usa el sistema unificado
-
+        
+        # Connect thread signals first, before starting the thread
         self.bot_thread.started.connect(self.bot_worker.initialize_in_thread)
+        
+        # Connect to the worker's initialization signals
+        self.bot_worker.initialization_complete.connect(self._on_bot_initialized)
+        self.bot_worker.initialization_failed.connect(self._on_bot_initialization_failed)
+        
+        # Start the thread - this will trigger initialization
         self.bot_thread.start()
+        
+        # Don't connect signals or load config until bot is initialized
 
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._update_ui)
         self.refresh_timer.start(1000)
+
+    def _is_bot_ready(self):
+        """Helper method to check if bot engine is initialized and ready"""
+        return (self.bot_engine and 
+                hasattr(self.bot_worker, '_initialized') and 
+                self.bot_worker._initialized)
+
+    def _check_bot_ready_or_warn(self):
+        """Check if bot is ready and show warning if not. Returns True if ready."""
+        if not self._is_bot_ready():
+            QMessageBox.warning(self, "Bot Not Ready", "Bot is still initializing. Please wait...")
+            return False
+        return True
+
+    def _on_bot_initialized(self):
+        """Called when the bot worker has finished initializing in its thread"""
+        try:
+            self.logger.info("Bot initialized, connecting signals and loading configuration")
+            self._connect_signals()
+            self._load_configuration()
+        except Exception as e:
+            self.logger.error(f"Error during post-initialization setup: {e}")
+            QMessageBox.critical(self, "Initialization Error", 
+                               f"Failed to complete bot initialization:\n{e}")
+
+    def _on_bot_initialization_failed(self, error_message):
+        """Called when bot worker initialization fails"""
+        self.logger.error(f"Bot initialization failed: {error_message}")
+        QMessageBox.critical(self, "Bot Initialization Failed", 
+                           f"Failed to initialize bot components:\n{error_message}")
+        # Disable UI elements since bot is not functional
+        self.start_stop_btn.setEnabled(False)
+        self.pause_resume_btn.setEnabled(False)
 
     @pyqtSlot()
     def _select_window(self):
@@ -84,6 +124,10 @@ class TantraBotMainWindow(QMainWindow):
         Abre el diálogo de selección, y si tiene éxito, le pasa el HWND al BotEngine
         para que este configure todos los subsistemas necesarios.
         """
+        # Check if bot engine is initialized
+        if not self._check_bot_ready_or_warn():
+            return
+            
         dialog = WindowSelectorDialog(self.bot_engine.window_manager, self)
 
         # El diálogo se cierra con `Accepted` solo si se seleccionó una ventana
@@ -110,6 +154,10 @@ class TantraBotMainWindow(QMainWindow):
         """
         Realiza una prueba de captura de un área específica y la muestra ampliada.
         """
+        # Check if bot engine is initialized
+        if not self._check_bot_ready_or_warn():
+            return
+            
         if not self.bot_engine.window_manager.target_window:
             QMessageBox.warning(
                 self, "Test Error", "Please select a game window first."
@@ -179,6 +227,10 @@ class TantraBotMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _test_ocr(self):
+        # Check if bot engine is initialized
+        if not self._check_bot_ready_or_warn():
+            return
+            
         if not self.bot_engine.window_manager.target_window:
             QMessageBox.warning(
                 self,
@@ -534,6 +586,10 @@ class TantraBotMainWindow(QMainWindow):
     def _save_configuration(self):
         """✅ ACTUALIZADO - Guarda usando sistema unificado"""
         try:
+            # Check if bot engine is initialized
+            if not self._check_bot_ready_or_warn():
+                return
+                
             # Aplicar cambios de la UI al sistema unificado
             self._apply_ui_settings_unified()
 
@@ -603,13 +659,8 @@ class TantraBotMainWindow(QMainWindow):
     def _open_advanced_config(self):
         """✅ NUEVO - Abrir diálogo de configuración avanzada"""
         try:
-            # Verificar que tenemos el config manager
-            if not hasattr(self.bot_engine, "config_manager"):
-                QMessageBox.warning(
-                    self,
-                    "Not Ready",
-                    "Configuration system not ready yet. Please wait a moment and try again.",
-                )
+            # Check if bot engine is initialized
+            if not self._check_bot_ready_or_warn():
                 return
 
             # Importar el diálogo de configuración avanzada
@@ -715,6 +766,10 @@ class TantraBotMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _toggle_bot(self):
+        # Check if bot engine is initialized
+        if not self._check_bot_ready_or_warn():
+            return
+            
         # Ya no llama a los métodos directamente. Emite señales.
         if self.bot_engine.get_state() == "stopped":
             if not self.bot_engine.window_manager.target_window:
@@ -762,12 +817,16 @@ class TantraBotMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _configure_regions(self):
+        if not self._check_bot_ready_or_warn():
+            return
         dialog = RegionConfigDialog(self.bot_engine, self)
         if dialog.exec_() == QDialog.Accepted:
             self.status_bar.showMessage("Region configuration updated", 2000)
 
     @pyqtSlot()
     def _open_skill_config(self):
+        if not self._check_bot_ready_or_warn():
+            return
         dialog = SkillConfigDialog(
             skill_manager=self.bot_engine.skill_manager,
             config_manager=self.bot_engine.config_manager,
@@ -782,6 +841,13 @@ class TantraBotMainWindow(QMainWindow):
 
     def _update_ui(self):
         try:
+            # Check if bot engine is initialized and has required components
+            if not self._is_bot_ready():
+                # Bot not yet initialized, show default state
+                self.bot_status_label.setText("Status: Initializing...")
+                self.bot_state_label.setText("Initializing")
+                return
+                
             state = self.bot_engine.get_state()
             self.bot_status_label.setText(f"Status: {state.title()}")
             self.bot_state_label.setText(state.title())

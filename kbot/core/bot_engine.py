@@ -839,7 +839,9 @@ class BotWorker(QObject):
 
     def __init__(self):
         super().__init__()
-        self.bot_engine = None
+        # Create a basic BotEngine instance immediately for signal connections
+        # Components will be initialized later in the thread
+        self.bot_engine = BotEngine()
         self._initialized = False
         self._initialization_lock = False
 
@@ -857,8 +859,6 @@ class BotWorker(QObject):
         self._initialization_lock = True
         
         try:
-            # Create BotEngine with thread-safe component initialization
-            self.bot_engine = BotEngine()
             self.bot_engine.logger.info("Initializing bot components inside the worker thread...")
 
             # Use factory to create all components thread-safely
@@ -881,8 +881,10 @@ class BotWorker(QObject):
             
         except Exception as e:
             error_msg = f"Failed to initialize bot components: {e}"
-            if self.bot_engine and self.bot_engine.logger:
+            if self.bot_engine and hasattr(self.bot_engine, 'logger') and self.bot_engine.logger:
                 self.bot_engine.logger.error(error_msg)
+            else:
+                print(f"BotWorker initialization error: {error_msg}")  # Fallback logging
             self.initialization_failed.emit(error_msg)
         finally:
             self._initialization_lock = False
