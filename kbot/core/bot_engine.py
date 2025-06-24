@@ -335,17 +335,18 @@ class BotEngine(QObject):
 
     def _setup_timers(self) -> None:
         """Setup optimized timers with consolidated high-frequency operations"""
-        timing = self.config_manager.get_timing()
+        timing = self.config_manager.get_combat_timing()
         
         # High-frequency main loop timer that consolidates vitals and combat
         # This reduces the overhead of multiple 500ms timers
-        main_loop_interval = min(timing.get("potion", 0.5), timing.get("combat_check", 0.5))
+        vitals_interval = timing.get("vitals_check_interval", 0.5)
         self.timer_manager.create_timer(
-            "main_loop", main_loop_interval, self._optimized_main_loop
+            "main_loop", vitals_interval, self._optimized_main_loop
         )
         
         # Medium-frequency timers for maintenance tasks
-        self.timer_manager.create_timer("stats_update", 5.0, self._update_stats)
+        stats_interval = timing.get("stats_update_interval", 5.0)
+        self.timer_manager.create_timer("stats_update", stats_interval, self._update_stats)
         self.timer_manager.create_timer(
             "maintenance_loop", 3.0, self._optimized_maintenance_loop
         )
@@ -485,9 +486,10 @@ class BotEngine(QObject):
                     if self.current_target and self.current_target != old_target:
                         self.logger.info(f"New target: {self.current_target}")
                 #  self.target_changed.emit(self.current_target or "")
-            auto_pots = self.config_manager.get_option("auto_pots", True)
+            behavior = self.config_manager.get_combat_behavior()
+            auto_pots = behavior.get("auto_potions", True)
             if auto_pots:
-                threshold = self.config_manager.get_option("potion_threshold", 70)
+                threshold = behavior.get("potion_threshold", 70)
 
                 # --- LÓGICA DE HP POTION MEJORADA ---
                 if vitals["hp"] < threshold:
