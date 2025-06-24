@@ -2,7 +2,7 @@
   "version": "2.0",
   "combat": {
     "timing": {
-      "skill_interval": 1.0,
+      "skill_interval": 0.5,
       "attack_interval": 1.2,
       "target_attempt_interval": 0.3,
       "post_combat_delay": 1.5,
@@ -16,11 +16,11 @@
     },
     "behavior": {
       "auto_potions": true,
-      "potion_threshold": 70,
+      "potion_threshold": 50,
       "enable_looting": true,
       "assist_mode": false,
       "use_skills": true,
-      "ocr_tolerance": 82,
+      "ocr_tolerance": 64,
       "fuzzy_match_threshold": 80,
       "loot_duration": 0.8,
       "loot_initial_delay": 0.1,
@@ -30,7 +30,7 @@
       "auto_pots": true
     },
     "whitelist": [
-      "*"
+      "Sinkiu"
     ]
   },
   "regions": {
@@ -48,9 +48,9 @@
     ],
     "target": [
       4,
-      66,
+      65,
       168,
-      75
+      68
     ],
     "target_name": [
       4,
@@ -60,7 +60,8 @@
     ]
   },
   "skills": {
-    "global_cooldown": 0.2,
+    "global_cooldown": 0.05,
+    "active_rotation": null,
     "definitions": {
       "Basic Attack": {
         "key": "r",
@@ -123,14 +124,17 @@
         "enabled": true
       }
     },
-       "rotations": {
+    "rotations": {
       "BasicCombo": {
-        "skills": ["Basic Attack", "Amada", "Bizs"],
+        "skills": [
+          "Basic Attack",
+          "Amada",
+          "Biz"
+        ],
         "repeat": true,
         "enabled": true
       }
-    },
-    "active_rotation": "BasicCombo"
+    }
   },
   "ui": {
     "refresh_interval": 1000,

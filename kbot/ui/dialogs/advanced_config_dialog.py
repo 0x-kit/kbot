@@ -366,15 +366,15 @@ class AdvancedConfigDialog(QDialog):
         )
 
         # Fuzzy match threshold
-        self.behavior_widgets["fuzzy_match_threshold"] = QSpinBox()
-        self.behavior_widgets["fuzzy_match_threshold"].setRange(50, 100)
-        self.behavior_widgets["fuzzy_match_threshold"].setSuffix("%")
-        self.behavior_widgets["fuzzy_match_threshold"].setToolTip(
-            "Fuzzy string matching threshold for target names"
-        )
-        threshold_layout.addRow(
-            "Fuzzy Match Threshold:", self.behavior_widgets["fuzzy_match_threshold"]
-        )
+        # self.behavior_widgets["fuzzy_match_threshold"] = QSpinBox()
+        # self.behavior_widgets["fuzzy_match_threshold"].setRange(50, 100)
+        # self.behavior_widgets["fuzzy_match_threshold"].setSuffix("%")
+        # self.behavior_widgets["fuzzy_match_threshold"].setToolTip(
+        #     "Fuzzy string matching threshold for target names"
+        # )
+        # threshold_layout.addRow(
+        #     "Fuzzy Match Threshold:", self.behavior_widgets["fuzzy_match_threshold"]
+        # )
 
         scroll_layout.addWidget(threshold_group)
 

@@ -1,10 +1,19 @@
-# kbot/combat/combat_manager.py - VERSIÓN OPTIMIZADA
+# kbot/combat/combat_manager.py - VERSIÓN CON FUZZYWUZZY CORREGIDO
 
 import time
 from typing import Optional, List, Dict, Any
 from enum import Enum
 import random
-from fuzzywuzzy import fuzz
+
+# ✅ IMPORT CORREGIDO - FuzzyWuzzy añadido de vuelta
+try:
+    from fuzzywuzzy import fuzz
+
+    FUZZYWUZZY_AVAILABLE = True
+except ImportError:
+    FUZZYWUZZY_AVAILABLE = False
+    print("WARNING: fuzzywuzzy not available, falling back to simple string matching")
+
 from core.pixel_analyzer import PixelAnalyzer
 from combat.skill_manager import SkillManager, SkillType
 from core.input_controller import InputController
@@ -25,7 +34,7 @@ class CombatState(Enum):
 
 
 class CombatManager:
-    """VERSIÓN OPTIMIZADA - Combat Manager más fluido y eficiente"""
+    """VERSIÓN OPTIMIZADA CON FUZZY MATCHING INTELIGENTE"""
 
     def __init__(
         self,
@@ -60,18 +69,18 @@ class CombatManager:
         self.stuck_detector = {
             "last_target_hp": 100,
             "hp_unchanged_since": 0,
-            "stuck_in_combat_timeout": 8.0,  # ✅ Reducido de 12s
+            "stuck_in_combat_timeout": 8.0,
             "last_unstuck_attempt": 0,
-            "unstuck_cooldown": 3.0,  # ✅ Reducido de 5s
+            "unstuck_cooldown": 3.0,
         }
 
         # Configuración de looteo
         self.looting_config = {
             "enabled": True,
-            "duration": 0.8,  # ✅ Reducido de 1s
-            "initial_delay": 0.1,  # ✅ Reducido de 0.2s
+            "duration": 0.8,
+            "initial_delay": 0.1,
             "loot_attempts": 2,
-            "attempt_interval": 0.2,  # ✅ Reducido de 0.3s
+            "attempt_interval": 0.2,
             "loot_key": "f",
         }
         self.looting_state_tracker = {"start_time": 0, "_attempts_made": 0}
@@ -84,16 +93,25 @@ class CombatManager:
         self.skill_priority_mode = "rotation"
         self.assist_mode_enabled = False
 
+        # ✅ CONFIGURACIÓN DE OCR TOLERANCE UNIFICADA
+        self.ocr_tolerance = (
+            80  # Tolerancia para variaciones de OCR (parámetro principal)
+        )
+
+        # ✅ Caché para evitar recalcular fuzzy scores
+        self._target_validation_cache = {}
+        self._cache_max_size = 50  # Límite del caché
+
         # ✅ TIMINGS OPTIMIZADOS PARA FLUIDEZ
         self.timing = {
-            "combat_log_interval": 5.0,  # ✅ Menos spam de logs
-            "target_attempt_interval": 0.3,  # ✅ Búsqueda más rápida (era 1.0s)
-            "stuck_detection_searching": 6.0,  # ✅ Detección más rápida (era 10s)
-            "attack_interval": 1.2,  # ✅ MUCHO más rápido (era 10s!)
-            "skill_interval": 1.0,  # ✅ Skills más fluidos (era 2.25s)
-            "post_combat_delay": 1.5,  # ✅ Menos espera (era 3s)
-            "assist_interval": 0.8,  # ✅ Assist más responsivo (era 1.5s)
-            "engage_timeout": 3.0,  # ✅ NUEVO: Timeout para fase de engage
+            "combat_log_interval": 5.0,
+            "target_attempt_interval": 0.3,
+            "stuck_detection_searching": 6.0,
+            "attack_interval": 1.2,
+            "skill_interval": 1.0,
+            "post_combat_delay": 1.5,
+            "assist_interval": 0.8,
+            "engage_timeout": 3.0,
         }
 
         # Estadísticas
@@ -107,10 +125,8 @@ class CombatManager:
             "unstuck_maneuvers": 0,
         }
 
-        self.ocr_tolerance_threshold = 80
-
     def process_combat(self) -> None:
-        """BUCLE PRINCIPAL OPTIMIZADO"""
+        """🔧 BUCLE PRINCIPAL CORREGIDO - VERSIÓN QUE SÍ ATACA"""
         if not self.is_running:
             return
 
@@ -118,17 +134,31 @@ class CombatManager:
             current_time = time.time()
             game_state = self.skill_manager.game_state
 
-            # ✅ LÓGICA DE DECISIÓN SIMPLIFICADA Y MÁS RÁPIDA
+            # ✅ OBTENER DATOS DEL TARGET CORRECTAMENTE
             target_exists = game_state.get("target_exists", False)
+            target_name = game_state.get("target_name", "").strip()
+            target_hp = game_state.get("target_hp", 0)
 
-            # Si tenemos target, vamos directo a combate
-            if target_exists:
-                if self.state != CombatState.FIGHTING:
-                    target_name = game_state.get("target_name", "")
-                    if self._is_target_allowed(target_name):
-                        self._start_combat(target_name, current_time)
+            # 🔧 LÓGICA CORREGIDA: Si hay target válido, atacar inmediatamente
+            if target_exists and target_hp > 0:
+                # Validar target name solo si no está vacío
+                target_is_valid = True
+                if target_name:
+                    target_is_valid = self._is_target_allowed(target_name)
+
+                if target_is_valid:
+                    if self.state != CombatState.FIGHTING:
+                        self._start_combat(
+                            target_name or "Unknown Target", current_time
+                        )
+                    else:
+                        self._handle_fighting_state(current_time, game_state)
                 else:
-                    self._handle_fighting_state(current_time, game_state)
+                    # Target no está en whitelist, buscar otro
+                    self.logger.debug(
+                        f"Target '{target_name}' not in whitelist, searching for valid target"
+                    )
+                    self._handle_searching_state(current_time, game_state)
             else:
                 # Sin target: manejar estados post-combate o búsqueda
                 if self.state == CombatState.FIGHTING:
@@ -149,7 +179,7 @@ class CombatManager:
             self.logger.error(f"Error in combat loop: {e}")
 
     def _start_combat(self, target_name: str, current_time: float):
-        """✅ NUEVO: Inicio de combate optimizado"""
+        """✅ INICIO DE COMBATE OPTIMIZADO"""
         self.logger.info(f"🎯 Target acquired: {target_name}")
         self.current_target = target_name
         self.state = CombatState.FIGHTING
@@ -182,11 +212,11 @@ class CombatManager:
         # Detección de stuck
         self._check_stuck_in_combat(current_time, target_hp)
 
-        # ✅ SISTEMA DE COMBATE NUEVO Y MÁS FLUIDO
+        # ✅ SISTEMA DE COMBATE MEJORADO
         self._execute_optimized_combat(current_time, target_hp)
 
     def _execute_optimized_combat(self, current_time: float, target_hp: int):
-        """✅ NUEVO: Sistema de combate unificado y más fluido"""
+        """✅ SISTEMA DE COMBATE UNIFICADO Y MÁS FLUIDO"""
 
         # Intentar usar skill primero (prioridad)
         skill_used = False
@@ -335,30 +365,81 @@ class CombatManager:
                 self.stuck_detector["last_unstuck_attempt"] = current_time
 
     def _is_target_allowed(self, target_name: str) -> bool:
-        self.logger.info(
-            f"TESTING: Validating target '{target_name}' against whitelist {self.mob_whitelist}"
-        )
+        """🔧 VALIDACIÓN DE TARGET CON FUZZY MATCHING INTELIGENTE"""
+        if not target_name:
+            return False
 
-        """✅ VALIDACIÓN DE TARGET OPTIMIZADA"""
-        if not self.mob_whitelist or not target_name:
-            return bool(target_name)  # Si no hay whitelist, cualquier target vale
+        # ✅ Si la whitelist contiene "*", permitir todos los targets
+        if "*" in self.mob_whitelist:
+            self.logger.debug(
+                f"Target '{target_name}' allowed (wildcard '*' in whitelist)"
+            )
+            return True
 
-        # ✅ Caché simple para evitar recalcular fuzzy matching
-        if not hasattr(self, "_target_cache"):
-            self._target_cache = {}
+        # Si no hay whitelist, no permitir nada
+        if not self.mob_whitelist:
+            self.logger.debug(f"Target '{target_name}' rejected (empty whitelist)")
+            return False
 
-        if target_name in self._target_cache:
-            return self._target_cache[target_name]
+        # ✅ VERIFICAR CACHÉ PRIMERO
+        cache_key = target_name.lower()
+        if cache_key in self._target_validation_cache:
+            result = self._target_validation_cache[cache_key]
+            self.logger.debug(f"Target '{target_name}' validation from cache: {result}")
+            return result
 
-        # Fuzzy matching optimizado
+        # ✅ FUZZY MATCHING CON FALLBACK A STRING SIMPLE
+        best_match_score = 0
+        best_match_name = None
+
+        target_lower = target_name.lower()
+
         for allowed_mob in self.mob_whitelist:
-            similarity = fuzz.partial_ratio(target_name.lower(), allowed_mob.lower())
-            if similarity >= self.ocr_tolerance_threshold:
-                self._target_cache[target_name] = True
-                return True
+            allowed_lower = allowed_mob.lower()
 
-        self._target_cache[target_name] = False
-        return False
+            # Verificación exacta (100% score)
+            if target_lower == allowed_lower:
+                score = 100
+            elif FUZZYWUZZY_AVAILABLE:
+                # ✅ USAR FUZZYWUZZY SI ESTÁ DISPONIBLE
+                score = max(
+                    fuzz.ratio(target_lower, allowed_lower),
+                    fuzz.partial_ratio(target_lower, allowed_lower),
+                    fuzz.token_sort_ratio(target_lower, allowed_lower),
+                )
+            else:
+                # Fallback a substring matching simple
+                if allowed_lower in target_lower or target_lower in allowed_lower:
+                    score = 75  # Score arbitrario para substring match
+                else:
+                    score = 0
+
+            if score > best_match_score:
+                best_match_score = score
+                best_match_name = allowed_mob
+
+        # ✅ EVALUAR RESULTADO
+        is_allowed = best_match_score >= self.ocr_tolerance
+
+        # ✅ GUARDAR EN CACHÉ (con límite de tamaño)
+        if len(self._target_validation_cache) >= self._cache_max_size:
+            # Limpiar caché si está lleno
+            oldest_key = next(iter(self._target_validation_cache))
+            del self._target_validation_cache[oldest_key]
+
+        self._target_validation_cache[cache_key] = is_allowed
+
+        # ✅ LOG DETALLADO
+        if is_allowed:
+            self.logger.info(
+                f"Target '{target_name}' ALLOWED (score: {best_match_score}% vs '{best_match_name}', threshold: {self.ocr_tolerance}%)"
+            )
+        else:
+            self.logger.debug(
+                f"Target '{target_name}' rejected (best score: {best_match_score}% vs '{best_match_name}', threshold: {self.ocr_tolerance}%)"
+            )
+
+        return is_allowed
 
     def _reset_stuck_detectors(self, current_time: float):
         """✅ RESET DE DETECTORES OPTIMIZADO"""
@@ -366,10 +447,6 @@ class CombatManager:
         self.stuck_detector["last_target_hp"] = 100
         self.stuck_search_timer = 0
         self.last_combat_log_time = 0
-
-        # Limpiar caché de targets cuando empezamos nuevo combate
-        if hasattr(self, "_target_cache"):
-            self._target_cache.clear()
 
     # ✅ MÉTODOS DE CONFIGURACIÓN SIMPLIFICADOS
     def start(self):
@@ -398,18 +475,28 @@ class CombatManager:
 
     def set_mob_whitelist(self, whitelist: List[str]):
         self.mob_whitelist = whitelist
-        # Limpiar caché cuando cambia whitelist
-        if hasattr(self, "_target_cache"):
-            self._target_cache.clear()
+        # Limpiar caché cuando cambia la whitelist
+        self._target_validation_cache.clear()
+        self.logger.info(f"📋 Whitelist updated: {whitelist} (cache cleared)")
 
     def set_looting_enabled(self, enabled: bool):
         self.looting_config["enabled"] = enabled
 
     def set_ocr_tolerance(self, tolerance: int):
-        self.ocr_tolerance_threshold = max(50, min(100, tolerance))
-        # Limpiar caché cuando cambia tolerancia
-        if hasattr(self, "_target_cache"):
-            self._target_cache.clear()
+        """✅ PRINCIPAL - Configurar tolerancia de OCR para fuzzy matching"""
+        self.ocr_tolerance = max(50, min(100, tolerance))
+        # Limpiar caché cuando cambia el threshold
+        self._target_validation_cache.clear()
+        self.logger.info(
+            f"🎯 OCR tolerance set to {self.ocr_tolerance}% (cache cleared)"
+        )
+
+    def set_fuzzy_match_threshold(self, threshold: int):
+        """✅ MÉTODO DE COMPATIBILIDAD - Mapea a ocr_tolerance"""
+        self.set_ocr_tolerance(threshold)
+        self.logger.debug(
+            f"Fuzzy match threshold mapped to ocr_tolerance: {threshold}%"
+        )
 
     def get_combat_stats(self) -> Dict[str, Any]:
         return self.combat_stats.copy()
@@ -422,27 +509,31 @@ class CombatManager:
         self.logger.info("📊 Combat stats reset")
 
     def set_potion_threshold(self, threshold: int):
-        """Set potion threshold - MÉTODO FALTANTE"""
+        """Set potion threshold"""
         self.potion_threshold = threshold
         self.logger.debug(f"Potion threshold set to {threshold}%")
 
     def set_skill_usage(self, enabled: bool):
-        """Enable/disable skill usage - MÉTODO FALTANTE"""
+        """Enable/disable skill usage"""
         self.use_skills = enabled
         status = "enabled" if enabled else "disabled"
         self.logger.info(f"Skill usage {status}")
 
     def set_skill_priority_mode(self, mode: str):
-        """Set skill priority mode - MÉTODO FALTANTE"""
+        """Set skill priority mode"""
         self.skill_priority_mode = mode
         self.logger.debug(f"Skill priority mode set to: {mode}")
 
     def pause(self):
-        """Pause combat manager - MÉTODO FALTANTE"""
+        """Pause combat manager"""
         self.is_running = False
         self.logger.info("Combat Manager paused")
 
     def resume(self):
-        """Resume combat manager - MÉTODO FALTANTE"""
+        """Resume combat manager"""
         self.is_running = True
         self.logger.info("Combat Manager resumed")
+
+    # ✅ MÉTODO ELIMINADO - AHORA set_ocr_tolerance ES EL PRINCIPAL
+    # def set_ocr_tolerance(self, tolerance: int):
+    #     """Compatibility method - maps to ocr_tolerance"""

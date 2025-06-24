@@ -130,7 +130,7 @@ class TantraBotMainWindow(QMainWindow):
             )
 
             # 3. Hacemos zoom para verla mejor en el diálogo.
-            zoom_factor = 1
+            zoom_factor = 2
             zoomed_image = ui_debug_image.resize(
                 (
                     ui_debug_image.width * zoom_factor,
