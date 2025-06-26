@@ -13,6 +13,8 @@ from core.input_controller import InputController
 from combat.combat_manager import CombatManager, CombatState
 from combat.skill_manager import SkillManager, TantraSkillTemplates, SkillType, Skill
 from core.movement_manager import MovementManager
+from skill_system.visual_system import VisualSkillSystem
+from skill_system.integration import SkillSystemIntegrator
 from utils.logger import BotLogger
 from utils.timer_manager import TimerManager
 from utils.exceptions import BotError
@@ -50,6 +52,8 @@ class BotEngine(QObject):
         self.movement_manager: Optional[MovementManager] = None
         self.skill_manager: Optional[SkillManager] = None
         self.combat_manager: Optional[CombatManager] = None
+        self.visual_skill_system: Optional[VisualSkillSystem] = None
+        self.skill_integrator: Optional[SkillSystemIntegrator] = None
 
         self.state = BotState.STOPPED
         self.last_vitals = {}
@@ -825,6 +829,21 @@ class ComponentFactory:
             input_controller=components['input_controller'],
             movement_manager=components['movement_manager'],
             logger=logger,
+        )
+        
+        # Visual skill system (optional - initialize but may not be configured)
+        try:
+            components['visual_skill_system'] = VisualSkillSystem()
+            logger.info("Visual skill system initialized successfully")
+        except Exception as e:
+            logger.warning(f"Visual skill system initialization failed (optional): {e}")
+            components['visual_skill_system'] = None
+        
+        # Skill system integrator - provides unified interface
+        components['skill_integrator'] = SkillSystemIntegrator(
+            traditional_skill_manager=components['skill_manager'],
+            visual_skill_system=components['visual_skill_system'],
+            logger=logger
         )
         
         return components

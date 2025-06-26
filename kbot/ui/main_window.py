@@ -38,6 +38,7 @@ from combat.combat_manager import CombatState
 from ui.dialogs.window_selector import WindowSelectorDialog
 from ui.dialogs.region_config import RegionConfigDialog
 from ui.dialogs.skill_config import SkillConfigDialog
+from ui.dialogs.simple_visual_config import SimpleVisualConfigDialog
 from ui.widgets.log_widget import LogWidget
 from ui.widgets.status_widget import StatusWidget
 from utils.exceptions import BotError
@@ -491,6 +492,12 @@ class TantraBotMainWindow(QMainWindow):
         skills_action = QAction("Configure Skills", self)
         skills_action.triggered.connect(self._open_skill_config)
         tools_menu.addAction(skills_action)
+        
+        # ✅ NEW - Visual Skill System
+        visual_skills_action = QAction("🎮 Visual Skill System", self)
+        visual_skills_action.setToolTip("Configure visual skill detection and execution")
+        visual_skills_action.triggered.connect(self._open_visual_skill_config)
+        tools_menu.addAction(visual_skills_action)
 
         # ✅ NUEVO - Configuración avanzada
         tools_menu.addSeparator()
@@ -823,6 +830,21 @@ class TantraBotMainWindow(QMainWindow):
         )
         if dialog.exec_() == QDialog.Accepted:
             self.status_bar.showMessage("Skills configuration updated", 3000)
+    
+    def _open_visual_skill_config(self):
+        """Open the new visual skill system configuration dialog"""
+        if not self._check_bot_ready_or_warn():
+            return
+        
+        try:
+            dialog = SimpleVisualConfigDialog(bot_engine=self.bot_engine, parent=self)
+            if dialog.exec_() == QDialog.Accepted:
+                self.status_bar.showMessage("Visual skill system configured successfully", 3000)
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Error", 
+                f"Failed to open visual skill configuration:\n{e}"
+            )
 
     @pyqtSlot()
     def _show_about(self):

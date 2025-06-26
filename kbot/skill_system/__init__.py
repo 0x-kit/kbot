@@ -18,6 +18,7 @@ from .skill_types import SkillType, SkillState, VisualSkill
 from .detector import SkillDetector
 from .class_manager import ClassManager
 from .execution import ExecutionEngine
+from .integration import SkillSystemIntegrator
 
 __version__ = "3.0.0"
 __author__ = "KBOT Team"
@@ -27,6 +28,7 @@ __all__ = [
     "SkillDetector", 
     "ClassManager",
     "ExecutionEngine",
+    "SkillSystemIntegrator",
     "SkillType",
     "SkillState",
     "VisualSkill"
