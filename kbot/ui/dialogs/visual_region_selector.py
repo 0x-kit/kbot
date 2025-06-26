@@ -492,8 +492,8 @@ class VisualRegionSelector(QDialog):
                 return
             
             # Capture screen using the existing pixel analyzer
-            capture_area = (0, 0, 1920, 1080)  # Full HD capture
-            self.current_capture = self.bot_engine.pixel_analyzer.capture_region(capture_area)
+            # Capture the full window - no region parameter needed
+            self.current_capture = self.bot_engine.pixel_analyzer.capture_screen()
             
             if self.current_capture:
                 self.update_preview()
