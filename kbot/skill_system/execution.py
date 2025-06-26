@@ -15,24 +15,9 @@ from dataclasses import dataclass
 import logging
 
 from .skill_types import (
-    VisualSkill, SkillState, SkillExecutionResult, VisualRotation
+    VisualSkill, SkillState, ExecutionMode, QueuePriority,
+    SkillExecutionResult, VisualRotation
 )
-
-
-class ExecutionMode(Enum):
-    """Execution modes for the engine"""
-    IMMEDIATE = "immediate"        # Execute immediately if ready
-    QUEUED = "queued"             # Add to queue for execution
-    PRIORITY = "priority"         # High priority immediate execution
-    ROTATION = "rotation"         # Part of rotation execution
-
-
-class QueuePriority(Enum):
-    """Queue priority levels"""
-    LOW = 1
-    NORMAL = 3
-    HIGH = 5
-    EMERGENCY = 10
 
 
 @dataclass

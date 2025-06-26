@@ -40,6 +40,22 @@ class DetectionMethod(Enum):
     TEXT_RECOGNITION = "text_recognition"
 
 
+class ExecutionMode(Enum):
+    """Execution modes for the engine"""
+    IMMEDIATE = "immediate"        # Execute immediately if ready
+    QUEUED = "queued"             # Add to queue for execution
+    PRIORITY = "priority"         # High priority immediate execution
+    ROTATION = "rotation"         # Part of rotation execution
+
+
+class QueuePriority(Enum):
+    """Queue priority levels"""
+    LOW = 1
+    NORMAL = 3
+    HIGH = 5
+    EMERGENCY = 10
+
+
 @dataclass
 class SkillPosition:
     """Position of a skill in the skill bar"""

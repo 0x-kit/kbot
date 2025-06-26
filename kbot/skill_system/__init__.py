@@ -14,7 +14,7 @@ Components:
 """
 
 from .visual_system import VisualSkillSystem
-from .skill_types import SkillType, SkillState, VisualSkill
+from .skill_types import SkillType, SkillState, VisualSkill, ExecutionMode, QueuePriority
 from .detector import SkillDetector
 from .class_manager import ClassManager
 from .execution import ExecutionEngine
@@ -31,5 +31,7 @@ __all__ = [
     "SkillSystemIntegrator",
     "SkillType",
     "SkillState",
-    "VisualSkill"
+    "VisualSkill",
+    "ExecutionMode",
+    "QueuePriority"
 ]
