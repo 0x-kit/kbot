@@ -841,6 +841,9 @@ class TantraBotMainWindow(QMainWindow):
             vitals = self.bot_engine.get_vitals()
             if vitals:
                 self.status_widget.update_vitals(vitals)
+                # También actualizar skills en el update manual
+                skills_data = self.bot_engine.get_skills_status()
+                self.status_widget.update_skills(skills_data)
             stats = self.bot_engine.get_stats()
             runtime_seconds = int(stats.get("current_runtime", 0))
             hours, remainder = divmod(runtime_seconds, 3600)
@@ -874,6 +877,10 @@ class TantraBotMainWindow(QMainWindow):
     def _on_vitals_updated(self, vitals: Dict[str, Any]):
         if self.status_widget:
             self.status_widget.update_vitals(vitals)
+            # También actualizar skills cuando se actualicen los vitals
+            if self.bot_engine:
+                skills_data = self.bot_engine.get_skills_status()
+                self.status_widget.update_skills(skills_data)
 
     @pyqtSlot(str)
     def _on_bot_state_changed(self, state: str):

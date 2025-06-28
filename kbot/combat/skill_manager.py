@@ -343,6 +343,10 @@ class SkillManager:
             if skill.skill_type == skill_type and skill.enabled:
                 return skill
         return None
+    
+    def get_all_skills(self) -> List[Skill]:
+        """Get all configured skills"""
+        return list(self.skills.values())
 
     def _get_expired_buff(self) -> Optional[str]:
         """✅ CORREGIDO: Encuentra buffs que han expirado y necesitan ser relanzados."""

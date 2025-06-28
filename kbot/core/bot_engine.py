@@ -293,6 +293,33 @@ class BotEngine(QObject):
 
     def get_vitals(self) -> Dict[str, Any]:
         return self.last_vitals.copy()
+    
+    def get_skills_status(self) -> list:
+        """Get current skills status for UI display"""
+        if not self.skill_manager:
+            return []
+        
+        skills_data = []
+        skills = self.skill_manager.get_all_skills()
+        
+        for skill in skills:
+            skill_usage = self.skill_manager.usage_stats.get(skill.name, None)
+            last_used = skill_usage.last_used if skill_usage else 0
+            current_time = time.time()
+            cooldown_remaining = max(0, skill.check_interval - (current_time - last_used))
+            
+            skills_data.append({
+                'name': skill.name,
+                'key': skill.key,
+                'enabled': skill.enabled,
+                'cooldown_remaining': cooldown_remaining,
+                'type': skill.skill_type.value,
+                'priority': skill.priority
+            })
+        
+        # Sort by priority (higher priority first)
+        skills_data.sort(key=lambda x: x['priority'], reverse=True)
+        return skills_data
 
     def update_components_from_config(self):
         try:
