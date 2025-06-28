@@ -168,7 +168,7 @@ class SkillManager:
             return False
 
         # ✅ NUEVA LÓGICA DE COMPROBACIÓN VISUAL
-        if skill.icon:
+        if skill.icon and skill.icon.strip():
             slot_index = self.key_to_slot_map.get(skill.key.lower())
             if slot_index is not None:
                 skill_bar_config = self.config_manager.config_data.get("skill_bar", {})
@@ -212,9 +212,9 @@ class SkillManager:
             usage.failed_uses += 1
             return False
 
-        # DEBUG para Samate específicamente
-        if skill_name == "Samate":
-            self.logger.info(f"🔍 ATTEMPTING to use {skill_name} - Type: {skill.skill_type.value}, Duration: {skill.duration}s")
+        # DEBUG para buffs específicamente
+        if skill.skill_type == SkillType.BUFF:
+            self.logger.info(f"🔍 ATTEMPTING to use {skill_name} - Type: {skill.skill_type.value}, Duration: {skill.duration}s, Icon: '{skill.icon}'")
 
         try:
             # Enviar la tecla
@@ -230,7 +230,7 @@ class SkillManager:
             
             # Verificación simple: si tiene icono, verificar que ya no esté disponible
             skill_confirmed = True
-            if skill.icon:
+            if skill.icon and skill.icon.strip():
                 slot_index = self.key_to_slot_map.get(skill.key.lower())
                 if slot_index is not None:
                     skill_bar_config = self.config_manager.config_data.get("skill_bar", {})
@@ -351,6 +351,10 @@ class SkillManager:
             skill for skill in self.skills.values()
             if skill.skill_type == SkillType.BUFF and skill.enabled and skill.duration > 0
         ]
+        
+        # DEBUG: Log all available buffs
+        if buff_skills:
+            self.logger.debug(f"Available buff skills: {[s.name for s in buff_skills]}")
         
         for skill in buff_skills:
             usage = self.usage_stats[skill.name]
