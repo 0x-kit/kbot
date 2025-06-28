@@ -117,6 +117,9 @@ class TantraBotMainWindow(QMainWindow):
             )
             self._connect_signals()
             self._load_configuration()
+            
+            # Intentar cargar skills después de un pequeño delay para asegurar que el skill_manager esté listo
+            QTimer.singleShot(1000, self._delayed_skills_load)
         except Exception as e:
             self.logger.error(f"Error during post-initialization setup: {e}")
             QMessageBox.critical(
@@ -124,6 +127,16 @@ class TantraBotMainWindow(QMainWindow):
                 "Initialization Error",
                 f"Failed to complete bot initialization:\n{e}",
             )
+
+    def _delayed_skills_load(self):
+        \"\"\"Load skills with delay to ensure skill_manager is ready\"\"\"
+        try:
+            if self.bot_engine and self.status_widget:
+                skills_data = self.bot_engine.get_skills_status()
+                self.status_widget.update_skills(skills_data)
+                self.logger.debug(\"Skills loaded successfully after delay\")
+        except Exception as e:
+            self.logger.debug(f\"Delayed skills load failed: {e}\")
 
     def _on_bot_initialization_failed(self, error_message):
         """Called when bot worker initialization fails"""
@@ -541,6 +554,14 @@ class TantraBotMainWindow(QMainWindow):
 
             # Configure whitelist (main window now only handles whitelist and actions)
             self.whitelist_edit.setPlainText("\n".join(whitelist))
+            
+            # Load skills for status widget display
+            try:
+                skills_data = self.bot_engine.get_skills_status()
+                if self.status_widget:
+                    self.status_widget.update_skills(skills_data)
+            except Exception as e:
+                self.logger.debug(f"Skills not ready yet during config load: {e}")
 
             self.status_bar.showMessage("Configuration loaded successfully", 2000)
             self.logger.info(
