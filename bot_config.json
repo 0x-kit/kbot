@@ -168,14 +168,14 @@
         "icon": "",
         "conditions": [],
         "description": "Assist party leader.",
-        "enabled": true
+        "enabled": false
       },
       "Amada": {
         "key": "2",
-        "check_interval": 1.0,
+        "check_interval": 0.1,
         "skill_type": "offensive",
         "priority": 10,
-        "mana_cost": 10,
+        "mana_cost": 60,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
         "conditions": [],
         "description": "Offensive skill slot 2",
@@ -183,14 +183,25 @@
       },
       "Biz": {
         "key": "3",
-        "check_interval": 1.0,
+        "check_interval": 0.1,
         "skill_type": "offensive",
         "priority": 3,
-        "mana_cost": 15,
+        "mana_cost": 60,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
         "conditions": [],
         "description": "Offensive skill slot 3",
         "enabled": true
+      },
+      "Samate": {
+        "key": "7",
+        "check_interval": 10,
+        "skill_type": "buff",
+        "priority": 1,
+        "mana_cost": 0,
+        "duration": 105,
+        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
+        "enabled": true,
+        "description": ""
       }
     },
     "rotations": {
