@@ -324,7 +324,8 @@ class BotEngine(QObject):
                     'enabled': skill.enabled,
                     'type': 'offensive',
                     'visual_cooldown': not is_ready,  # True si está en cooldown visual
-                    'is_ready': is_ready
+                    'is_ready': is_ready,
+                    'icon': skill.icon or ''
                 }
             
             elif skill.skill_type == SkillType.BUFF:
@@ -339,7 +340,8 @@ class BotEngine(QObject):
                     'enabled': skill.enabled,
                     'type': 'buff',
                     'buff_remaining': buff_remaining,
-                    'buff_duration': skill.duration
+                    'buff_duration': skill.duration,
+                    'icon': skill.icon or ''
                 }
             
             skills_data.append(status_info)

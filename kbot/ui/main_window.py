@@ -454,34 +454,30 @@ class TantraBotMainWindow(QMainWindow):
 
     def _create_stats_horizontal_bar(self, parent_layout):
         """Compact horizontal session statistics bar"""
-        stats_frame = QFrame()
-        stats_frame.setFrameStyle(QFrame.StyledPanel)
-        stats_frame.setMaximumHeight(50)  # Keep it compact
-        stats_layout = QHBoxLayout(stats_frame)
-        stats_layout.setContentsMargins(10, 5, 10, 5)
+        stats_widget = QWidget()
+        stats_widget.setMaximumHeight(40)  # Keep it compact
+        stats_layout = QHBoxLayout(stats_widget)
+        stats_layout.setContentsMargins(0, 5, 0, 5)
+        
+        # Push everything to the right
+        stats_layout.addStretch()
         
         # Runtime
         stats_layout.addWidget(QLabel("⏱️ Runtime:"))
         self.runtime_label = QLabel("00:00:00")
-        self.runtime_label.setStyleSheet("font-weight: bold; color: #0066cc;")
+        self.runtime_label.setStyleSheet("font-weight: bold; color: black;")
         stats_layout.addWidget(self.runtime_label)
         
-        # Separator
-        separator = QFrame()
-        separator.setFrameShape(QFrame.VLine)
-        separator.setFrameShadow(QFrame.Sunken)
-        stats_layout.addWidget(separator)
+        # Spacing
+        stats_layout.addSpacing(20)
         
         # Targets Killed
         stats_layout.addWidget(QLabel("🎯 Targets:"))
         self.targets_killed_label = QLabel("0")
-        self.targets_killed_label.setStyleSheet("font-weight: bold; color: #00aa00;")
+        self.targets_killed_label.setStyleSheet("font-weight: bold; color: black;")
         stats_layout.addWidget(self.targets_killed_label)
         
-        # Push everything to the left
-        stats_layout.addStretch()
-        
-        parent_layout.addWidget(stats_frame)
+        parent_layout.addWidget(stats_widget)
 
     def _setup_menu_bar(self):
         menubar = self.menuBar()
