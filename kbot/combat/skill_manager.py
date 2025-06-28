@@ -153,7 +153,9 @@ class SkillManager:
 
         # Comprobación de intervalo mínimo para no spamear el análisis visual
         usage = self.usage_stats[skill_name]
-        if current_time - usage.last_used < skill.check_interval:
+        time_since_last_use = current_time - usage.last_used
+        if time_since_last_use < skill.check_interval:
+            self.logger.debug(f"Skill '{skill.name}' check_interval not ready: {time_since_last_use:.2f}s < {skill.check_interval}s")
             return False
 
         # Comprobación de maná
@@ -187,6 +189,7 @@ class SkillManager:
         # Comprobación de condiciones (sin cambios)
         # if not self._evaluate_conditions(skill): return False
 
+        self.logger.debug(f"Skill '{skill.name}' passed all checks and is ready to use")
         return True
 
     def use_skill(self, skill_name: str, force: bool = False) -> bool:
@@ -202,9 +205,38 @@ class SkillManager:
             return False
 
         try:
-            # ✅ Log justo antes de la acción
-            self.logger.info(f"🔥 Using skill: {skill.name}")
+            # Enviar la tecla
             success = self.input_controller.send_key(skill.key)
+            if not success:
+                self.logger.debug(f"Failed to send key for skill: {skill.name}")
+                usage.failed_uses += 1
+                return False
+
+            # ✅ NUEVO: Esperar y verificar que el skill realmente se usó
+            import time as time_module
+            time_module.sleep(0.1)  # Esperar 100ms para que el juego procese la acción
+            
+            # Verificar visualmente que el skill ya no está disponible (solo si tiene icono)
+            skill_actually_used = True
+            if skill.icon:
+                slot_index = self.key_to_slot_map.get(skill.key.lower())
+                if slot_index is not None:
+                    skill_bar_config = self.config_manager.config_data.get("skill_bar", {})
+                    slots = skill_bar_config.get("slots", [])
+                    threshold = skill_bar_config.get("cooldown_similarity_threshold", 0.7)
+                    
+                    if slot_index < len(slots):
+                        slot_region = tuple(slots[slot_index])
+                        # Si el skill sigue disponible, significa que no se usó realmente
+                        if self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold):
+                            skill_actually_used = False
+                            self.logger.debug(f"Skill '{skill.name}' key sent but still visually available - may not have been used")
+
+            # Solo loggear si realmente se usó
+            if skill_actually_used:
+                self.logger.info(f"🔥 Using skill: {skill.name} ✓ CONFIRMED")
+            else:
+                self.logger.debug(f"Skill '{skill.name}' key sent but not confirmed visually")
 
             # El resto de las estadísticas se actualizan después
             current_time = time.time()
@@ -212,7 +244,7 @@ class SkillManager:
             usage.total_uses += 1
             self.last_skill_used = current_time
             
-            if success:
+            if skill_actually_used:
                 usage.successful_uses += 1
                 # ✅ NUEVO: Si es un buff, establecer cuándo expira
                 if skill.skill_type == SkillType.BUFF and skill.duration > 0:
@@ -272,7 +304,9 @@ class SkillManager:
                 # Ordenar por prioridad descendente (mayor número = mayor prioridad)
                 available_skills.sort(key=lambda s: s.priority, reverse=True)
                 self.logger.debug(f"Available skills by priority: {[(s.name, s.priority) for s in available_skills]}")
-                return available_skills[0].name
+                selected_skill = available_skills[0].name
+                self.logger.debug(f"Selected skill by priority: {selected_skill} (priority: {available_skills[0].priority})")
+                return selected_skill
 
         # Fallback a ataque básico si la rotación falla o no hay skills disponibles
         auto_attack = self.find_skill_by_type(SkillType.AUTO_ATTACK)
