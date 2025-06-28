@@ -207,12 +207,12 @@ class UnifiedConfigManager:
     def save_config(self):
         """✅ Guardar configuración en JSON"""
         try:
-            # Crear backup antes de guardar
-            if os.path.exists(self.config_file):
-                backup_file = f"{self.config_file}.backup"
-                with open(self.config_file, "r") as original:
-                    with open(backup_file, "w") as backup:
-                        backup.write(original.read())
+            # Crear backup antes de guardar (DESHABILITADO)
+            # if os.path.exists(self.config_file):
+            #     backup_file = f"{self.config_file}.backup"
+            #     with open(self.config_file, "r") as original:
+            #         with open(backup_file, "w") as backup:
+            #             backup.write(original.read())
 
             # Guardar nueva configuración
             with open(self.config_file, "w", encoding="utf-8") as f:

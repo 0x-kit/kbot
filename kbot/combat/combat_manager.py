@@ -127,29 +127,17 @@ class CombatManager:
 
     def execute_combat_action(self):
         """Lógica de decisión de skills con logging mejorado."""
-        # Prioridad 1: Intentar usar un skill de la rotación.
         if self.use_skills:
-            # ✅ AÑADIDO: Log para mostrar la rotación activa.
-            active_rotation = self.skill_manager.active_rotation
-            if active_rotation:
-                self.logger.debug(
-                    f"Using rotation: '{active_rotation}'. Checking next skill."
-                )
-                next_skill_name = self.skill_manager.get_next_skill()
-                if next_skill_name:
-                    if self.skill_manager.use_skill(next_skill_name):
-                        self.last_action_time = time.time()
-                        return
-                else:
-                    self.logger.debug(
-                        "No usable skill found in rotation at this moment."
-                    )
+            # ✅ CORREGIDO: Usar get_next_skill() que maneja rotaciones Y prioridades
+            next_skill_name = self.skill_manager.get_next_skill()
+            if next_skill_name:
+                if self.skill_manager.use_skill(next_skill_name):
+                    self.last_action_time = time.time()
+                    return
             else:
-                self.logger.debug(
-                    "No active rotation set. Falling back to basic attack."
-                )
+                self.logger.debug("No usable skills found, falling back to basic attack.")
 
-        # Prioridad 2: Si no hay rotación o ningún skill de la rotación funcionó, usar ataque básico.
+        # Fallback: usar ataque básico si no hay skills disponibles
         basic_attack = self.skill_manager.find_skill_by_type(SkillType.AUTO_ATTACK)
         if basic_attack:
             if self.skill_manager.use_skill(basic_attack.name):

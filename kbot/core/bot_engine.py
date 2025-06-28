@@ -257,6 +257,7 @@ class BotEngine(QObject):
                 "mp": vitals.get("mp", 100),
                 "target_exists": vitals.get("target_exists", False),
                 "target_hp": vitals.get("target_health", 0),
+                "target_name": vitals.get("target_name", ""),
                 "in_combat": self.combat_manager.state == CombatState.FIGHTING,
             }
             self.skill_manager.update_game_state(game_state)

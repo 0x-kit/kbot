@@ -202,7 +202,6 @@
         "repeat": true
       }
     },
-    "active_rotation": "BasicCombo",
     "active_rotation": null,
     "global_cooldown": 0.05
   },
