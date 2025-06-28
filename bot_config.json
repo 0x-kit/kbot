@@ -187,19 +187,30 @@
         "skill_type": "offensive",
         "priority": 1,
         "mana_cost": 0,
+        "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
-        "conditions": [],
-        "description": "Offensive skill slot 3",
-        "enabled": true
+        "enabled": true,
+        "description": "Offensive skill slot 3"
       },
       "Samate": {
         "key": "7",
-        "check_interval": 10,
+        "check_interval": 10.0,
         "skill_type": "buff",
         "priority": 10,
         "mana_cost": 0,
-        "duration": 105,
+        "duration": 105.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
+        "enabled": true,
+        "description": ""
+      },
+      "Dru": {
+        "key": "8",
+        "check_interval": 10.0,
+        "skill_type": "buff",
+        "priority": 1,
+        "mana_cost": 0,
+        "duration": 305.0,
+        "icon": "",
         "enabled": true,
         "description": ""
       }
