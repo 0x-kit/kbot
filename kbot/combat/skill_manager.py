@@ -303,12 +303,17 @@ class SkillManager:
         else:
             # Si no hay rotación activa, usar sistema de prioridades
             self.logger.debug("No active rotation, using priority system")
+            
+            # DEBUG: Evaluar todos los skills ofensivos individualmente
+            offensive_skills = [skill for skill in self.skills.values() 
+                              if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK, SkillType.BUFF]]
+            
+            for skill in offensive_skills:
+                can_use = self.can_use_skill(skill.name)
+                self.logger.debug(f"Skill '{skill.name}' - Enabled: {skill.enabled}, Type: {skill.skill_type.value}, Can use: {can_use}")
+            
             # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
-            available_skills = [
-                skill for skill in self.skills.values() 
-                if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK, SkillType.BUFF]
-                and self.can_use_skill(skill.name)
-            ]
+            available_skills = [skill for skill in offensive_skills if self.can_use_skill(skill.name)]
             
             if available_skills:
                 # Ordenar por prioridad descendente (mayor número = mayor prioridad)
