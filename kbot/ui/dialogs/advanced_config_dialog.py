@@ -52,9 +52,24 @@ class AdvancedConfigDialog(QDialog):
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
 
-        # Create all sections
-        self._create_timing_section(scroll_layout)
-        self._create_behavior_section(scroll_layout)
+        # Create horizontal layout for timing and behavior sections
+        combat_layout = QHBoxLayout()
+        
+        # Create left column for timing
+        timing_widget = QWidget()
+        timing_column = QVBoxLayout(timing_widget)
+        self._create_timing_section(timing_column)
+        combat_layout.addWidget(timing_widget)
+        
+        # Create right column for behavior
+        behavior_widget = QWidget()
+        behavior_column = QVBoxLayout(behavior_widget)
+        self._create_behavior_section(behavior_column)
+        combat_layout.addWidget(behavior_widget)
+        
+        scroll_layout.addLayout(combat_layout)
+        
+        # Add other sections normally
         self._create_whitelist_section(scroll_layout)
         self._create_config_management_section(scroll_layout)
 
@@ -255,11 +270,6 @@ class AdvancedConfigDialog(QDialog):
 
         config_layout.addRow("Actions:", config_buttons_layout)
 
-        # Configuration summary
-        self.config_summary = QTextEdit()
-        self.config_summary.setMaximumHeight(120)
-        self.config_summary.setReadOnly(True)
-        config_layout.addRow("Summary:", self.config_summary)
 
         parent_layout.addWidget(config_group)
 
@@ -296,18 +306,9 @@ class AdvancedConfigDialog(QDialog):
             if hasattr(self, "whitelist_edit"):
                 self.whitelist_edit.setPlainText("\n".join(whitelist))
 
-            # Load debug settings
-            debug_config = self.config_manager.config_data.get("debug", {})
-            for param, widget in self.debug_widgets.items():
-                if param in debug_config:
-                    value = debug_config[param]
-                    if isinstance(widget, QCheckBox):
-                        widget.setChecked(bool(value))
-                    elif isinstance(widget, QComboBox):
-                        widget.setCurrentText(str(value))
+            # Debug widgets removed in simplification
 
-            # Update displays
-            self._update_config_summary()
+            # Config summary removed in simplification
 
         except Exception as e:
             QMessageBox.warning(
@@ -349,7 +350,6 @@ class AdvancedConfigDialog(QDialog):
 
     def _on_timing_changed(self):
         """Handle timing parameter changes"""
-        self._update_performance_indicator()
         self._emit_config_change()
 
     def _on_behavior_changed(self):
@@ -360,100 +360,6 @@ class AdvancedConfigDialog(QDialog):
         """Handle whitelist changes for real-time updates"""
         self._emit_config_change()
 
-    def _update_config_summary(self):
-        """✅ Enhanced configuration summary with ALL settings"""
-        try:
-            if hasattr(self, "config_summary"):
-                summary_html = self._generate_comprehensive_summary()
-                self.config_summary.setHtml(summary_html)
-        except Exception as e:
-            if hasattr(self, "config_summary"):
-                self.config_summary.setPlainText(f"Error loading summary: {e}")
-
-    def _generate_comprehensive_summary(self) -> str:
-        """Generate comprehensive HTML summary of all configuration settings"""
-        try:
-            html_parts = []
-            html_parts.append(
-                "<h3 style='color: #2e86de; margin: 0;'>📋 Configuration Overview</h3>"
-            )
-
-            # Basic Info
-            version = self.config_manager.config_data.get("version", "Unknown")
-            html_parts.append(f"<p><b>Version:</b> {version}</p>")
-
-            # Combat Behavior
-            behavior = self.config_manager.get_combat_behavior()
-            html_parts.append(
-                "<h4 style='color: #00a8ff; margin: 5px 0;'>⚔️ Combat Behavior</h4>"
-            )
-            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(
-                f"<li>Potion Threshold: <b>{behavior.get('potion_threshold', 'N/A')}%</b></li>"
-            )
-            html_parts.append(
-                f"<li>Enable Looting: <b>{'✅' if behavior.get('enable_looting') else '❌'}</b></li>"
-            )
-            html_parts.append(
-                f"<li>Assist Mode: <b>{'✅' if behavior.get('assist_mode') else '❌'}</b></li>"
-            )
-            html_parts.append(
-                f"<li>Use Skills: <b>{'✅' if behavior.get('use_skills') else '❌'}</b></li>"
-            )
-            html_parts.append(
-                f"<li>OCR Tolerance: <b>{behavior.get('ocr_tolerance', 'N/A')}%</b></li>"
-            )
-            html_parts.append("</ul>")
-
-            # Timing Settings
-            timing = self.config_manager.get_combat_timing()
-            html_parts.append(
-                "<h4 style='color: #00a8ff; margin: 5px 0;'>⏱️ Key Timings</h4>"
-            )
-            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(
-                f"<li>Skill Interval: <b>{timing.get('skill_interval', 'N/A')}s</b></li>"
-            )
-            html_parts.append(
-                f"<li>Attack Interval: <b>{timing.get('attack_interval', 'N/A')}s</b></li>"
-            )
-            html_parts.append(
-                f"<li>Stuck Detection: <b>{timing.get('stuck_detection_searching', 'N/A')}s</b></li>"
-            )
-            html_parts.append("</ul>")
-
-            # Skills Info
-            skills_config = self.config_manager.get_skills_config()
-            skills_count = len(skills_config.get("definitions", {}))
-            rotations_count = len(skills_config.get("rotations", {}))
-            active_rotation = skills_config.get("active_rotation", "None")
-            html_parts.append(
-                "<h4 style='color: #00a8ff; margin: 5px 0;'>🎯 Skills & Rotations</h4>"
-            )
-            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(f"<li>Total Skills: <b>{skills_count}</b></li>")
-            html_parts.append(f"<li>Rotations: <b>{rotations_count}</b></li>")
-            html_parts.append(f"<li>Active Rotation: <b>{active_rotation}</b></li>")
-            html_parts.append(
-                f"<li>Global Cooldown: <b>{skills_config.get('global_cooldown', 'N/A')}s</b></li>"
-            )
-            html_parts.append("</ul>")
-
-            # Whitelist
-            whitelist = self.config_manager.get_whitelist()
-            html_parts.append(
-                "<h4 style='color: #00a8ff; margin: 5px 0;'>📋 Targets</h4>"
-            )
-            html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(
-                f"<li>Whitelisted Mobs: <b>{len(whitelist)}</b> ({', '.join(whitelist[:3])}{'...' if len(whitelist) > 3 else ''})</li>"
-            )
-            html_parts.append("</ul>")
-
-            return "".join(html_parts)
-
-        except Exception as e:
-            return f"<p style='color: red;'>Error generating summary: {e}</p>"
 
     def _emit_config_change(self):
         """Emit configuration change signal"""
