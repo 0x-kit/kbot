@@ -1,0 +1,121 @@
+[17:41:16] [INFO] 🎯 Engaging target: ByokboS
+[17:41:16] [DEBUG] No active rotation, using priority system
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:16] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: True
+[17:41:16] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:16] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:16] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:16] [DEBUG] Available skills by priority: [('Amada', 5)]
+[17:41:16] [DEBUG] Selected skill by priority: Amada (priority: 5)
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:16] [DEBUG] No active rotation, using priority system
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:16] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: True
+[17:41:16] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:16] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:16] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:16] [DEBUG] Available skills by priority: [('Amada', 5)]
+[17:41:16] [DEBUG] Selected skill by priority: Amada (priority: 5)
+[17:41:16] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] No active rotation, using priority system
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: True
+[17:41:17] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:17] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:17] [DEBUG] Available skills by priority: [('Amada', 5)]
+[17:41:17] [DEBUG] Selected skill by priority: Amada (priority: 5)
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] No active rotation, using priority system
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: True
+[17:41:17] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:17] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:17] [DEBUG] Skill 'Biz' en cooldown (visual).
+[17:41:17] [DEBUG] Available skills by priority: [('Amada', 5)]
+[17:41:17] [DEBUG] Selected skill by priority: Amada (priority: 5)
+[17:41:17] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:18] [DEBUG] No active rotation, using priority system
+[17:41:18] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:18] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: True
+[17:41:18] [DEBUG] Skill 'Biz' passed all checks and is ready to use
+[17:41:18] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: True
+[17:41:18] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:18] [DEBUG] Skill 'Biz' passed all checks and is ready to use
+[17:41:18] [DEBUG] Available skills by priority: [('Amada', 5), ('Biz', 1)]
+[17:41:18] [DEBUG] Selected skill by priority: Amada (priority: 5)
+[17:41:18] [DEBUG] Skill 'Amada' passed all checks and is ready to use
+[17:41:18] [INFO] 🔥 Using skill: Amada
+[17:41:19] [DEBUG] No active rotation, using priority system
+[17:41:19] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:19] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:19] [DEBUG] Skill 'Basic Attack' passed all checks and is ready to use
+[17:41:19] [DEBUG] Skill 'Basic Attack' passed all checks and is ready to use
+[17:41:19] [INFO] 🔥 Using skill: Basic Attack
+[17:41:20] [DEBUG] No active rotation, using priority system
+[17:41:20] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:20] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:20] [DEBUG] Skill 'Basic Attack' check_interval not ready: 0.78s < 10s
+[17:41:20] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:20] [DEBUG] Skill 'Basic Attack' check_interval not ready: 0.78s < 10s
+[17:41:20] [DEBUG] No active rotation, using priority system
+[17:41:20] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:20] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:20] [DEBUG] Skill 'Basic Attack' check_interval not ready: 1.28s < 10s
+[17:41:20] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:20] [DEBUG] Skill 'Basic Attack' check_interval not ready: 1.28s < 10s
+[17:41:21] [DEBUG] No active rotation, using priority system
+[17:41:21] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:21] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:21] [DEBUG] Skill 'Basic Attack' check_interval not ready: 1.78s < 10s
+[17:41:21] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:21] [DEBUG] Skill 'Basic Attack' check_interval not ready: 1.78s < 10s
+[17:41:21] [DEBUG] No active rotation, using priority system
+[17:41:21] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:21] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:21] [DEBUG] Skill 'Basic Attack' check_interval not ready: 2.28s < 10s
+[17:41:21] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:21] [DEBUG] Skill 'Basic Attack' check_interval not ready: 2.28s < 10s
+[17:41:22] [DEBUG] No active rotation, using priority system
+[17:41:22] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:22] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:22] [DEBUG] Skill 'Basic Attack' check_interval not ready: 2.78s < 10s
+[17:41:22] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:22] [DEBUG] Skill 'Basic Attack' check_interval not ready: 2.78s < 10s
+[17:41:22] [DEBUG] No active rotation, using priority system
+[17:41:22] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:22] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:22] [DEBUG] Skill 'Basic Attack' check_interval not ready: 3.28s < 10s
+[17:41:22] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:22] [DEBUG] Skill 'Basic Attack' check_interval not ready: 3.28s < 10s
+[17:41:23] [DEBUG] No active rotation, using priority system
+[17:41:23] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:23] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:23] [DEBUG] Skill 'Basic Attack' check_interval not ready: 3.78s < 10s
+[17:41:23] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:23] [DEBUG] Skill 'Basic Attack' check_interval not ready: 3.78s < 10s
+[17:41:23] [DEBUG] No active rotation, using priority system
+[17:41:23] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:23] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:23] [DEBUG] Skill 'Basic Attack' check_interval not ready: 4.28s < 10s
+[17:41:23] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:23] [DEBUG] Skill 'Basic Attack' check_interval not ready: 4.28s < 10s
+[17:41:24] [DEBUG] No active rotation, using priority system
+[17:41:24] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:24] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:24] [DEBUG] Skill 'Basic Attack' check_interval not ready: 4.78s < 10s
+[17:41:24] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:24] [DEBUG] Skill 'Basic Attack' check_interval not ready: 4.78s < 10s
+[17:41:24] [DEBUG] No active rotation, using priority system
+[17:41:24] [DEBUG] Skill 'Amada' - Enabled: True, Type: offensive, Can use: False
+[17:41:24] [DEBUG] Skill 'Biz' - Enabled: True, Type: offensive, Can use: False
+[17:41:24] [DEBUG] Skill 'Basic Attack' check_interval not ready: 5.27s < 10s
+[17:41:24] [DEBUG] No usable skills found, falling back to basic attack.
+[17:41:24] [DEBUG] Skill 'Basic Attack' check_interval not ready: 5.27s < 10s
+[17:41:24] [INFO] ✅ Target ByokboS defeated.
+[17:41:26] [INFO] Combat Manager paused.
+[17:41:26] [INFO] Bot paused
