@@ -307,6 +307,7 @@ class BotEngine(QObject):
             self.combat_manager.set_looting_enabled(
                 behavior.get("enable_looting", True)
             )
+            self.combat_manager.set_loot_attempts(behavior.get("loot_attempts", 1))
             self.combat_manager.set_assist_mode(behavior.get("assist_mode", False))
             self.combat_manager.set_use_skills(behavior.get("use_skills", True))
             

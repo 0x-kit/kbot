@@ -27,6 +27,7 @@ class CombatState(Enum):
     FIGHTING = "Fighting"
     LOOTING = "Looting"
     ASSISTING = "Assisting leader"
+    POST_COMBAT_DELAY = "Post-combat delay"
 
 
 class CombatManager:
@@ -72,10 +73,12 @@ class CombatManager:
         self.timing = {
             "target_attempt_interval": 0.3,
             "skill_interval": 0.6,
+            "attack_interval": 0,
             "stuck_detection_searching": 8.0,
             "stuck_in_combat_timeout": 10.0,
             "loot_duration": 1.5,
         }
+        self.loot_attempts = 1
         self.loot_key = "f"
 
         self._target_validation_cache = {}
@@ -151,17 +154,33 @@ class CombatManager:
             if self.looting_enabled:
                 self.state = CombatState.LOOTING
                 self.looting_start_time = time.time()
+                self.current_loot_attempts = 0  # ✅ NUEVO: Contador de intentos de loot
             else:
-                self._reset_combat_state()
+                self._start_post_combat_delay()  # ✅ NUEVO: Delay incluso sin looting
 
         if self.state == CombatState.LOOTING:
+            # ✅ NUEVO: Lógica con loot_attempts
             if (
                 time.time() - getattr(self, "looting_start_time", 0)
                 > self.timing["loot_duration"]
+                or self.current_loot_attempts >= self.loot_attempts
             ):
-                self._reset_combat_state()
+                self.logger.debug(f"Looting finished. Attempts: {self.current_loot_attempts}/{self.loot_attempts}")
+                self._start_post_combat_delay()
             else:
                 self.input_controller.send_key(self.loot_key)
+                self.current_loot_attempts += 1
+                self.logger.debug(f"Loot attempt {self.current_loot_attempts}/{self.loot_attempts}")
+            return
+
+        if self.state == CombatState.POST_COMBAT_DELAY:
+            # ✅ NUEVO: Delay post-combate usando attack_interval
+            if (
+                time.time() - getattr(self, "post_combat_delay_start", 0)
+                >= self.timing["attack_interval"]
+            ):
+                self.logger.debug(f"Post-combat delay finished ({self.timing['attack_interval']}s)")
+                self._reset_combat_state()
             return
 
         if self.assist_mode:
@@ -201,6 +220,16 @@ class CombatManager:
         self.last_target_hp = 100
         self.stuck_detector["last_hp_change_time"] = time.time()
         self.skill_manager.reset_active_rotation()
+
+    def _start_post_combat_delay(self):
+        """✅ NUEVO: Inicia el delay post-combate usando attack_interval."""
+        if self.timing["attack_interval"] > 0:
+            self.state = CombatState.POST_COMBAT_DELAY
+            self.post_combat_delay_start = time.time()
+            self.logger.debug(f"Starting post-combat delay: {self.timing['attack_interval']}s")
+        else:
+            # Si attack_interval es 0, ir directamente a IDLE
+            self._reset_combat_state()
 
     def _reset_combat_state(self):
         self.state = CombatState.IDLE
@@ -262,6 +291,9 @@ class CombatManager:
 
     def set_looting_enabled(self, enabled: bool):
         self.looting_enabled = enabled
+
+    def set_loot_attempts(self, attempts: int):
+        self.loot_attempts = attempts
 
     def set_potion_threshold(self, threshold: int):
         self.potion_threshold = threshold
