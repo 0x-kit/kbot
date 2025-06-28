@@ -248,7 +248,9 @@ class SkillManager:
                 # Si es un buff, establecer cuándo expira
                 if skill.skill_type == SkillType.BUFF and skill.duration > 0:
                     usage.buff_expires_at = current_time + skill.duration
-                    self.logger.info(f"🛡️ Buff '{skill.name}' applied, expires in {skill.duration}s")
+                    self.logger.info(f"🛡️ Buff '{skill.name}' applied, expires at {usage.buff_expires_at:.1f} (duration: {skill.duration}s)")
+                elif skill.skill_type == SkillType.BUFF:
+                    self.logger.debug(f"Buff '{skill.name}' has no duration ({skill.duration}), not tracking expiration")
                 return True
             else:
                 usage.failed_uses += 1
