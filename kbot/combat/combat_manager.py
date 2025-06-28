@@ -103,7 +103,7 @@ class CombatManager:
                 self.logger.info(
                     f"Target '{target_name}' is not in whitelist. Finding new target."
                 )
-                self.input_controller.send_key("esc")
+                self.input_controller.send_key("e")
                 self.state = CombatState.SEARCHING
                 return
 
