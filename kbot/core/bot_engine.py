@@ -308,7 +308,7 @@ class BotEngine(QObject):
                 behavior.get("enable_looting", True)
             )
             self.combat_manager.set_assist_mode(behavior.get("assist_mode", False))
-            self.combat_manager.set_skill_usage(behavior.get("use_skills", True))
+            self.combat_manager.set_use_skills(behavior.get("use_skills", True))
             self.combat_manager.set_timing(timing)
         except Exception as e:
             self.logger.error(

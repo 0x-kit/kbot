@@ -131,6 +131,7 @@ class SkillManager:
         if rotation_name and rotation_name not in self.rotations:
             raise SkillError(f"Rotation '{rotation_name}' not found")
         self.active_rotation = rotation_name
+        self.logger.info(f"Active rotation set to: {rotation_name}")
         if rotation_name:
             self.rotations[rotation_name].reset()
 
@@ -249,6 +250,7 @@ class SkillManager:
 
         # Prioridad 3: Usar rotación si está activa (solo in combat o si no hay buffs pendientes)
         if self.active_rotation and self.active_rotation in self.rotations:
+            self.logger.debug(f"Using active rotation: {self.active_rotation}")
             rotation = self.rotations[self.active_rotation]
             if rotation.enabled and rotation.skills:
                 # Intentar encontrar un skill de la rotación que esté listo
@@ -258,6 +260,7 @@ class SkillManager:
                         return next_skill_name
         else:
             # Si no hay rotación activa, usar sistema de prioridades
+            self.logger.debug("No active rotation, using priority system")
             # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
             available_skills = [
                 skill for skill in self.skills.values() 
@@ -268,6 +271,7 @@ class SkillManager:
             if available_skills:
                 # Ordenar por prioridad descendente (mayor número = mayor prioridad)
                 available_skills.sort(key=lambda s: s.priority, reverse=True)
+                self.logger.debug(f"Available skills by priority: {[(s.name, s.priority) for s in available_skills]}")
                 return available_skills[0].name
 
         # Fallback a ataque básico si la rotación falla o no hay skills disponibles
@@ -363,7 +367,7 @@ class SkillManager:
         self.active_rotation = config.get("active_rotation")
         self.global_cooldown = config.get("global_cooldown", 0.15)
         self.logger.info(
-            f"Imported {len(self.skills)} skills and {len(self.rotations)} rotations."
+            f"Imported {len(self.skills)} skills and {len(self.rotations)} rotations. Active rotation: {self.active_rotation}"
         )
 
     def reset_usage_stats(self):

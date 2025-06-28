@@ -68,6 +68,8 @@ class InputController:
         "f12": win32con.VK_F12,
         "space": win32con.VK_SPACE,
         "enter": win32con.VK_RETURN,
+        "esc": win32con.VK_ESCAPE,
+        "escape": win32con.VK_ESCAPE,
     }
 
     def __init__(
