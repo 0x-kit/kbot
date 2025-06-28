@@ -392,29 +392,24 @@ class TantraBotMainWindow(QMainWindow):
         """Quick actions and configuration access"""
         actions_group = QGroupBox("Configuration Actions")
         actions_layout = QVBoxLayout(actions_group)
-        
+
         # Estilo común para todos los botones (estilo simple)
         simple_button_style = """
             QPushButton {
                 min-height: 35px;
-                font-weight: bold;
             }
         """
 
         # Skills Configuration button
         self.skills_config_btn = QPushButton("🎯 Skills Configuration")
-        self.skills_config_btn.setToolTip(
-            "Configure combat skills and abilities"
-        )
+        self.skills_config_btn.setToolTip("Configure combat skills and abilities")
         self.skills_config_btn.clicked.connect(self._open_skill_config)
         self.skills_config_btn.setStyleSheet(simple_button_style)
         actions_layout.addWidget(self.skills_config_btn)
 
         # Regions Configuration button
         self.regions_config_btn = QPushButton("📍 Regions Configuration")
-        self.regions_config_btn.setToolTip(
-            "Configure game regions and detection areas"
-        )
+        self.regions_config_btn.setToolTip("Configure game regions and detection areas")
         self.regions_config_btn.clicked.connect(self._configure_regions)
         self.regions_config_btn.setStyleSheet(simple_button_style)
         actions_layout.addWidget(self.regions_config_btn)
