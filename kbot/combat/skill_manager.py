@@ -12,11 +12,7 @@ from config.unified_config_manager import UnifiedConfigManager
 
 class SkillType(Enum):
     OFFENSIVE = "offensive"
-    DEFENSIVE = "defensive"
     BUFF = "buff"
-    DEBUFF = "debuff"
-    UTILITY = "utility"
-    POTION = "potion"
     HP_POTION = "hp_potion"
     MP_POTION = "mp_potion"
     AUTO_ATTACK = "auto_attack"
@@ -38,11 +34,12 @@ class Skill:
 
     name: str
     key: str
-    cooldown: float  # Reinterpretado como "check_interval"
+    check_interval: float  # Intervalo mínimo entre verificaciones de disponibilidad
     skill_type: SkillType
     priority: int = 1
     mana_cost: int = 0
     icon: Optional[str] = None  # ✅ NUEVO: Ruta al icono de la habilidad
+    duration: float = 0.0  # ✅ NUEVO: Duración del buff en segundos (0 = no es buff)
     conditions: List[Dict[str, Any]] = field(default_factory=list)
     description: str = ""
     enabled: bool = True
@@ -54,6 +51,7 @@ class SkillUsage:
     total_uses: int = 0
     successful_uses: int = 0
     failed_uses: int = 0
+    buff_expires_at: float = 0.0  # ✅ NUEVO: Timestamp cuando expira el buff
 
     @property
     def success_rate(self) -> float:
@@ -152,9 +150,9 @@ class SkillManager:
         if current_time - self.last_skill_used < self.global_cooldown:
             return False
 
-        # Comprobación de intervalo mínimo (antes `cooldown`) para no spamear el análisis
+        # Comprobación de intervalo mínimo para no spamear el análisis visual
         usage = self.usage_stats[skill_name]
-        if current_time - usage.last_used < skill.cooldown:
+        if current_time - usage.last_used < skill.check_interval:
             return False
 
         # Comprobación de maná
@@ -212,8 +210,13 @@ class SkillManager:
             usage.last_used = current_time
             usage.total_uses += 1
             self.last_skill_used = current_time
+            
             if success:
                 usage.successful_uses += 1
+                # ✅ NUEVO: Si es un buff, establecer cuándo expira
+                if skill.skill_type == SkillType.BUFF and skill.duration > 0:
+                    usage.buff_expires_at = current_time + skill.duration
+                    self.logger.info(f"🛡️ Buff '{skill.name}' applied, expires in {skill.duration}s")
                 return True
             else:
                 usage.failed_uses += 1
@@ -223,7 +226,7 @@ class SkillManager:
             raise SkillError(f"Failed to execute skill '{skill_name}': {e}")
 
     def get_next_skill(self) -> Optional[str]:
-        # Prioridad para pociones
+        # Prioridad 1: Pociones de emergencia
         if self.game_state["hp"] < self.config_manager.get_combat_behavior().get(
             "potion_threshold", 50
         ):
@@ -238,7 +241,13 @@ class SkillManager:
             if mp_potion and self.can_use_skill(mp_potion.name):
                 return mp_potion.name
 
-        # Usar rotación si está activa
+        # Prioridad 2: Buffs automáticos (solo out of combat)
+        if not self.game_state.get("in_combat", False):
+            buff_to_cast = self._get_expired_buff()
+            if buff_to_cast:
+                return buff_to_cast
+
+        # Prioridad 3: Usar rotación si está activa (solo in combat o si no hay buffs pendientes)
         if self.active_rotation and self.active_rotation in self.rotations:
             rotation = self.rotations[self.active_rotation]
             if rotation.enabled and rotation.skills:
@@ -252,7 +261,7 @@ class SkillManager:
             # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
             available_skills = [
                 skill for skill in self.skills.values() 
-                if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK]
+                if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK, SkillType.BUFF]
                 and self.can_use_skill(skill.name)
             ]
             
@@ -274,16 +283,33 @@ class SkillManager:
                 return skill
         return None
 
+    def _get_expired_buff(self) -> Optional[str]:
+        """✅ NUEVO: Encuentra buffs que han expirado y necesitan ser relanzados."""
+        current_time = time.time()
+        buff_skills = [
+            skill for skill in self.skills.values()
+            if skill.skill_type == SkillType.BUFF and skill.enabled and skill.duration > 0
+        ]
+        
+        for skill in buff_skills:
+            usage = self.usage_stats[skill.name]
+            # Si el buff ha expirado o nunca se ha usado
+            if current_time >= usage.buff_expires_at and self.can_use_skill(skill.name):
+                return skill.name
+        
+        return None
+
     def export_config(self) -> Dict[str, Any]:
         skills_data = {}
         for name, skill in self.skills.items():
             skills_data[name] = {
                 "key": skill.key,
-                "cooldown": skill.cooldown,
+                "check_interval": skill.check_interval,
                 "skill_type": skill.skill_type.value,
                 "priority": skill.priority,
                 "mana_cost": skill.mana_cost,
                 "icon": skill.icon,
+                "duration": skill.duration,
                 "conditions": skill.conditions,
                 "description": skill.description,
                 "enabled": skill.enabled,
@@ -314,11 +340,12 @@ class SkillManager:
                 skill = Skill(
                     name=name,
                     key=skill_data["key"],
-                    cooldown=skill_data.get("cooldown", 1.0),
+                    check_interval=skill_data.get("check_interval", skill_data.get("cooldown", 1.0)),  # Compatibilidad con ambos nombres
                     skill_type=SkillType(skill_data["skill_type"]),
                     priority=skill_data.get("priority", 1),
                     mana_cost=skill_data.get("mana_cost", 0),
-                    icon=skill_data.get("icon"),  # ✅ NUEVO
+                    icon=skill_data.get("icon"),
+                    duration=skill_data.get("duration", 0.0),  # ✅ NUEVO
                     conditions=skill_data.get("conditions", []),
                     description=skill_data.get("description", ""),
                     enabled=skill_data.get("enabled", True),
