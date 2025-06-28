@@ -53,10 +53,10 @@
       68
     ],
     "target_name": [
-      19,
-      88,
-      51,
-      120
+      4,
+      55,
+      168,
+      70
     ]
   },
   "skill_bar": {
@@ -203,6 +203,7 @@
       }
     },
     "active_rotation": "BasicCombo",
+    "active_rotation": null,
     "global_cooldown": 0.05
   },
   "ui": {
