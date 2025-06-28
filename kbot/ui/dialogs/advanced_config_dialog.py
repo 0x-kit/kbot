@@ -4,8 +4,6 @@ from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
-    QTabWidget,
-    QWidget,
     QGroupBox,
     QFormLayout,
     QLabel,
@@ -18,113 +16,79 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
     QMessageBox,
     QTextEdit,
-    QComboBox,
-    QSlider,
-    QFrame,
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPalette
 
 
 class AdvancedConfigDialog(QDialog):
-    """✅ COMPLETA - Configuración avanzada de todos los parámetros del bot"""
+    """Configuración avanzada simplificada del bot"""
 
-    config_changed = pyqtSignal(dict)  # Signal for real-time updates
+    config_changed = pyqtSignal(dict)
 
     def __init__(self, unified_config_manager, parent=None):
         super().__init__(parent)
         self.config_manager = unified_config_manager
         self.setWindowTitle("🔧 Advanced Bot Configuration")
-        self.setMinimumSize(800, 600)
-        self.resize(1000, 700)
+        self.setMinimumSize(600, 500)
+        self.resize(700, 600)
 
         # Store widgets for easy access
         self.timing_widgets = {}
         self.behavior_widgets = {}
-        self.debug_widgets = {}
 
         self._setup_ui()
         self._load_current_values()
         self._connect_signals()
 
     def _setup_ui(self):
-        """Setup the complete UI with all configuration options"""
+        """Setup simplified single-screen UI"""
         layout = QVBoxLayout(self)
 
-        # Create tab widget
-        self.tab_widget = QTabWidget()
-        layout.addWidget(self.tab_widget)
-
-        # Create tabs
-        self._create_timing_tab()
-        self._create_behavior_tab()
-        self._create_advanced_tab()
-        self._create_debug_tab()
-
-        # Bottom buttons
-        button_layout = QHBoxLayout()
-
-        # Preset buttons
-        self.preset_aggressive_btn = QPushButton("⚡ Aggressive Preset")
-        self.preset_conservative_btn = QPushButton("🛡️ Conservative Preset")
-        self.preset_balanced_btn = QPushButton("⚖️ Balanced Preset")
-
-        button_layout.addWidget(self.preset_aggressive_btn)
-        button_layout.addWidget(self.preset_conservative_btn)
-        button_layout.addWidget(self.preset_balanced_btn)
-        button_layout.addStretch()
-
-        # Standard dialog buttons
-        self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Apply
-        )
-        button_layout.addWidget(self.button_box)
-
-        layout.addLayout(button_layout)
-
-    def _create_timing_tab(self):
-        """✅ Tab para todos los parámetros de timing"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        # Scroll area for many parameters
+        # Create scroll area for all content
         scroll = QScrollArea()
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
 
-        # Combat Timing Group
-        combat_group = QGroupBox("⚔️ Combat Timing")
-        combat_layout = QFormLayout(combat_group)
+        # Create all sections
+        self._create_timing_section(scroll_layout)
+        self._create_behavior_section(scroll_layout)
+        self._create_whitelist_section(scroll_layout)
+        self._create_config_management_section(scroll_layout)
 
-        # Create timing controls with descriptions  
+        scroll_layout.addStretch()
+        scroll.setWidget(scroll_widget)
+        scroll.setWidgetResizable(True)
+        layout.addWidget(scroll)
+
+        # Bottom buttons - only standard dialog buttons
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Apply
+        )
+        layout.addWidget(self.button_box)
+
+    def _create_timing_section(self, parent_layout):
+        """Create Combat Timing section including global cooldown"""
+        timing_group = QGroupBox("⏱️ Combat Timing")
+        timing_layout = QFormLayout(timing_group)
+
+        # Global cooldown (moved from advanced tab)
+        self.global_cooldown_spin = QDoubleSpinBox()
+        self.global_cooldown_spin.setRange(0.05, 1.0)
+        self.global_cooldown_spin.setSingleStep(0.05)
+        self.global_cooldown_spin.setSuffix(" s")
+        self.global_cooldown_spin.setToolTip("Minimum time between any skill uses")
+        timing_layout.addRow("Global Cooldown:", self.global_cooldown_spin)
+
+        # Timing parameters
         timing_params = [
-            (
-                "skill_interval",
-                "Skill Interval",
-                "Time between skills",
-                0.1,
-                5.0,
-                0.1,
-                "s",
-            ),
-            (
-                "attack_interval",
-                "Attack Interval", 
-                "Post-combat delay between mob kills",
-                0.0,
-                10.0,
-                0.1,
-                "s",
-            ),
-            (
-                "target_attempt_interval",
-                "Target Search",
-                "How often to search for targets",
-                0.1,
-                2.0,
-                0.1,
-                "s",
-            ),
+            ("skill_interval", "Skill Interval", "Time between skills", 0.1, 5.0, 0.1, "s"),
+            ("attack_interval", "Attack Interval", "Post-combat delay", 0.0, 10.0, 0.1, "s"),
+            ("target_attempt_interval", "Target Search", "How often to search for targets", 0.1, 2.0, 0.1, "s"),
+            ("stuck_detection_searching", "Search Timeout", "Time before anti-stuck when searching", 3.0, 30.0, 0.5, "s"),
+            ("stuck_in_combat_timeout", "Combat Timeout", "Time before anti-stuck in combat", 5.0, 60.0, 0.5, "s"),
+            ("vitals_check_interval", "Vitals Check Rate", "How often to check HP/MP", 0.1, 2.0, 0.1, "s"),
+            ("stats_update_interval", "Stats Update Rate", "How often to update statistics", 1.0, 30.0, 0.5, "s"),
         ]
 
         for param, label, tooltip, min_val, max_val, step, suffix in timing_params:
@@ -133,147 +97,20 @@ class AdvancedConfigDialog(QDialog):
             widget.setSingleStep(step)
             widget.setSuffix(f" {suffix}")
             widget.setToolTip(tooltip)
-            widget.setMinimumWidth(100)
-
-            # Add colored indicator for optimal ranges
-            if param == "skill_interval":
-                widget.setStyleSheet(
-                    "QDoubleSpinBox { background-color: #e8f5e8; }"
-                )  # Green tint
-            elif param == "attack_interval":
-                widget.setStyleSheet(
-                    "QDoubleSpinBox { background-color: #ffe8e8; }"
-                )  # Red tint
-
             self.timing_widgets[param] = widget
+            timing_layout.addRow(f"{label}:", widget)
 
-            # Create compact label with tooltip (remove extra description labels)
-            full_label = f"{label}:"
-            combat_layout.addRow(full_label, widget)
+        parent_layout.addWidget(timing_group)
 
-        scroll_layout.addWidget(combat_group)
+    def _create_behavior_section(self, parent_layout):
+        """Create Combat Behavior section"""
+        behavior_group = QGroupBox("⚔️ Combat Behavior")
+        behavior_layout = QFormLayout(behavior_group)
 
-        # Anti-Stuck Timing Group
-        stuck_group = QGroupBox("🔄 Anti-Stuck Detection")
-        stuck_layout = QFormLayout(stuck_group)
-
-        stuck_params = [
-            (
-                "stuck_detection_searching",
-                "Search Timeout",
-                "Time before anti-stuck when searching",
-                3.0,
-                30.0,
-                0.5,
-                "s",
-            ),
-            (
-                "stuck_in_combat_timeout",
-                "Combat Timeout",
-                "Time before anti-stuck in combat",
-                5.0,
-                60.0,
-                0.5,
-                "s",
-            ),
-        ]
-
-        for param, label, tooltip, min_val, max_val, step, suffix in stuck_params:
-            widget = QDoubleSpinBox()
-            widget.setRange(min_val, max_val)
-            widget.setSingleStep(step)
-            widget.setSuffix(f" {suffix}")
-            widget.setToolTip(tooltip)
-            widget.setStyleSheet(
-                "QDoubleSpinBox { background-color: #fff8e8; }"
-            )  # Orange tint
-
-            self.timing_widgets[param] = widget
-
-            stuck_layout.addRow(f"{label}:", widget)
-
-        scroll_layout.addWidget(stuck_group)
-
-        # Monitoring Timing Group
-        monitor_group = QGroupBox("📊 Monitoring & Logging")
-        monitor_layout = QFormLayout(monitor_group)
-
-        monitor_params = [
-            (
-                "vitals_check_interval",
-                "Vitals Check Rate",
-                "How often to check HP/MP",
-                0.1,
-                2.0,
-                0.1,
-                "s",
-            ),
-            (
-                "stats_update_interval",
-                "Stats Update Rate",
-                "How often to update statistics",
-                1.0,
-                30.0,
-                0.5,
-                "s",
-            ),
-        ]
-
-        for param, label, tooltip, min_val, max_val, step, suffix in monitor_params:
-            widget = QDoubleSpinBox()
-            widget.setRange(min_val, max_val)
-            widget.setSingleStep(step)
-            widget.setSuffix(f" {suffix}")
-            widget.setToolTip(tooltip)
-            widget.setStyleSheet(
-                "QDoubleSpinBox { background-color: #e8e8ff; }"
-            )  # Blue tint
-
-            self.timing_widgets[param] = widget
-
-            monitor_layout.addRow(f"{label}:", widget)
-
-        scroll_layout.addWidget(monitor_group)
-
-        # Performance indicator
-        performance_frame = QFrame()
-        performance_frame.setFrameStyle(QFrame.Box)
-        performance_layout = QVBoxLayout(performance_frame)
-
-        self.performance_label = QLabel("⚡ Performance Impact: Calculating...")
-        self.performance_label.setAlignment(Qt.AlignCenter)
-        self.performance_label.setStyleSheet("font-weight: bold; padding: 10px;")
-        performance_layout.addWidget(self.performance_label)
-
-        scroll_layout.addWidget(performance_frame)
-        scroll_layout.addStretch()
-
-        scroll.setWidget(scroll_widget)
-        layout.addWidget(scroll)
-
-        self.tab_widget.addTab(tab, "⏱️ Timing")
-
-    def _create_behavior_tab(self):
-        """✅ Tab para parámetros de comportamiento"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        scroll = QScrollArea()
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout(scroll_widget)
-
-        # Combat Behavior Group
-        combat_group = QGroupBox("⚔️ Combat Behavior")
-        combat_layout = QFormLayout(combat_group)
-
-        # Boolean options (including basic options moved from main window)
+        # Boolean options
         bool_params = [
             ("enable_looting", "Enable Looting", "Loot items after killing targets"),
-            (
-                "assist_mode",
-                "Assist Mode",
-                "Use assist skill instead of searching for targets",
-            ),
+            ("assist_mode", "Assist Mode", "Use assist skill instead of searching for targets"),
             ("use_skills", "Use Skills", "Enable skill usage in combat"),
         ]
 
@@ -281,145 +118,56 @@ class AdvancedConfigDialog(QDialog):
             widget = QCheckBox()
             widget.setToolTip(tooltip)
             self.behavior_widgets[param] = widget
+            behavior_layout.addRow(f"{label}:", widget)
 
-            combat_layout.addRow(f"{label}:", widget)
-
-        scroll_layout.addWidget(combat_group)
-
-        # Thresholds Group
-        threshold_group = QGroupBox("🎯 Thresholds & Tolerances")
-        threshold_layout = QFormLayout(threshold_group)
-
-        # Potion threshold
+        # Thresholds
         self.behavior_widgets["potion_threshold"] = QSpinBox()
         self.behavior_widgets["potion_threshold"].setRange(1, 99)
         self.behavior_widgets["potion_threshold"].setSuffix("%")
-        self.behavior_widgets["potion_threshold"].setToolTip(
-            "HP/MP percentage to trigger potion use"
-        )
-        threshold_layout.addRow(
-            "Potion Threshold:", self.behavior_widgets["potion_threshold"]
-        )
+        self.behavior_widgets["potion_threshold"].setToolTip("HP/MP percentage to trigger potion use")
+        behavior_layout.addRow("Potion Threshold:", self.behavior_widgets["potion_threshold"])
 
-        # OCR tolerance
         self.behavior_widgets["ocr_tolerance"] = QSpinBox()
         self.behavior_widgets["ocr_tolerance"].setRange(50, 100)
         self.behavior_widgets["ocr_tolerance"].setSuffix("%")
-        self.behavior_widgets["ocr_tolerance"].setToolTip(
-            "OCR text matching accuracy required"
-        )
-        threshold_layout.addRow(
-            "OCR Tolerance:", self.behavior_widgets["ocr_tolerance"]
-        )
+        self.behavior_widgets["ocr_tolerance"].setToolTip("OCR text matching accuracy required")
+        behavior_layout.addRow("OCR Tolerance:", self.behavior_widgets["ocr_tolerance"])
 
-        # Fuzzy match threshold
-        # self.behavior_widgets["fuzzy_match_threshold"] = QSpinBox()
-        # self.behavior_widgets["fuzzy_match_threshold"].setRange(50, 100)
-        # self.behavior_widgets["fuzzy_match_threshold"].setSuffix("%")
-        # self.behavior_widgets["fuzzy_match_threshold"].setToolTip(
-        #     "Fuzzy string matching threshold for target names"
-        # )
-        # threshold_layout.addRow(
-        #     "Fuzzy Match Threshold:", self.behavior_widgets["fuzzy_match_threshold"]
-        # )
+        # Looting parameters
+        self.behavior_widgets["loot_duration"] = QDoubleSpinBox()
+        self.behavior_widgets["loot_duration"].setRange(0.1, 5.0)
+        self.behavior_widgets["loot_duration"].setSingleStep(0.1)
+        self.behavior_widgets["loot_duration"].setSuffix(" s")
+        self.behavior_widgets["loot_duration"].setToolTip("Total time spent looting")
+        behavior_layout.addRow("Loot Duration:", self.behavior_widgets["loot_duration"])
 
-        scroll_layout.addWidget(threshold_group)
+        self.behavior_widgets["loot_attempts"] = QSpinBox()
+        self.behavior_widgets["loot_attempts"].setRange(1, 10)
+        self.behavior_widgets["loot_attempts"].setToolTip("Number of loot key presses")
+        behavior_layout.addRow("Loot Attempts:", self.behavior_widgets["loot_attempts"])
 
-        # Looting Configuration Group
-        loot_group = QGroupBox("📦 Looting Configuration")
-        loot_layout = QFormLayout(loot_group)
-
-        loot_params = [
-            (
-                "loot_duration",
-                "Loot Duration",
-                "Total time spent looting",
-                0.1,
-                5.0,
-                0.1,
-                "s",
-            ),
-            (
-                "loot_attempts",
-                "Loot Attempts",
-                "Number of loot key presses",
-                1,
-                10,
-                1,
-                "",
-            ),
-        ]
-
-        for param, label, tooltip, min_val, max_val, step, suffix in loot_params:
-            if param == "loot_attempts":
-                widget = QSpinBox()
-                widget.setRange(int(min_val), int(max_val))
-                widget.setSingleStep(int(step))
-            else:
-                widget = QDoubleSpinBox()
-                widget.setRange(min_val, max_val)
-                widget.setSingleStep(step)
-
-            if suffix:
-                widget.setSuffix(f" {suffix}")
-            widget.setToolTip(tooltip)
-
-            self.behavior_widgets[param] = widget
-
-            desc_label = QLabel(f"<small>{tooltip}</small>")
-            desc_label.setStyleSheet("color: gray;")
-
-            loot_layout.addRow(f"{label}:", widget)
-            loot_layout.addRow("", desc_label)
-
-        # Loot key
         self.behavior_widgets["loot_key"] = QLineEdit()
         self.behavior_widgets["loot_key"].setMaxLength(1)
         self.behavior_widgets["loot_key"].setToolTip("Key to press for looting")
-        loot_layout.addRow("Loot Key:", self.behavior_widgets["loot_key"])
+        behavior_layout.addRow("Loot Key:", self.behavior_widgets["loot_key"])
 
-        scroll_layout.addWidget(loot_group)
-        scroll_layout.addStretch()
+        parent_layout.addWidget(behavior_group)
 
-        scroll.setWidget(scroll_widget)
-        layout.addWidget(scroll)
-
-        self.tab_widget.addTab(tab, "🎮 Behavior")
-
-    def _create_advanced_tab(self):
-        """✅ Tab para configuración avanzada"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        # Skills Global Settings
-        skills_group = QGroupBox("🎯 Skills Global Settings")
-        skills_layout = QFormLayout(skills_group)
-
-        # Global cooldown
-        self.global_cooldown_spin = QDoubleSpinBox()
-        self.global_cooldown_spin.setRange(0.05, 1.0)
-        self.global_cooldown_spin.setSingleStep(0.05)
-        self.global_cooldown_spin.setSuffix(" s")
-        self.global_cooldown_spin.setToolTip("Minimum time between any skill uses")
-        skills_layout.addRow("Global Cooldown:", self.global_cooldown_spin)
-
-        layout.addWidget(skills_group)
-
-        # Whitelist Management
+    def _create_whitelist_section(self, parent_layout):
+        """Create Mob Whitelist section"""
         whitelist_group = QGroupBox("📋 Mob Whitelist")
         whitelist_layout = QVBoxLayout(whitelist_group)
 
         whitelist_layout.addWidget(QLabel("Allowed mobs (one per line):"))
         self.whitelist_edit = QTextEdit()
-        self.whitelist_edit.setMaximumHeight(200)
-        self.whitelist_edit.setToolTip(
-            "Enter mob names that the bot is allowed to attack"
-        )
+        self.whitelist_edit.setMaximumHeight(150)
+        self.whitelist_edit.setToolTip("Enter mob names that the bot is allowed to attack")
         whitelist_layout.addWidget(self.whitelist_edit)
 
-        layout.addWidget(whitelist_group)
+        parent_layout.addWidget(whitelist_group)
 
-        # Configuration Management
+    def _create_config_management_section(self, parent_layout):
+        """Create Configuration Management section"""
         config_group = QGroupBox("⚙️ Configuration Management")
         config_layout = QFormLayout(config_group)
 
@@ -439,299 +187,12 @@ class AdvancedConfigDialog(QDialog):
 
         # Configuration summary
         self.config_summary = QTextEdit()
-        self.config_summary.setMaximumHeight(150)
+        self.config_summary.setMaximumHeight(120)
         self.config_summary.setReadOnly(True)
         config_layout.addRow("Summary:", self.config_summary)
 
-        layout.addWidget(config_group)
-        layout.addStretch()
+        parent_layout.addWidget(config_group)
 
-        self.tab_widget.addTab(tab, "🔧 Advanced")
-
-    def _create_debug_tab(self):
-        """✅ Enhanced Debug Tab - Bot Behavior Diagnostics"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-
-        # Debug Configuration
-        debug_config_group = QGroupBox("🐛 Debug Configuration")
-        debug_config_layout = QFormLayout(debug_config_group)
-
-        # Log level
-        self.debug_widgets["log_level"] = QComboBox()
-        self.debug_widgets["log_level"].addItems(["DEBUG", "INFO", "WARNING", "ERROR"])
-        self.debug_widgets["log_level"].setToolTip("Set logging verbosity level")
-        debug_config_layout.addRow("Log Level:", self.debug_widgets["log_level"])
-
-        # Performance monitoring toggle
-        self.debug_widgets["performance_monitoring"] = QCheckBox()
-        self.debug_widgets["performance_monitoring"].setToolTip("Enable real-time performance tracking")
-        debug_config_layout.addRow("Performance Monitoring:", self.debug_widgets["performance_monitoring"])
-
-        layout.addWidget(debug_config_group)
-
-        # Bot Behavior Diagnostics
-        behavior_group = QGroupBox("🤖 Bot Behavior Diagnostics")
-        behavior_layout = QVBoxLayout(behavior_group)
-
-        # Real-time bot state display
-        state_frame = QFrame()
-        state_frame.setFrameStyle(QFrame.StyledPanel)
-        state_layout = QHBoxLayout(state_frame)
-
-        state_layout.addWidget(QLabel("<b>Current State:</b>"))
-        self.current_state_label = QLabel("Not Connected")
-        self.current_state_label.setStyleSheet("padding: 4px; background-color: #f0f0f0; border-radius: 3px;")
-        state_layout.addWidget(self.current_state_label)
-
-        state_layout.addWidget(QLabel("<b>Combat State:</b>"))
-        self.combat_state_label = QLabel("Unknown")
-        self.combat_state_label.setStyleSheet("padding: 4px; background-color: #f0f0f0; border-radius: 3px;")
-        state_layout.addWidget(self.combat_state_label)
-
-        state_layout.addStretch()
-        behavior_layout.addWidget(state_frame)
-
-        # Bot behavior metrics
-        metrics_layout = QHBoxLayout()
-
-        # Left metrics
-        left_metrics = QGroupBox("📊 Performance Metrics")
-        left_metrics_layout = QFormLayout(left_metrics)
-
-        self.ocr_accuracy_label = QLabel("N/A")
-        self.targeting_success_label = QLabel("N/A") 
-        self.skill_execution_label = QLabel("N/A")
-
-        left_metrics_layout.addRow("OCR Accuracy:", self.ocr_accuracy_label)
-        left_metrics_layout.addRow("Targeting Success:", self.targeting_success_label)
-        left_metrics_layout.addRow("Skill Execution:", self.skill_execution_label)
-
-        # Right metrics  
-        right_metrics = QGroupBox("⚠️ Error Tracking")
-        right_metrics_layout = QFormLayout(right_metrics)
-
-        self.error_count_label = QLabel("0")
-        self.stuck_count_label = QLabel("0")
-        self.failed_targets_label = QLabel("0")
-
-        right_metrics_layout.addRow("Total Errors:", self.error_count_label)
-        right_metrics_layout.addRow("Stuck Events:", self.stuck_count_label)
-        right_metrics_layout.addRow("Failed Targets:", self.failed_targets_label)
-
-        metrics_layout.addWidget(left_metrics)
-        metrics_layout.addWidget(right_metrics)
-        behavior_layout.addLayout(metrics_layout)
-
-        layout.addWidget(behavior_group)
-
-        # Real-time Diagnostic Log
-        log_group = QGroupBox("📝 Diagnostic Log")
-        log_layout = QVBoxLayout(log_group)
-
-        # Log controls
-        log_controls = QHBoxLayout()
-        
-        self.diagnostic_filter = QComboBox()
-        self.diagnostic_filter.addItems(["All Events", "Errors Only", "State Changes", "Combat Events", "Performance Issues"])
-        self.diagnostic_filter.setToolTip("Filter diagnostic messages")
-        log_controls.addWidget(QLabel("Filter:"))
-        log_controls.addWidget(self.diagnostic_filter)
-
-        self.clear_log_btn = QPushButton("🗑️ Clear Log")
-        self.export_log_btn = QPushButton("💾 Export Log")
-        log_controls.addStretch()
-        log_controls.addWidget(self.clear_log_btn)
-        log_controls.addWidget(self.export_log_btn)
-
-        log_layout.addLayout(log_controls)
-
-        # Diagnostic log display
-        self.diagnostic_log = QTextEdit()
-        self.diagnostic_log.setReadOnly(True)
-        self.diagnostic_log.setMaximumHeight(250)
-        self.diagnostic_log.setStyleSheet("QTextEdit { font-family: 'Courier New', monospace; font-size: 10px; }")
-        log_layout.addWidget(self.diagnostic_log)
-
-        layout.addWidget(log_group)
-
-        # Initialize diagnostic data
-        self._init_diagnostic_system()
-
-        self.tab_widget.addTab(tab, "🐛 Debug")
-
-    def _init_diagnostic_system(self):
-        """Initialize the diagnostic monitoring system"""
-        try:
-            # Connect diagnostic log controls
-            if hasattr(self, 'clear_log_btn'):
-                self.clear_log_btn.clicked.connect(self._clear_diagnostic_log)
-            if hasattr(self, 'export_log_btn'):
-                self.export_log_btn.clicked.connect(self._export_diagnostic_log)
-            if hasattr(self, 'diagnostic_filter'):
-                self.diagnostic_filter.currentTextChanged.connect(self._filter_diagnostic_log)
-            
-            # Initialize diagnostic data
-            self.diagnostic_data = {
-                'total_errors': 0,
-                'stuck_events': 0,
-                'failed_targets': 0,
-                'ocr_accuracy': 0.0,
-                'targeting_success': 0.0,
-                'skill_execution': 0.0,
-                'log_entries': []
-            }
-            
-            # Add initial diagnostic message
-            self._add_diagnostic_message("Debug", "Diagnostic system initialized")
-            
-        except Exception as e:
-            print(f"Error initializing diagnostic system: {e}")
-
-    def _add_diagnostic_message(self, category, message):
-        """Add a message to the diagnostic log"""
-        try:
-            if hasattr(self, 'diagnostic_log'):
-                timestamp = __import__('datetime').datetime.now().strftime("%H:%M:%S")
-                formatted_message = f"[{timestamp}] [{category}] {message}"
-                
-                # Store in data
-                self.diagnostic_data['log_entries'].append({
-                    'timestamp': timestamp,
-                    'category': category,
-                    'message': message,
-                    'formatted': formatted_message
-                })
-                
-                # Keep only last 500 entries
-                if len(self.diagnostic_data['log_entries']) > 500:
-                    self.diagnostic_data['log_entries'] = self.diagnostic_data['log_entries'][-500:]
-                
-                # Update display based on current filter
-                self._update_diagnostic_display()
-                
-        except Exception as e:
-            print(f"Error adding diagnostic message: {e}")
-
-    def _update_diagnostic_display(self):
-        """Update the diagnostic log display based on current filter"""
-        try:
-            if not hasattr(self, 'diagnostic_log') or not hasattr(self, 'diagnostic_filter'):
-                return
-                
-            current_filter = self.diagnostic_filter.currentText()
-            filtered_entries = []
-            
-            for entry in self.diagnostic_data['log_entries']:
-                if current_filter == "All Events":
-                    filtered_entries.append(entry['formatted'])
-                elif current_filter == "Errors Only" and entry['category'] in ['Error', 'Critical']:
-                    filtered_entries.append(entry['formatted'])
-                elif current_filter == "State Changes" and entry['category'] in ['State', 'Combat']:
-                    filtered_entries.append(entry['formatted'])
-                elif current_filter == "Combat Events" and entry['category'] in ['Combat', 'Skill', 'Target']:
-                    filtered_entries.append(entry['formatted'])
-                elif current_filter == "Performance Issues" and entry['category'] in ['Performance', 'OCR', 'Timing']:
-                    filtered_entries.append(entry['formatted'])
-            
-            # Update display
-            self.diagnostic_log.setText('\n'.join(filtered_entries[-100:]))  # Show last 100 entries
-            
-            # Auto-scroll to bottom
-            cursor = self.diagnostic_log.textCursor()
-            cursor.movePosition(cursor.End)
-            self.diagnostic_log.setTextCursor(cursor)
-            
-        except Exception as e:
-            print(f"Error updating diagnostic display: {e}")
-
-    def _clear_diagnostic_log(self):
-        """Clear the diagnostic log"""
-        try:
-            self.diagnostic_data['log_entries'] = []
-            if hasattr(self, 'diagnostic_log'):
-                self.diagnostic_log.clear()
-            self._add_diagnostic_message("Debug", "Diagnostic log cleared")
-        except Exception as e:
-            print(f"Error clearing diagnostic log: {e}")
-
-    def _export_diagnostic_log(self):
-        """Export diagnostic log to file"""
-        try:
-            from PyQt5.QtWidgets import QFileDialog
-            import os
-            
-            filename, _ = QFileDialog.getSaveFileName(
-                self, 
-                "Export Diagnostic Log", 
-                "diagnostic_log.txt", 
-                "Text Files (*.txt);;All Files (*)"
-            )
-            
-            if filename:
-                with open(filename, 'w', encoding='utf-8') as f:
-                    f.write("KBot Diagnostic Log\n")
-                    f.write("=" * 50 + "\n\n")
-                    for entry in self.diagnostic_data['log_entries']:
-                        f.write(entry['formatted'] + '\n')
-                
-                self._add_diagnostic_message("Debug", f"Log exported to {os.path.basename(filename)}")
-                
-        except Exception as e:
-            self._add_diagnostic_message("Error", f"Failed to export log: {e}")
-
-    def _filter_diagnostic_log(self):
-        """Handle filter change"""
-        self._update_diagnostic_display()
-
-    def update_diagnostic_metrics(self, metrics_data):
-        """Update diagnostic metrics from external source"""
-        try:
-            if not hasattr(self, 'diagnostic_data'):
-                return
-                
-            # Update error tracking
-            if 'total_errors' in metrics_data:
-                self.diagnostic_data['total_errors'] = metrics_data['total_errors']
-                if hasattr(self, 'error_count_label'):
-                    self.error_count_label.setText(str(metrics_data['total_errors']))
-            
-            if 'stuck_events' in metrics_data:
-                self.diagnostic_data['stuck_events'] = metrics_data['stuck_events']
-                if hasattr(self, 'stuck_count_label'):
-                    self.stuck_count_label.setText(str(metrics_data['stuck_events']))
-            
-            if 'failed_targets' in metrics_data:
-                self.diagnostic_data['failed_targets'] = metrics_data['failed_targets']
-                if hasattr(self, 'failed_targets_label'):
-                    self.failed_targets_label.setText(str(metrics_data['failed_targets']))
-            
-            # Update performance metrics
-            if 'ocr_accuracy' in metrics_data:
-                accuracy = metrics_data['ocr_accuracy']
-                self.diagnostic_data['ocr_accuracy'] = accuracy
-                if hasattr(self, 'ocr_accuracy_label'):
-                    color = "#00aa00" if accuracy > 90 else "#ff8800" if accuracy > 70 else "#dd0000"
-                    self.ocr_accuracy_label.setText(f"{accuracy:.1f}%")
-                    self.ocr_accuracy_label.setStyleSheet(f"color: {color}; font-weight: bold;")
-            
-            # Update bot states
-            if 'bot_state' in metrics_data:
-                state = metrics_data['bot_state']
-                if hasattr(self, 'current_state_label'):
-                    self.current_state_label.setText(state.title())
-                    color = "#00aa00" if state == "running" else "#ff8800" if state == "paused" else "#666666"
-                    self.current_state_label.setStyleSheet(f"padding: 4px; background-color: {color}; color: white; border-radius: 3px; font-weight: bold;")
-            
-            if 'combat_state' in metrics_data:
-                combat_state = metrics_data['combat_state']
-                if hasattr(self, 'combat_state_label'):
-                    self.combat_state_label.setText(combat_state.title())
-                    color = "#dd0000" if combat_state == "fighting" else "#00aa00" if combat_state == "searching" else "#666666"
-                    self.combat_state_label.setStyleSheet(f"padding: 4px; background-color: {color}; color: white; border-radius: 3px; font-weight: bold;")
-                    
-        except Exception as e:
-            print(f"Error updating diagnostic metrics: {e}")
 
     def _load_current_values(self):
         """✅ Cargar valores actuales desde la configuración"""
@@ -777,7 +238,6 @@ class AdvancedConfigDialog(QDialog):
                         widget.setCurrentText(str(value))
 
             # Update displays
-            self._update_performance_indicator()
             self._update_config_summary()
 
         except Exception as e:
@@ -804,10 +264,6 @@ class AdvancedConfigDialog(QDialog):
         if hasattr(self, "whitelist_edit"):
             self.whitelist_edit.textChanged.connect(self._on_whitelist_changed)
 
-        # Connect preset buttons
-        self.preset_aggressive_btn.clicked.connect(self._apply_aggressive_preset)
-        self.preset_conservative_btn.clicked.connect(self._apply_conservative_preset)
-        self.preset_balanced_btn.clicked.connect(self._apply_balanced_preset)
 
         # Connect config management buttons
         if hasattr(self, "export_btn"):
@@ -836,41 +292,6 @@ class AdvancedConfigDialog(QDialog):
         """Handle whitelist changes for real-time updates"""
         self._emit_config_change()
 
-    def _update_performance_indicator(self):
-        """✅ Actualizar indicador de rendimiento"""
-        try:
-            # Calculate performance impact based on timing values
-            total_calls_per_second = 0
-
-            for param, widget in self.timing_widgets.items():
-                value = widget.value()
-                if value > 0:
-                    calls_per_second = 1.0 / value
-                    total_calls_per_second += calls_per_second
-
-            # Determine performance level
-            if total_calls_per_second > 15:
-                level = "🔥 VERY HIGH"
-                color = "#ff4444"
-            elif total_calls_per_second > 10:
-                level = "⚡ HIGH"
-                color = "#ff8844"
-            elif total_calls_per_second > 5:
-                level = "⚖️ MODERATE"
-                color = "#44aa44"
-            else:
-                level = "🐌 LOW"
-                color = "#4444ff"
-
-            self.performance_label.setText(
-                f"⚡ Performance Impact: {level} ({total_calls_per_second:.1f} ops/sec)"
-            )
-            self.performance_label.setStyleSheet(
-                f"font-weight: bold; padding: 10px; color: {color};"
-            )
-
-        except Exception as e:
-            self.performance_label.setText("⚡ Performance Impact: Error calculating")
 
     def _update_config_summary(self):
         """✅ Enhanced configuration summary with ALL settings"""
@@ -976,68 +397,6 @@ class AdvancedConfigDialog(QDialog):
 
         return config
 
-    def _apply_aggressive_preset(self):
-        """Apply aggressive combat preset"""
-        aggressive_timing = {
-            "skill_interval": 0.4,
-            "attack_interval": 0.5,
-            "target_attempt_interval": 0.2,
-            "stuck_detection_searching": 4.0,
-            "stuck_in_combat_timeout": 6.0,
-        }
-
-        for param, value in aggressive_timing.items():
-            if param in self.timing_widgets:
-                self.timing_widgets[param].setValue(value)
-
-        self._update_performance_indicator()
-        QMessageBox.information(
-            self,
-            "Preset Applied",
-            "⚡ Aggressive preset applied!\nHigh performance, fast combat.",
-        )
-
-    def _apply_conservative_preset(self):
-        """Apply conservative combat preset"""
-        conservative_timing = {
-            "skill_interval": 1.2,
-            "attack_interval": 3.0,
-            "target_attempt_interval": 0.5,
-            "stuck_detection_searching": 12.0,
-            "stuck_in_combat_timeout": 15.0,
-        }
-
-        for param, value in conservative_timing.items():
-            if param in self.timing_widgets:
-                self.timing_widgets[param].setValue(value)
-
-        self._update_performance_indicator()
-        QMessageBox.information(
-            self,
-            "Preset Applied",
-            "🛡️ Conservative preset applied!\nSafe, stable operation.",
-        )
-
-    def _apply_balanced_preset(self):
-        """Apply balanced combat preset"""
-        balanced_timing = {
-            "skill_interval": 0.6,
-            "attack_interval": 0,
-            "target_attempt_interval": 0.3,
-            "stuck_detection_searching": 8.0,
-            "stuck_in_combat_timeout": 10.0,
-        }
-
-        for param, value in balanced_timing.items():
-            if param in self.timing_widgets:
-                self.timing_widgets[param].setValue(value)
-
-        self._update_performance_indicator()
-        QMessageBox.information(
-            self,
-            "Preset Applied",
-            "⚖️ Balanced preset applied!\nOptimal balance of speed and stability.",
-        )
 
     def _apply_changes(self):
         """Apply changes without closing dialog"""
