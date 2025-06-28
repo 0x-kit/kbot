@@ -129,14 +129,14 @@ class TantraBotMainWindow(QMainWindow):
             )
 
     def _delayed_skills_load(self):
-        \"\"\"Load skills with delay to ensure skill_manager is ready\"\"\"
+        """Load skills with delay to ensure skill_manager is ready"""
         try:
             if self.bot_engine and self.status_widget:
                 skills_data = self.bot_engine.get_skills_status()
                 self.status_widget.update_skills(skills_data)
-                self.logger.debug(\"Skills loaded successfully after delay\")
+                self.logger.debug("Skills loaded successfully after delay")
         except Exception as e:
-            self.logger.debug(f\"Delayed skills load failed: {e}\")
+            self.logger.debug(f"Delayed skills load failed: {e}")
 
     def _on_bot_initialization_failed(self, error_message):
         """Called when bot worker initialization fails"""
@@ -351,20 +351,26 @@ class TantraBotMainWindow(QMainWindow):
         main_splitter.addWidget(left_panel_widget)
         right_panel_widget = QWidget()
         right_layout = QVBoxLayout(right_panel_widget)
+        
+        # Session statistics horizontal bar at top
+        self._create_stats_horizontal_bar(right_layout)
+        
+        # Main content splitter (status widget + logs)
         right_splitter = QSplitter(Qt.Vertical)
-        right_layout.addWidget(right_splitter)
-        top_info_panel = QWidget()
-        top_info_layout = QHBoxLayout(top_info_panel)
+        
+        # Status widget gets its own space
         self.status_widget = StatusWidget()
-        top_info_layout.addWidget(self.status_widget, 1)
-        self._create_stats_group(top_info_layout)
-        right_splitter.addWidget(top_info_panel)
+        right_splitter.addWidget(self.status_widget)
+        
+        # Log widget
         self.log_widget = LogWidget()
         right_splitter.addWidget(self.log_widget)
+        
+        right_layout.addWidget(right_splitter)
         main_splitter.addWidget(right_panel_widget)
         # Optimized layout proportions for status/monitoring focus
         main_splitter.setSizes([300, 900])  # Reduced left panel, expanded right panel
-        right_splitter.setSizes([350, 450])  # Expanded status area, reduced logs
+        right_splitter.setSizes([400, 400])  # More space for status widget
 
     def _create_main_control_buttons(self, parent_layout):
         control_group = QGroupBox("Bot Control")
@@ -446,30 +452,36 @@ class TantraBotMainWindow(QMainWindow):
 
         parent_layout.addWidget(actions_group)
 
-    def _create_stats_group(self, parent_layout):
-        """Enhanced session statistics focused on essential monitoring metrics"""
-        stats_group = QGroupBox("Session Statistics")
-        stats_layout = QGridLayout(stats_group)
-
-        # Essential metrics only - Runtime and Targets
-        stats_layout.addWidget(QLabel("Runtime:"), 0, 0)
+    def _create_stats_horizontal_bar(self, parent_layout):
+        """Compact horizontal session statistics bar"""
+        stats_frame = QFrame()
+        stats_frame.setFrameStyle(QFrame.StyledPanel)
+        stats_frame.setMaximumHeight(50)  # Keep it compact
+        stats_layout = QHBoxLayout(stats_frame)
+        stats_layout.setContentsMargins(10, 5, 10, 5)
+        
+        # Runtime
+        stats_layout.addWidget(QLabel("⏱️ Runtime:"))
         self.runtime_label = QLabel("00:00:00")
         self.runtime_label.setStyleSheet("font-weight: bold; color: #0066cc;")
-        stats_layout.addWidget(self.runtime_label, 0, 1)
-
-        stats_layout.addWidget(QLabel("Targets Killed:"), 1, 0)
+        stats_layout.addWidget(self.runtime_label)
+        
+        # Separator
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        stats_layout.addWidget(separator)
+        
+        # Targets Killed
+        stats_layout.addWidget(QLabel("🎯 Targets:"))
         self.targets_killed_label = QLabel("0")
         self.targets_killed_label.setStyleSheet("font-weight: bold; color: #00aa00;")
-        stats_layout.addWidget(self.targets_killed_label, 1, 1)
-
-        # Bot state indicator
-        stats_layout.addWidget(QLabel("Bot State:"), 2, 0)
-        self.bot_state_label = QLabel("Stopped")
-        self.bot_state_label.setStyleSheet("font-weight: bold; padding: 2px;")
-        stats_layout.addWidget(self.bot_state_label, 2, 1)
-
-        stats_layout.setColumnStretch(1, 1)
-        parent_layout.addWidget(stats_group, 1)
+        stats_layout.addWidget(self.targets_killed_label)
+        
+        # Push everything to the left
+        stats_layout.addStretch()
+        
+        parent_layout.addWidget(stats_frame)
 
     def _setup_menu_bar(self):
         menubar = self.menuBar()
