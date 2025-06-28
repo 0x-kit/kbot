@@ -295,30 +295,57 @@ class BotEngine(QObject):
         return self.last_vitals.copy()
     
     def get_skills_status(self) -> list:
-        """Get current skills status for UI display"""
+        """Get current skills status for UI display - only offensive and buff skills"""
         if not self.skill_manager:
             return []
         
+        from combat.skill_manager import SkillType
+        
         skills_data = []
         skills = self.skill_manager.get_all_skills()
+        current_time = time.time()
         
         for skill in skills:
+            # Solo mostrar skills ofensivos y buffs
+            if skill.skill_type not in [SkillType.OFFENSIVE, SkillType.BUFF]:
+                continue
+                
             skill_usage = self.skill_manager.usage_stats.get(skill.name, None)
-            last_used = skill_usage.last_used if skill_usage else 0
-            current_time = time.time()
-            cooldown_remaining = max(0, skill.check_interval - (current_time - last_used))
             
-            skills_data.append({
-                'name': skill.name,
-                'key': skill.key,
-                'enabled': skill.enabled,
-                'cooldown_remaining': cooldown_remaining,
-                'type': skill.skill_type.value,
-                'priority': skill.priority
-            })
+            if skill.skill_type == SkillType.OFFENSIVE:
+                # Para skills ofensivos: verificar cooldown visual
+                try:
+                    is_ready = self.skill_manager.can_use_skill(skill.name) if skill_usage else False
+                except Exception:
+                    is_ready = False
+                status_info = {
+                    'name': skill.name,
+                    'key': skill.key,
+                    'enabled': skill.enabled,
+                    'type': 'offensive',
+                    'visual_cooldown': not is_ready,  # True si está en cooldown visual
+                    'is_ready': is_ready
+                }
+            
+            elif skill.skill_type == SkillType.BUFF:
+                # Para buffs: mostrar duración restante
+                buff_remaining = 0
+                if skill_usage and skill_usage.buff_expires_at > 0:
+                    buff_remaining = max(0, skill_usage.buff_expires_at - current_time)
+                
+                status_info = {
+                    'name': skill.name,
+                    'key': skill.key,
+                    'enabled': skill.enabled,
+                    'type': 'buff',
+                    'buff_remaining': buff_remaining,
+                    'buff_duration': skill.duration
+                }
+            
+            skills_data.append(status_info)
         
-        # Sort by priority (higher priority first)
-        skills_data.sort(key=lambda x: x['priority'], reverse=True)
+        # Ordenar por key (tecla asignada)
+        skills_data.sort(key=lambda x: x['key'])
         return skills_data
 
     def update_components_from_config(self):

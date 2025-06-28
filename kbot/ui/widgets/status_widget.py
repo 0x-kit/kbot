@@ -139,18 +139,17 @@ class StatusWidget(QWidget):
             
         self.no_skills_label.hide()
         
-        # Add skills
+        # Add skills - pasamos todo el diccionario de datos
         for skill_data in skills_data:
-            skill_name = skill_data.get('name', 'Unknown')
-            skill_key = skill_data.get('key', '?')
-            skill_enabled = skill_data.get('enabled', False)
-            skill_cooldown = skill_data.get('cooldown_remaining', 0)
-            skill_type = skill_data.get('type', 'Unknown')
-            
-            self._add_skill_widget(skill_name, skill_key, skill_enabled, skill_cooldown, skill_type)
+            self._add_skill_widget(skill_data)
     
-    def _add_skill_widget(self, name: str, key: str, enabled: bool, cooldown: float, skill_type: str):
+    def _add_skill_widget(self, skill_data: Dict[str, Any]):
         """Add a skill widget to the skillbar display"""
+        name = skill_data['name']
+        key = skill_data['key']
+        enabled = skill_data['enabled']
+        skill_type = skill_data['type']
+        
         skill_frame = QFrame()
         skill_frame.setFrameStyle(QFrame.Box)
         skill_layout = QHBoxLayout(skill_frame)
@@ -161,16 +160,30 @@ class StatusWidget(QWidget):
         info_label.setMinimumWidth(120)
         skill_layout.addWidget(info_label)
         
-        # Status indicator
-        if cooldown > 0:
-            status_text = f"CD: {cooldown:.1f}s"
-            status_color = "#ff8800"
-        elif enabled:
-            status_text = "Ready"
-            status_color = "#00aa00"
-        else:
+        # Status indicator - diferente lógica según tipo
+        if not enabled:
             status_text = "Disabled"
             status_color = "#666666"
+        elif skill_type == 'offensive':
+            # Skills ofensivos: mostrar cooldown visual
+            if skill_data.get('visual_cooldown', False):
+                status_text = "🕐 CD"
+                status_color = "#ff8800"
+            else:
+                status_text = "Ready"
+                status_color = "#00aa00"
+        elif skill_type == 'buff':
+            # Buffs: mostrar duración restante
+            buff_remaining = skill_data.get('buff_remaining', 0)
+            if buff_remaining > 0:
+                status_text = f"{buff_remaining:.0f}s"
+                status_color = "#00aa00"
+            else:
+                status_text = "Expired"
+                status_color = "#ff8800"
+        else:
+            status_text = "Unknown"
+            status_color = "#888888"
         
         status_label = QLabel(status_text)
         status_label.setStyleSheet(f"color: {status_color}; font-weight: bold;")
