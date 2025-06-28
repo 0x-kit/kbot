@@ -57,12 +57,14 @@ class AdvancedConfigDialog(QDialog):
         
         # Create left column for timing
         timing_widget = QWidget()
+        timing_widget.setMinimumWidth(350)  # Fixed width for consistency
         timing_column = QVBoxLayout(timing_widget)
         self._create_timing_section(timing_column)
         combat_layout.addWidget(timing_widget)
         
         # Create right column for behavior
         behavior_widget = QWidget()
+        behavior_widget.setMinimumWidth(350)  # Same width as timing
         behavior_column = QVBoxLayout(behavior_widget)
         self._create_behavior_section(behavior_column)
         combat_layout.addWidget(behavior_widget)
@@ -95,6 +97,7 @@ class AdvancedConfigDialog(QDialog):
         self.global_cooldown_spin.setSingleStep(0.05)
         self.global_cooldown_spin.setSuffix(" s")
         self.global_cooldown_spin.setToolTip("Minimum time between any skill uses")
+        self.global_cooldown_spin.setFixedWidth(120)  # Fixed width for consistency
         timing_layout.addRow("Global Cooldown:", self.global_cooldown_spin)
 
         # Timing parameters
@@ -170,6 +173,7 @@ class AdvancedConfigDialog(QDialog):
             widget.setSingleStep(step)
             widget.setSuffix(f" {suffix}")
             widget.setToolTip(tooltip)
+            widget.setFixedWidth(120)  # Fixed width for consistency
             self.timing_widgets[param] = widget
             timing_layout.addRow(f"{label}:", widget)
 
@@ -204,6 +208,7 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["potion_threshold"].setToolTip(
             "HP/MP percentage to trigger potion use"
         )
+        self.behavior_widgets["potion_threshold"].setFixedWidth(120)  # Fixed width for consistency
         behavior_layout.addRow(
             "Potion Threshold:", self.behavior_widgets["potion_threshold"]
         )
@@ -214,6 +219,7 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["ocr_tolerance"].setToolTip(
             "OCR accuracy for text matching and target name validation (fuzzy matching threshold)"
         )
+        self.behavior_widgets["ocr_tolerance"].setFixedWidth(120)  # Fixed width for consistency
         behavior_layout.addRow("OCR/Target Tolerance:", self.behavior_widgets["ocr_tolerance"])
 
         # Looting parameters
@@ -222,16 +228,19 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["loot_duration"].setSingleStep(0.1)
         self.behavior_widgets["loot_duration"].setSuffix(" s")
         self.behavior_widgets["loot_duration"].setToolTip("Total time spent looting")
+        self.behavior_widgets["loot_duration"].setFixedWidth(120)  # Fixed width for consistency
         behavior_layout.addRow("Loot Duration:", self.behavior_widgets["loot_duration"])
 
         self.behavior_widgets["loot_attempts"] = QSpinBox()
         self.behavior_widgets["loot_attempts"].setRange(1, 10)
         self.behavior_widgets["loot_attempts"].setToolTip("Number of loot key presses")
+        self.behavior_widgets["loot_attempts"].setFixedWidth(120)  # Fixed width for consistency
         behavior_layout.addRow("Loot Attempts:", self.behavior_widgets["loot_attempts"])
 
         self.behavior_widgets["loot_key"] = QLineEdit()
         self.behavior_widgets["loot_key"].setMaxLength(1)
         self.behavior_widgets["loot_key"].setToolTip("Key to press for looting")
+        self.behavior_widgets["loot_key"].setFixedWidth(120)  # Fixed width for consistency
         behavior_layout.addRow("Loot Key:", self.behavior_widgets["loot_key"])
 
         parent_layout.addWidget(behavior_group)
