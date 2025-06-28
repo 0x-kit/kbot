@@ -160,9 +160,9 @@ class PixelAnalyzer:
 
             # Si el valor máximo de coincidencia es alto, significa que el icono "listo" está presente.
             is_ready = max_val >= threshold
-            self.logger.debug(
-                f"Template matching para {ready_icon_path}: Confianza={max_val:.2f}, Umbral={threshold}, Listo={is_ready}"
-            )
+            # self.logger.debug(
+            #     f"Template matching para {ready_icon_path}: Confianza={max_val:.2f}, Umbral={threshold}, Listo={is_ready}"
+            # )
 
             return is_ready
 

@@ -212,12 +212,12 @@ class SkillManager:
                 usage.failed_uses += 1
                 return False
 
-            # ✅ NUEVO: Esperar y verificar que el skill realmente se usó
+            # ✅ SIMPLIFICADO: Esperar y verificar - lógica straight-forward
             import time as time_module
-            time_module.sleep(0.1)  # Esperar 100ms para que el juego procese la acción
+            time_module.sleep(0.15)  # Esperar para que el juego procese
             
-            # Verificar visualmente que el skill ya no está disponible (solo si tiene icono)
-            skill_actually_used = True
+            # Verificación simple: si tiene icono, verificar que ya no esté disponible
+            skill_confirmed = True
             if skill.icon:
                 slot_index = self.key_to_slot_map.get(skill.key.lower())
                 if slot_index is not None:
@@ -227,26 +227,25 @@ class SkillManager:
                     
                     if slot_index < len(slots):
                         slot_region = tuple(slots[slot_index])
-                        # Si el skill sigue disponible, significa que no se usó realmente
-                        if self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold):
-                            skill_actually_used = False
-                            self.logger.debug(f"Skill '{skill.name}' key sent but still visually available - may not have been used")
+                        # Simple: si sigue disponible = no se usó
+                        skill_confirmed = not self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold)
 
-            # Solo loggear si realmente se usó
-            if skill_actually_used:
-                self.logger.info(f"🔥 Using skill: {skill.name} ✓ CONFIRMED")
+            # Log simple y directo
+            if skill_confirmed:
+                self.logger.info(f"🔥 Using skill: {skill.name}")
             else:
-                self.logger.debug(f"Skill '{skill.name}' key sent but not confirmed visually")
+                # self.logger.debug(f"❌ Skill '{skill.name}' not confirmed - still available")
+                pass
 
-            # El resto de las estadísticas se actualizan después
+            # Actualizar estadísticas
             current_time = time.time()
             usage.last_used = current_time
             usage.total_uses += 1
             self.last_skill_used = current_time
             
-            if skill_actually_used:
+            if skill_confirmed:
                 usage.successful_uses += 1
-                # ✅ NUEVO: Si es un buff, establecer cuándo expira
+                # Si es un buff, establecer cuándo expira
                 if skill.skill_type == SkillType.BUFF and skill.duration > 0:
                     usage.buff_expires_at = current_time + skill.duration
                     self.logger.info(f"🛡️ Buff '{skill.name}' applied, expires in {skill.duration}s")
@@ -322,7 +321,7 @@ class SkillManager:
         return None
 
     def _get_expired_buff(self) -> Optional[str]:
-        """✅ NUEVO: Encuentra buffs que han expirado y necesitan ser relanzados."""
+        """✅ CORREGIDO: Encuentra buffs que han expirado y necesitan ser relanzados."""
         current_time = time.time()
         buff_skills = [
             skill for skill in self.skills.values()
@@ -331,9 +330,14 @@ class SkillManager:
         
         for skill in buff_skills:
             usage = self.usage_stats[skill.name]
-            # Si el buff ha expirado o nunca se ha usado
-            if current_time >= usage.buff_expires_at and self.can_use_skill(skill.name):
-                return skill.name
+            
+            # Si nunca se ha usado (buff_expires_at == 0.0) o si ha expirado
+            if (usage.buff_expires_at == 0.0 or current_time >= usage.buff_expires_at):
+                if self.can_use_skill(skill.name):
+                    self.logger.debug(f"Buff '{skill.name}' needs to be cast: expires_at={usage.buff_expires_at}, current={current_time:.1f}")
+                    return skill.name
+                else:
+                    self.logger.debug(f"Buff '{skill.name}' expired but can't use skill yet")
         
         return None
 
