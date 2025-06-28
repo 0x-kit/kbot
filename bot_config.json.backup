@@ -177,9 +177,8 @@
         "priority": 10,
         "mana_cost": 10,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.BMP",
-        "conditions": [],
-        "description": "Offensive skill slot 2",
-        "enabled": true
+        "enabled": true,
+        "description": "Offensive skill slot 2"
       },
       "Biz": {
         "key": "3",
@@ -188,9 +187,8 @@
         "priority": 3,
         "mana_cost": 15,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
-        "conditions": [],
-        "description": "Offensive skill slot 3",
-        "enabled": true
+        "enabled": true,
+        "description": "Offensive skill slot 3"
       }
     },
     "rotations": {

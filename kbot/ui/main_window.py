@@ -5,6 +5,7 @@ import os
 import traceback
 from typing import Dict, Any
 import os
+import win32gui
 
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -28,6 +29,7 @@ from PyQt5.QtWidgets import (
     QDoubleSpinBox,
     QFileDialog,
     QFrame,
+    QScrollArea,
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot, QThread, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QImage
@@ -68,55 +70,69 @@ class TantraBotMainWindow(QMainWindow):
         self._setup_ui()
         self._setup_menu_bar()
         self._setup_status_bar()
-        
+
         # Connect thread signals first, before starting the thread
         self.bot_thread.started.connect(self.bot_worker.initialize_in_thread)
-        
+
         # Connect to the worker's initialization signals
         self.bot_worker.initialization_complete.connect(self._on_bot_initialized)
-        self.bot_worker.initialization_failed.connect(self._on_bot_initialization_failed)
-        
+        self.bot_worker.initialization_failed.connect(
+            self._on_bot_initialization_failed
+        )
+
         # Start the thread - this will trigger initialization
         self.bot_thread.start()
-        
+
         # Don't connect signals or load config until bot is initialized
 
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._update_ui)
         self.refresh_timer.start(1000)
-        
+
         # Reference to active advanced dialog for bidirectional sync
         self._active_advanced_dialog = None
 
     def _is_bot_ready(self):
         """Helper method to check if bot engine is initialized and ready"""
-        return (self.bot_engine and 
-                hasattr(self.bot_worker, '_initialized') and 
-                self.bot_worker._initialized)
+        return (
+            self.bot_engine
+            and hasattr(self.bot_worker, "_initialized")
+            and self.bot_worker._initialized
+        )
 
     def _check_bot_ready_or_warn(self):
         """Check if bot is ready and show warning if not. Returns True if ready."""
         if not self._is_bot_ready():
-            QMessageBox.warning(self, "Bot Not Ready", "Bot is still initializing. Please wait...")
+            QMessageBox.warning(
+                self, "Bot Not Ready", "Bot is still initializing. Please wait..."
+            )
             return False
         return True
 
     def _on_bot_initialized(self):
         """Called when the bot worker has finished initializing in its thread"""
         try:
-            self.logger.info("Bot initialized, connecting signals and loading configuration")
+            self.logger.info(
+                "Bot initialized, connecting signals and loading configuration"
+            )
             self._connect_signals()
             self._load_configuration()
         except Exception as e:
             self.logger.error(f"Error during post-initialization setup: {e}")
-            QMessageBox.critical(self, "Initialization Error", 
-                               f"Failed to complete bot initialization:\n{e}")
+            QMessageBox.critical(
+                self,
+                "Initialization Error",
+                f"Failed to complete bot initialization:\n{e}",
+            )
 
     def _on_bot_initialization_failed(self, error_message):
         """Called when bot worker initialization fails"""
         self.logger.error(f"Bot initialization failed: {error_message}")
-        QMessageBox.critical(self, "Bot Initialization Failed", 
-                           f"Failed to initialize bot components:\n{error_message}")
+        QMessageBox.critical(
+            self,
+            "Bot Initialization Failed",
+            f"Failed to initialize bot components:\n{error_message}",
+        )
         # Disable UI elements since bot is not functional
         self.start_stop_btn.setEnabled(False)
         self.pause_resume_btn.setEnabled(False)
@@ -130,7 +146,7 @@ class TantraBotMainWindow(QMainWindow):
         # Check if bot engine is initialized
         if not self._check_bot_ready_or_warn():
             return
-            
+
         dialog = WindowSelectorDialog(self.bot_engine.window_manager, self)
 
         # El diálogo se cierra con `Accepted` solo si se seleccionó una ventana
@@ -160,7 +176,7 @@ class TantraBotMainWindow(QMainWindow):
         # Check if bot engine is initialized
         if not self._check_bot_ready_or_warn():
             return
-            
+
         if not self.bot_engine.window_manager.target_window:
             QMessageBox.warning(
                 self, "Test Error", "Please select a game window first."
@@ -169,19 +185,19 @@ class TantraBotMainWindow(QMainWindow):
 
         try:
             self.logger.info("Performing pixel accuracy test on UI area...")
-            regions = self.bot_engine.config_manager.get_regions()
+            all_regions_config = self.bot_engine.config_manager.get_all_config()
 
             # --- LÓGICA MÁS EFICIENTE ---
             # 1. Definimos el área de la UI que nos interesa.
-            ui_capture_area = (0, 0, 300, 250)
+            ui_capture_area = (0, 0, 1360, 768)
 
             # 2. Le pedimos al PixelAnalyzer que capture y dibuje SOLO esa área.
             ui_debug_image = self.bot_engine.pixel_analyzer.create_debug_image(
-                regions, capture_area=ui_capture_area
+                all_regions_config, capture_area=ui_capture_area
             )
 
             # 3. Hacemos zoom para verla mejor en el diálogo.
-            zoom_factor = 2
+            zoom_factor = 1
             zoomed_image = ui_debug_image.resize(
                 (
                     ui_debug_image.width * zoom_factor,
@@ -233,7 +249,7 @@ class TantraBotMainWindow(QMainWindow):
         # Check if bot engine is initialized
         if not self._check_bot_ready_or_warn():
             return
-            
+
         if not self.bot_engine.window_manager.target_window:
             QMessageBox.warning(
                 self,
@@ -363,7 +379,6 @@ class TantraBotMainWindow(QMainWindow):
         window_layout.addWidget(self.current_window_label)
         parent_layout.addWidget(window_group)
 
-
     def _create_mob_whitelist_group(self, parent_layout):
         whitelist_group = QGroupBox("Mob Whitelist")
         whitelist_layout = QVBoxLayout(whitelist_group)
@@ -377,7 +392,7 @@ class TantraBotMainWindow(QMainWindow):
         """Quick actions and configuration access"""
         actions_group = QGroupBox("Configuration & Actions")
         actions_layout = QVBoxLayout(actions_group)
-        
+
         # Advanced Configuration button - prominent access
         self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
         self.advanced_config_btn.setToolTip(
@@ -404,10 +419,12 @@ class TantraBotMainWindow(QMainWindow):
             """
         )
         actions_layout.addWidget(self.advanced_config_btn)
-        
+
         # Save configuration button
         self.save_changes_btn = QPushButton("💾 Save Configuration")
-        self.save_changes_btn.setToolTip("Save all current settings to configuration file")
+        self.save_changes_btn.setToolTip(
+            "Save all current settings to configuration file"
+        )
         self.save_changes_btn.setStyleSheet(
             """
             QPushButton {
@@ -428,31 +445,31 @@ class TantraBotMainWindow(QMainWindow):
             """
         )
         actions_layout.addWidget(self.save_changes_btn)
-        
+
         parent_layout.addWidget(actions_group)
 
     def _create_stats_group(self, parent_layout):
         """Enhanced session statistics focused on essential monitoring metrics"""
         stats_group = QGroupBox("Session Statistics")
         stats_layout = QGridLayout(stats_group)
-        
+
         # Essential metrics only - Runtime and Targets
         stats_layout.addWidget(QLabel("Runtime:"), 0, 0)
         self.runtime_label = QLabel("00:00:00")
         self.runtime_label.setStyleSheet("font-weight: bold; color: #0066cc;")
         stats_layout.addWidget(self.runtime_label, 0, 1)
-        
+
         stats_layout.addWidget(QLabel("Targets Killed:"), 1, 0)
         self.targets_killed_label = QLabel("0")
         self.targets_killed_label.setStyleSheet("font-weight: bold; color: #00aa00;")
         stats_layout.addWidget(self.targets_killed_label, 1, 1)
-        
+
         # Bot state indicator
         stats_layout.addWidget(QLabel("Bot State:"), 2, 0)
         self.bot_state_label = QLabel("Stopped")
         self.bot_state_label.setStyleSheet("font-weight: bold; padding: 2px;")
         stats_layout.addWidget(self.bot_state_label, 2, 1)
-        
+
         stats_layout.setColumnStretch(1, 1)
         parent_layout.addWidget(stats_group, 1)
 
@@ -561,10 +578,10 @@ class TantraBotMainWindow(QMainWindow):
             # Configure whitelist (main window now only handles whitelist and actions)
             self.whitelist_edit.setPlainText("\n".join(whitelist))
 
-            self.status_bar.showMessage(
-                "Configuration loaded successfully", 2000
+            self.status_bar.showMessage("Configuration loaded successfully", 2000)
+            self.logger.info(
+                "Main window configuration loaded from unified JSON system"
             )
-            self.logger.info("Main window configuration loaded from unified JSON system")
 
         except Exception as e:
             self.logger.error(f"Failed to load basic configuration: {e}")
@@ -578,7 +595,7 @@ class TantraBotMainWindow(QMainWindow):
             # Check if bot engine is initialized
             if not self._check_bot_ready_or_warn():
                 return
-                
+
             # Aplicar cambios de la UI al sistema unificado
             self._apply_ui_settings_unified()
 
@@ -618,28 +635,36 @@ class TantraBotMainWindow(QMainWindow):
 
             # Aplicar cambios a los componentes del bot
             self.bot_engine.update_components_from_config()
-            
+
             # Sync changes to advanced dialog if it's open
             self._sync_to_advanced_dialog()
 
-            self.logger.info("Main window settings (whitelist) applied to unified config system.")
+            self.logger.info(
+                "Main window settings (whitelist) applied to unified config system."
+            )
 
         except Exception as e:
-            self.logger.error(f"Failed to apply basic UI settings to unified config: {e}")
+            self.logger.error(
+                f"Failed to apply basic UI settings to unified config: {e}"
+            )
             QMessageBox.critical(
                 self, "Apply Settings Error", f"Could not apply settings:\n{e}"
             )
 
     def _sync_to_advanced_dialog(self):
         """Sync changes from main window to advanced dialog if it's open"""
-        if self._active_advanced_dialog and hasattr(self._active_advanced_dialog, 'whitelist_edit'):
+        if self._active_advanced_dialog and hasattr(
+            self._active_advanced_dialog, "whitelist_edit"
+        ):
             try:
                 # Get current whitelist from config manager
                 current_whitelist = self.bot_engine.config_manager.get_whitelist()
-                
+
                 # Update advanced dialog whitelist display
-                self._active_advanced_dialog.whitelist_edit.setPlainText("\n".join(current_whitelist))
-                
+                self._active_advanced_dialog.whitelist_edit.setPlainText(
+                    "\n".join(current_whitelist)
+                )
+
                 self.logger.debug("Synced whitelist changes to advanced dialog")
             except Exception as e:
                 self.logger.error(f"Failed to sync to advanced dialog: {e}")
@@ -671,7 +696,7 @@ class TantraBotMainWindow(QMainWindow):
 
             # Conectar señal de cambios en tiempo real (opcional)
             dialog.config_changed.connect(self._on_advanced_config_changed)
-            
+
             # Store dialog reference for bidirectional sync
             self._active_advanced_dialog = dialog
 
@@ -699,7 +724,7 @@ class TantraBotMainWindow(QMainWindow):
                 )
             else:
                 self.logger.info("Advanced configuration dialog cancelled")
-            
+
             # Clean up dialog reference
             self._active_advanced_dialog = None
 
@@ -737,10 +762,10 @@ class TantraBotMainWindow(QMainWindow):
             if "whitelist" in config_changes:
                 whitelist_changes = config_changes["whitelist"]
                 self.bot_engine.config_manager.set_whitelist(whitelist_changes)
-                
+
                 # Update main window whitelist display to reflect changes from advanced dialog
                 self.whitelist_edit.setPlainText("\n".join(whitelist_changes))
-                
+
                 self.logger.debug(f"Applied whitelist changes: {whitelist_changes}")
 
             # Aplicar todos los cambios a los componentes del bot
@@ -766,7 +791,7 @@ class TantraBotMainWindow(QMainWindow):
         # Check if bot engine is initialized
         if not self._check_bot_ready_or_warn():
             return
-            
+
         # Ya no llama a los métodos directamente. Emite señales.
         if self.bot_engine.get_state() == "stopped":
             if not self.bot_engine.window_manager.target_window:
@@ -797,7 +822,9 @@ class TantraBotMainWindow(QMainWindow):
 
             # Apply changes to bot components
             self.bot_engine.update_components_from_config()
-            self.logger.info("Main window UI settings (whitelist) applied to bot engine.")
+            self.logger.info(
+                "Main window UI settings (whitelist) applied to bot engine."
+            )
         except Exception as e:
             self.logger.error(f"Failed to apply UI settings: {e}")
             QMessageBox.critical(
@@ -806,11 +833,18 @@ class TantraBotMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _configure_regions(self):
+        """Abre el diálogo de configuración de regiones."""
         if not self._check_bot_ready_or_warn():
             return
+
+        # Le pasamos bot_engine completo para que tenga acceso a todo lo necesario.
         dialog = RegionConfigDialog(self.bot_engine, self)
+
         if dialog.exec_() == QDialog.Accepted:
             self.status_bar.showMessage("Region configuration updated", 2000)
+            self.logger.info(
+                "El diálogo de regiones se cerró y los cambios se guardaron."
+            )
 
     @pyqtSlot()
     def _open_skill_config(self):
@@ -836,7 +870,7 @@ class TantraBotMainWindow(QMainWindow):
                 self.bot_status_label.setText("Status: Initializing...")
                 self.bot_state_label.setText("Initializing")
                 return
-                
+
             state = self.bot_engine.get_state()
             self.bot_status_label.setText(f"Status: {state.title()}")
             self.bot_state_label.setText(state.title())
@@ -849,18 +883,26 @@ class TantraBotMainWindow(QMainWindow):
             minutes, seconds = divmod(remainder, 60)
             self.runtime_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
             self.targets_killed_label.setText(str(stats.get("targets_lost", 0)))
-            
+
             # Update bot state with color coding
             state = self.bot_engine.get_state()
             self.bot_state_label.setText(state.title())
             if state == "running":
-                self.bot_state_label.setStyleSheet("font-weight: bold; color: #00aa00; padding: 2px;")
+                self.bot_state_label.setStyleSheet(
+                    "font-weight: bold; color: #00aa00; padding: 2px;"
+                )
             elif state == "error":
-                self.bot_state_label.setStyleSheet("font-weight: bold; color: #dd0000; padding: 2px;")
+                self.bot_state_label.setStyleSheet(
+                    "font-weight: bold; color: #dd0000; padding: 2px;"
+                )
             elif state == "paused":
-                self.bot_state_label.setStyleSheet("font-weight: bold; color: #ff8800; padding: 2px;")
+                self.bot_state_label.setStyleSheet(
+                    "font-weight: bold; color: #ff8800; padding: 2px;"
+                )
             else:
-                self.bot_state_label.setStyleSheet("font-weight: bold; color: #666666; padding: 2px;")
+                self.bot_state_label.setStyleSheet(
+                    "font-weight: bold; color: #666666; padding: 2px;"
+                )
         except Exception as e:
             print(f"Error updating UI: {e}")
 

@@ -1,191 +1,271 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QGridLayout, QSpinBox, 
-                            QLabel, QDialogButtonBox, QPushButton, QGroupBox,
-                            QMessageBox)
-from PyQt5.QtCore import Qt
+# kbot/ui/dialogs/region_config.py
+
+import sys
+import win32gui
+from PyQt5.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QSpinBox,
+    QLabel,
+    QDialogButtonBox,
+    QPushButton,
+    QGroupBox,
+    QMessageBox,
+    QGraphicsView,
+    QGraphicsScene,
+    QGraphicsRectItem,
+    QApplication,
+    QInputDialog,
+    QFormLayout,
+)
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QPixmap, QImage, QPen
+
+
+class RegionSelector(QGraphicsView):
+    """Una vista gráfica para dibujar rectángulos sobre una imagen."""
+
+    def __init__(self, pixmap, parent=None):
+        super().__init__(parent)
+        self.scene = QGraphicsScene()
+        self.setScene(self.scene)
+        self.scene.addPixmap(pixmap)
+        self.current_rect_item = None
+        self.start_pos = None
+
+    def mousePressEvent(self, event):
+        self.start_pos = self.mapToScene(event.pos())
+        if self.current_rect_item:
+            self.scene.removeItem(self.current_rect_item)
+        rect = QRectF(self.start_pos, self.start_pos)
+        self.current_rect_item = QGraphicsRectItem(rect)
+        self.current_rect_item.setPen(QPen(Qt.red, 2, Qt.SolidLine))
+        self.scene.addItem(self.current_rect_item)
+
+    def mouseMoveEvent(self, event):
+        if self.start_pos:
+            end_pos = self.mapToScene(event.pos())
+            rect = QRectF(self.start_pos, end_pos).normalized()
+            self.current_rect_item.setRect(rect)
+
+    def mouseReleaseEvent(self, event):
+        self.start_pos = None
+
+    def get_selected_region(self):
+        if self.current_rect_item:
+            rect = self.current_rect_item.rect()
+            return (
+                int(rect.x()),
+                int(rect.y()),
+                int(rect.x() + rect.width()),
+                int(rect.y() + rect.height()),
+            )
+        return None
+
 
 class RegionConfigDialog(QDialog):
-    """Dialog for configuring screen regions"""
-    
+    """Diálogo interactivo para configurar todas las regiones."""
+
     def __init__(self, bot_engine, parent=None):
         super().__init__(parent)
-        self.bot_engine = bot_engine  # Store bot_engine instead of just pixel_analyzer
-        self.setWindowTitle("Configure Screen Regions")
-        self.setFixedSize(500, 400)
-        
-        # Store original regions in case of cancel
-        self.original_regions = {}
-        
+        self.bot_engine = bot_engine
+        self.setWindowTitle("Interactive Region Configuration")
+        self.resize(800, 600)
+
+        import copy
+
+        self.original_config = copy.deepcopy(
+            self.bot_engine.config_manager.get_all_config()
+        )
+
         self._setup_ui()
-        self._load_current_regions()
-    
+        self._load_coords_to_ui()
+
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        
-        # Instructions
-        instructions = QLabel("""
-        Configure the screen regions for HP/MP bars and target detection.
-        Coordinates are relative to the selected game window.
-        """)
-        instructions.setWordWrap(True)
-        layout.addWidget(instructions)
-        
-        # Region configuration
-        regions_group = QGroupBox("Region Coordinates")
-        regions_layout = QGridLayout(regions_group)
-        
-        # Headers
-        regions_layout.addWidget(QLabel("<b>Region</b>"), 0, 0)
-        regions_layout.addWidget(QLabel("<b>X1</b>"), 0, 1)
-        regions_layout.addWidget(QLabel("<b>Y1</b>"), 0, 2)
-        regions_layout.addWidget(QLabel("<b>X2</b>"), 0, 3)
-        regions_layout.addWidget(QLabel("<b>Y2</b>"), 0, 4)
-        
-        # Create spinboxes for each region
-        self.region_spinboxes = {}
-        regions = ['hp', 'mp', 'target', 'target_name']
-        region_labels = ['HP Bar', 'MP Bar', 'Target Health', 'Target Name']
-        
-        for i, (region, label) in enumerate(zip(regions, region_labels), 1):
-            regions_layout.addWidget(QLabel(label), i, 0)
-            
-            spinboxes = []
-            for j in range(4):  # x1, y1, x2, y2
-                spinbox = QSpinBox()
-                spinbox.setRange(0, 2000)
-                regions_layout.addWidget(spinbox, i, j + 1)
-                spinboxes.append(spinbox)
-            
-            self.region_spinboxes[region] = spinboxes
-        
-        layout.addWidget(regions_group)
-        
-        # Test button
-        self.test_btn = QPushButton("Test Current Regions")
-        self.test_btn.clicked.connect(self._test_regions)
-        layout.addWidget(self.test_btn)
-        
-        # Dialog buttons
+        main_layout = QVBoxLayout(self)
+        info_label = QLabel(
+            "Usa los botones de abajo para capturar la pantalla y dibujar las regiones con el ratón."
+        )
+        main_layout.addWidget(info_label)
+        self.coords_layout = QGridLayout()
+        main_layout.addLayout(self.coords_layout)
+        self.spinboxes = {}
+        self._create_spinbox_group(
+            "Vitals & Target", ["hp", "mp", "target", "target_name"]
+        )
+        self._create_spinbox_group("Skill Bar", [f"slot_{i}" for i in range(10)])
+        main_layout.addStretch()
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
-    
-    def _load_current_regions(self):
-        """Load current region coordinates from config"""
-        try:
-            # Get regions from config manager
-            current_regions = self.bot_engine.config_manager.get_regions()
-            
-            # Store original values for cancel
-            self.original_regions = current_regions.copy()
-            
-            # Load values into spinboxes
-            for region, coords in current_regions.items():
-                if region in self.region_spinboxes:
-                    spinboxes = self.region_spinboxes[region]
-                    for i, coord in enumerate(coords):
-                        spinboxes[i].setValue(coord)
-            
-            print(f"Loaded regions: {current_regions}")  # Debug
-            
-        except Exception as e:
-            QMessageBox.warning(self, "Load Error", f"Failed to load current regions: {e}")
-            # Fall back to defaults if loading fails
-            self._load_default_regions()
-    
-    def _load_default_regions(self):
-        """Load default regions if current ones can't be loaded"""
-        default_regions = {
-            'hp': (4, 20, 168, 36),
-            'mp': (4, 36, 168, 51),
-            'target': (4, 66, 168, 75),
-            'target_name': (4, 55, 168, 70)
-        }
-        
-        for region, coords in default_regions.items():
-            if region in self.region_spinboxes:
-                spinboxes = self.region_spinboxes[region]
-                for i, coord in enumerate(coords):
-                    spinboxes[i].setValue(coord)
-    
-    def _test_regions(self):
-        """Test the current region configuration"""
-        try:
-            # Get current values from spinboxes
-            regions = self._get_current_regions()
-            
-            # Temporarily update the pixel analyzer regions for testing
-            temp_regions = self.bot_engine.config_manager.get_regions()
-            
-            # Update config temporarily
-            self.bot_engine.config_manager.set_regions(regions)
-            
-            # Show info about testing
-            QMessageBox.information(
-                self, "Test Regions", 
-                "Region coordinates have been temporarily updated.\n\n"
-                "To test:\n"
-                "1. Click OK to close this dialog\n"
-                "2. Use 'Test Pixel Accuracy' from the main window\n"
-                "3. Check if HP/MP bars are detected correctly\n"
-                "4. Come back here to adjust if needed"
+        main_layout.addWidget(button_box)
+
+    def _create_spinbox_group(self, title, region_keys):
+        group = QGroupBox(title)
+        layout = QVBoxLayout(group)
+        form_layout = QFormLayout()
+
+        if title == "Skill Bar":
+            btn = QPushButton("Auto-Configure Skill Bar...")
+            btn.clicked.connect(self.launch_skill_bar_selector)
+            layout.addWidget(btn)
+        else:  # Botones individuales para vitals
+            for key in region_keys:
+                btn = QPushButton(f"Select {key.replace('_', ' ').title()} Region...")
+                btn.clicked.connect(lambda _, k=key: self.launch_region_selector(k))
+                form_layout.addRow(btn)
+
+        for key in region_keys:
+            coords_layout = QHBoxLayout()
+            spin_row = []
+            for lbl in ["X1", "Y1", "X2", "Y2"]:
+                coords_layout.addWidget(QLabel(lbl))
+                sb = QSpinBox()
+                sb.setRange(0, 8000)
+                sb.setFixedWidth(70)
+                coords_layout.addWidget(sb)
+                spin_row.append(sb)
+            self.spinboxes[key] = spin_row
+            form_layout.addRow(
+                QLabel(f"{key.replace('_', ' ').title()}:"), coords_layout
             )
-            
+
+        layout.addLayout(form_layout)
+        self.coords_layout.addWidget(group)
+
+    def _get_capture_for_selection(self) -> (QPixmap, tuple):
+        """
+        ✅ LÓGICA CENTRALIZADA: Realiza la captura forzada a 1360x768.
+        Devuelve el QPixmap y las coordenadas de la esquina superior izquierda de la captura.
+        """
+        try:
+            # Forzar captura desde el origen de la pantalla para garantizar nitidez
+            capture_area = (0, 0, 1360, 768)
+            capture = self.bot_engine.pixel_analyzer.capture_screen(region=capture_area)
+
+            q_image = QImage(
+                capture.tobytes("raw", "RGB"),
+                capture.width,
+                capture.height,
+                QImage.Format_RGB888,
+            )
+            pixmap = QPixmap.fromImage(q_image)
+
+            return pixmap, (capture_area[0], capture_area[1])
         except Exception as e:
-            QMessageBox.critical(self, "Test Error", f"Failed to test regions: {e}")
-    
-    def _get_current_regions(self):
-        """Get current region values from spinboxes"""
-        regions = {}
-        for region, spinboxes in self.region_spinboxes.items():
-            coords = tuple(spinbox.value() for spinbox in spinboxes)
-            regions[region] = coords
-        return regions
-    
+            QMessageBox.critical(
+                self, "Capture Error", f"Could not capture screen: {e}"
+            )
+            return None, None
+
+    def launch_region_selector(self, region_key):
+        pixmap, (offset_x, offset_y) = self._get_capture_for_selection()
+        if not pixmap:
+            return
+
+        if self._get_region_from_user(f"Draw rect for: {region_key}", pixmap):
+            region = self.temp_region
+            # Las coordenadas del rectángulo son relativas a la captura (0,0,1360,768).
+            # Como la captura empieza en (0,0), estas son también las coordenadas absolutas.
+            self._update_spinboxes(region_key, region)
+
+    def launch_skill_bar_selector(self):
+        pixmap, (offset_x, offset_y) = self._get_capture_for_selection()
+        if not pixmap:
+            return
+
+        if not self._get_region_from_user(
+            "Draw a box over a SINGLE skill slot (ideally the first one)", pixmap
+        ):
+            return
+
+        first_slot_rel_region = self.temp_region
+
+        num_slots, ok1 = QInputDialog.getInt(
+            self, "Number of Slots", "How many skill slots in the bar?", 10, 1, 12, 1
+        )
+        if not ok1:
+            return
+        spacing, ok2 = QInputDialog.getInt(
+            self, "Spacing", "Horizontal space between slots (in pixels)?", 5, 0, 50, 1
+        )
+        if not ok2:
+            return
+
+        x1, y1, x2, y2 = first_slot_rel_region
+        width = x2 - x1
+        height = y2 - y1
+
+        for i in range(num_slots):
+            slot_x1 = x1 + i * (width + spacing)
+            slot_x2 = slot_x1 + width
+
+            # Coordenadas relativas a la captura
+            rel_region = (slot_x1, y1, slot_x2, y2)
+            # Como la captura empieza en (0,0), las coordenadas absolutas son las mismas que las relativas.
+            self._update_spinboxes(f"slot_{i}", rel_region)
+
+    def _get_region_from_user(self, title, pixmap):
+        selector_dialog = QDialog(self)
+        selector_dialog.setWindowTitle(title)
+        selector_dialog.setWindowState(Qt.WindowMaximized)
+
+        layout = QVBoxLayout(selector_dialog)
+        selector_view = RegionSelector(pixmap)
+        layout.addWidget(selector_view)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(selector_dialog.accept)
+        buttons.rejected.connect(selector_dialog.reject)
+        layout.addWidget(buttons)
+
+        if selector_dialog.exec_() == QDialog.Accepted:
+            self.temp_region = selector_view.get_selected_region()
+            return self.temp_region is not None
+        return False
+
+    def _update_spinboxes(self, key, region):
+        if key in self.spinboxes:
+            sbs = self.spinboxes[key]
+            for i, val in enumerate(region):
+                sbs[i].setValue(val)
+
+    def _load_coords_to_ui(self):
+        config = self.bot_engine.config_manager.get_all_config()
+        vitals_regions = config.get("regions", {})
+        for key, coords in vitals_regions.items():
+            self._update_spinboxes(key, coords)
+
+        skill_bar_slots = config.get("skill_bar", {}).get("slots", [])
+        for i, coords in enumerate(skill_bar_slots):
+            self._update_spinboxes(f"slot_{i}", coords)
+
+    def _apply_ui_to_config(self):
+        config = self.bot_engine.config_manager.get_all_config()
+
+        vitals_regions = config.get("regions", {})
+        for key in ["hp", "mp", "target", "target_name"]:
+            vitals_regions[key] = [sb.value() for sb in self.spinboxes[key]]
+        config["regions"] = vitals_regions
+
+        skill_slots = []
+        for i in range(10):
+            key = f"slot_{i}"
+            if key in self.spinboxes:
+                skill_slots.append([sb.value() for sb in self.spinboxes[key]])
+        if "skill_bar" not in config:
+            config["skill_bar"] = {}
+        config["skill_bar"]["slots"] = skill_slots
+
+        self.bot_engine.config_manager.config_data = config
+
     def accept(self):
-        """Accept dialog and save regions"""
-        try:
-            regions = self._get_current_regions()
-            
-            # Validate regions
-            for region, coords in regions.items():
-                x1, y1, x2, y2 = coords
-                if x1 >= x2 or y1 >= y2:
-                    QMessageBox.warning(
-                        self, "Invalid Region", 
-                        f"Invalid coordinates for {region}:\n"
-                        f"X2 ({x2}) must be greater than X1 ({x1})\n"
-                        f"Y2 ({y2}) must be greater than Y1 ({y1})"
-                    )
-                    return
-            
-            # Save to config manager
-            self.bot_engine.config_manager.set_regions(regions)
-            
-            # Save config to file
-            self.bot_engine.config_manager.save_config()
-            
-            print(f"Saved regions: {regions}")  # Debug
-            
-            QMessageBox.information(
-                self, "Success", 
-                "Region coordinates saved successfully!\n"
-                "Use 'Test Pixel Accuracy' to verify the new settings."
-            )
-            
-            super().accept()
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Save Error", f"Failed to save regions: {e}")
-    
+        self._apply_ui_to_config()
+        self.bot_engine.config_manager.save_config()
+        super().accept()
+
     def reject(self):
-        """Reject dialog and restore original regions"""
-        try:
-            # Restore original regions if they were changed during testing
-            if self.original_regions:
-                self.bot_engine.config_manager.set_regions(self.original_regions)
-                print("Restored original regions on cancel")
-        except Exception as e:
-            print(f"Error restoring regions on cancel: {e}")
-        
+        self.bot_engine.config_manager.config_data = self.original_config
         super().reject()
