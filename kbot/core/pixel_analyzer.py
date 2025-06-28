@@ -237,7 +237,7 @@ class PixelAnalyzer:
         try:
             name_img = img.crop(name_region_relative)
             processed_img = self.preprocess_name_image(name_img)
-            custom_config = r"--psm 8 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+            custom_config = r"--psm 8 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ()"
             raw_name = pytesseract.image_to_string(
                 processed_img, config=custom_config
             ).strip()
@@ -271,9 +271,14 @@ class PixelAnalyzer:
         )
 
     def correct_ocr_mistakes(self, text: str) -> str:
-        char_map = {"J": "Z", "i": "l", "1": "l", "0": "O", "5": "S", "8": "B", " ": ""}
+        # Updated to preserve spaces, numbers, and parentheses for multi-word mob names with levels
+        char_map = {
+            "J": "Z", "i": "l", "1": "l", "0": "O", "5": "S", "8": "B",
+            # Remove the space mapping that was causing issues: " ": "",
+        }
         corrected = "".join(char_map.get(char, char) for char in text)
-        return re.sub(r"[^a-zA-Z]", "", corrected).strip()
+        # Allow letters, numbers, spaces, and parentheses for names like "Byokbo (56)" or "Sinkiu Gosu (60)"
+        return re.sub(r"[^a-zA-Z0-9 ()]", "", corrected).strip()
 
     def test_ocr_accuracy(
         self, name_region: Tuple[int, int, int, int]
@@ -289,7 +294,7 @@ class PixelAnalyzer:
             )
             original_image = full_capture.crop(relative_region)
             processed_image = self.preprocess_name_image(original_image)
-            custom_config = r"--psm 8 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+            custom_config = r"--psm 8 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ()"
             raw_name = pytesseract.image_to_string(
                 processed_image, config=custom_config
             ).strip()

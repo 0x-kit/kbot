@@ -246,16 +246,43 @@ class CombatManager:
         if target_lower in self._target_validation_cache:
             return self._target_validation_cache[target_lower]
 
-        best_match_score = (
-            max(fuzz.ratio(target_lower, mob) for mob in self.whitelist)
-            if FUZZYWUZZY_AVAILABLE
-            else 0
-        )
+        # Enhanced matching for multi-word names with levels
+        # OCR may detect "Byokbo (56)" but whitelist only contains "Byokbo"
+        best_match_score = 0
+        best_match_name = ""
+        
+        if FUZZYWUZZY_AVAILABLE:
+            # Extract base target name (remove level info if present)
+            base_target = target_lower.split("(")[0].strip()
+            
+            for mob in self.whitelist:
+                mob_lower = mob.lower()
+                
+                # Primary match: base target name vs whitelist entry
+                base_score = fuzz.ratio(base_target, mob_lower)
+                
+                # Secondary match: full target name vs whitelist entry (fallback)
+                full_score = fuzz.ratio(target_lower, mob_lower)
+                
+                # Prioritize base name matching since whitelist contains base names
+                final_score = max(base_score, full_score)
+                
+                if final_score > best_match_score:
+                    best_match_score = final_score
+                    best_match_name = mob
+        
         is_allowed = best_match_score >= self.ocr_tolerance
 
         if is_allowed:
+            # Show if we matched base name (without level) vs full name
+            base_target = target_lower.split("(")[0].strip()
+            match_type = "base name" if base_target != target_lower else "full name"
             self.logger.info(
-                f"Target '{target_name}' validated against whitelist (Score: {best_match_score}%)"
+                f"Target '{target_name}' validated against whitelist '{best_match_name}' ({match_type} match, Score: {best_match_score}%)"
+            )
+        else:
+            self.logger.debug(
+                f"Target '{target_name}' rejected - best match: '{best_match_name}' (Score: {best_match_score}% < {self.ocr_tolerance}%)"
             )
 
         self._target_validation_cache[target_lower] = is_allowed
