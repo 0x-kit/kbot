@@ -86,6 +86,12 @@ class SkillConfigDialog(QDialog):
         self.skill_enabled_cb = QCheckBox()
         self.skill_desc_edit = QLineEdit()
 
+        # ✅ NUEVO: Campo de duración para buffs
+        self.skill_duration_spin = QDoubleSpinBox()
+        self.skill_duration_spin.setRange(0, 3600)  # 0 a 1 hora
+        self.skill_duration_spin.setSuffix(" sec")
+        self.skill_duration_spin.setValue(0.0)
+
         # ✅ NUEVO: Campo para el icono
         self.icon_layout = QHBoxLayout()
         self.skill_icon_edit = QLineEdit()
@@ -102,6 +108,7 @@ class SkillConfigDialog(QDialog):
         self.details_layout.addRow("Type:", self.skill_type_combo)
         self.details_layout.addRow("Priority:", self.skill_priority_spin)
         self.details_layout.addRow("Mana Cost:", self.skill_mana_spin)
+        self.details_layout.addRow("Duration (buffs):", self.skill_duration_spin)
         self.details_layout.addRow("Icon Path:", self.icon_layout)
         self.details_layout.addRow("Enabled:", self.skill_enabled_cb)
         self.details_layout.addRow("Description:", self.skill_desc_edit)
@@ -147,10 +154,13 @@ class SkillConfigDialog(QDialog):
 
         self.skill_name_edit.setText(self.current_skill_name)
         self.skill_key_edit.setText(data.get("key", ""))
-        self.skill_cooldown_spin.setValue(float(data.get("cooldown", 1.0)))
+        # ✅ CORREGIDO: Usar check_interval con compatibilidad hacia atrás
+        self.skill_cooldown_spin.setValue(float(data.get("check_interval", data.get("cooldown", 1.0))))
         self.skill_type_combo.setCurrentText(data.get("skill_type", "offensive"))
         self.skill_priority_spin.setValue(int(data.get("priority", 1)))
         self.skill_mana_spin.setValue(int(data.get("mana_cost", 0)))
+        # ✅ NUEVO: Cargar duración
+        self.skill_duration_spin.setValue(float(data.get("duration", 0.0)))
         self.skill_icon_edit.setText(data.get("icon", ""))
         self.skill_enabled_cb.setChecked(data.get("enabled", True))
         self.skill_desc_edit.setText(data.get("description", ""))
@@ -167,10 +177,11 @@ class SkillConfigDialog(QDialog):
 
         data = {
             "key": self.skill_key_edit.text(),
-            "cooldown": self.skill_cooldown_spin.value(),
+            "check_interval": self.skill_cooldown_spin.value(),
             "skill_type": self.skill_type_combo.currentText(),
             "priority": self.skill_priority_spin.value(),
             "mana_cost": self.skill_mana_spin.value(),
+            "duration": self.skill_duration_spin.value(),
             "icon": self.skill_icon_edit.text(),
             "enabled": self.skill_enabled_cb.isChecked(),
             "description": self.skill_desc_edit.text(),
@@ -196,7 +207,7 @@ class SkillConfigDialog(QDialog):
             i += 1
         name = f"New Skill {i}"
 
-        data = {"key": "", "cooldown": 1.0, "skill_type": "offensive", "enabled": True}
+        data = {"key": "", "check_interval": 1.0, "skill_type": "offensive", "enabled": True}
         definitions[name] = data
         self.add_skill_to_tree(name, data)
 
