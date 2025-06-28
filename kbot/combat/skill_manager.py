@@ -204,6 +204,10 @@ class SkillManager:
             usage.failed_uses += 1
             return False
 
+        # DEBUG para Samate específicamente
+        if skill_name == "Samate":
+            self.logger.info(f"🔍 ATTEMPTING to use {skill_name} - Type: {skill.skill_type.value}, Duration: {skill.duration}s")
+
         try:
             # Enviar la tecla
             success = self.input_controller.send_key(skill.key)
@@ -227,8 +231,13 @@ class SkillManager:
                     
                     if slot_index < len(slots):
                         slot_region = tuple(slots[slot_index])
-                        # Simple: si sigue disponible = no se usó
-                        skill_confirmed = not self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold)
+                        # Para buffs, asumimos que siempre se usan correctamente (no tienen cooldown visual)
+                        if skill.skill_type == SkillType.BUFF:
+                            skill_confirmed = True
+                            self.logger.debug(f"Buff '{skill.name}' assumed successful (buffs don't have visual cooldown)")
+                        else:
+                            # Simple: si sigue disponible = no se usó
+                            skill_confirmed = not self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold)
 
             # Log simple y directo
             if skill_confirmed:
