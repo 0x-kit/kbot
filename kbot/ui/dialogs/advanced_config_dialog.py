@@ -96,7 +96,7 @@ class AdvancedConfigDialog(QDialog):
         combat_group = QGroupBox("⚔️ Combat Timing")
         combat_layout = QFormLayout(combat_group)
 
-        # Create timing controls with descriptions
+        # Create timing controls with descriptions  
         timing_params = [
             (
                 "skill_interval",
@@ -109,9 +109,9 @@ class AdvancedConfigDialog(QDialog):
             ),
             (
                 "attack_interval",
-                "Attack Interval",
-                "Time between basic attacks",
-                0.5,
+                "Attack Interval", 
+                "Post-combat delay between mob kills",
+                0.0,
                 10.0,
                 0.1,
                 "s",
@@ -122,24 +122,6 @@ class AdvancedConfigDialog(QDialog):
                 "How often to search for targets",
                 0.1,
                 2.0,
-                0.1,
-                "s",
-            ),
-            (
-                "post_combat_delay",
-                "Post-Combat Delay",
-                "Wait time after killing target",
-                0.0,
-                10.0,
-                0.1,
-                "s",
-            ),
-            (
-                "assist_interval",
-                "Assist Interval",
-                "How often to use assist skill",
-                0.1,
-                3.0,
                 0.1,
                 "s",
             ),
@@ -194,15 +176,6 @@ class AdvancedConfigDialog(QDialog):
                 0.5,
                 "s",
             ),
-            (
-                "unstuck_cooldown",
-                "Unstuck Cooldown",
-                "Cooldown between unstuck attempts",
-                1.0,
-                10.0,
-                0.5,
-                "s",
-            ),
         ]
 
         for param, label, tooltip, min_val, max_val, step, suffix in stuck_params:
@@ -226,15 +199,6 @@ class AdvancedConfigDialog(QDialog):
         monitor_layout = QFormLayout(monitor_group)
 
         monitor_params = [
-            (
-                "combat_log_interval",
-                "Combat Log Rate",
-                "How often to log combat progress",
-                1.0,
-                30.0,
-                0.5,
-                "s",
-            ),
             (
                 "vitals_check_interval",
                 "Vitals Check Rate",
@@ -304,7 +268,6 @@ class AdvancedConfigDialog(QDialog):
 
         # Boolean options (including basic options moved from main window)
         bool_params = [
-            ("auto_potions", "Auto Potions", "Automatically use HP/MP potions"),
             ("enable_looting", "Enable Looting", "Loot items after killing targets"),
             (
                 "assist_mode",
@@ -377,15 +340,6 @@ class AdvancedConfigDialog(QDialog):
                 "s",
             ),
             (
-                "loot_initial_delay",
-                "Initial Delay",
-                "Delay before first loot attempt",
-                0.0,
-                2.0,
-                0.1,
-                "s",
-            ),
-            (
                 "loot_attempts",
                 "Loot Attempts",
                 "Number of loot key presses",
@@ -393,15 +347,6 @@ class AdvancedConfigDialog(QDialog):
                 10,
                 1,
                 "",
-            ),
-            (
-                "loot_attempt_interval",
-                "Attempt Interval",
-                "Time between loot attempts",
-                0.1,
-                2.0,
-                0.1,
-                "s",
             ),
         ]
 
@@ -951,7 +896,7 @@ class AdvancedConfigDialog(QDialog):
             behavior = self.config_manager.get_combat_behavior()
             html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>⚔️ Combat Behavior</h4>")
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(f"<li>Auto Potions: <b>{'✅' if behavior.get('auto_potions') else '❌'}</b> ({behavior.get('potion_threshold', 'N/A')}%)</li>")
+            html_parts.append(f"<li>Potion Threshold: <b>{behavior.get('potion_threshold', 'N/A')}%</b></li>")
             html_parts.append(f"<li>Enable Looting: <b>{'✅' if behavior.get('enable_looting') else '❌'}</b></li>")
             html_parts.append(f"<li>Assist Mode: <b>{'✅' if behavior.get('assist_mode') else '❌'}</b></li>")
             html_parts.append(f"<li>Use Skills: <b>{'✅' if behavior.get('use_skills') else '❌'}</b></li>")
@@ -964,7 +909,6 @@ class AdvancedConfigDialog(QDialog):
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
             html_parts.append(f"<li>Skill Interval: <b>{timing.get('skill_interval', 'N/A')}s</b></li>")
             html_parts.append(f"<li>Attack Interval: <b>{timing.get('attack_interval', 'N/A')}s</b></li>")
-            html_parts.append(f"<li>Post-Combat Delay: <b>{timing.get('post_combat_delay', 'N/A')}s</b></li>")
             html_parts.append(f"<li>Stuck Detection: <b>{timing.get('stuck_detection_searching', 'N/A')}s</b></li>")
             html_parts.append("</ul>")
             
@@ -1035,11 +979,9 @@ class AdvancedConfigDialog(QDialog):
     def _apply_aggressive_preset(self):
         """Apply aggressive combat preset"""
         aggressive_timing = {
-            "skill_interval": 0.8,
-            "attack_interval": 1.0,
+            "skill_interval": 0.4,
+            "attack_interval": 0.5,
             "target_attempt_interval": 0.2,
-            "post_combat_delay": 1.0,
-            "assist_interval": 0.6,
             "stuck_detection_searching": 4.0,
             "stuck_in_combat_timeout": 6.0,
         }
@@ -1058,12 +1000,10 @@ class AdvancedConfigDialog(QDialog):
     def _apply_conservative_preset(self):
         """Apply conservative combat preset"""
         conservative_timing = {
-            "skill_interval": 1.5,
-            "attack_interval": 2.0,
+            "skill_interval": 1.2,
+            "attack_interval": 3.0,
             "target_attempt_interval": 0.5,
-            "post_combat_delay": 2.5,
-            "assist_interval": 1.2,
-            "stuck_detection_searching": 10.0,
+            "stuck_detection_searching": 12.0,
             "stuck_in_combat_timeout": 15.0,
         }
 
@@ -1081,13 +1021,11 @@ class AdvancedConfigDialog(QDialog):
     def _apply_balanced_preset(self):
         """Apply balanced combat preset"""
         balanced_timing = {
-            "skill_interval": 1.0,
-            "attack_interval": 1.2,
+            "skill_interval": 0.6,
+            "attack_interval": 0,
             "target_attempt_interval": 0.3,
-            "post_combat_delay": 1.5,
-            "assist_interval": 0.8,
-            "stuck_detection_searching": 6.0,
-            "stuck_in_combat_timeout": 8.0,
+            "stuck_detection_searching": 8.0,
+            "stuck_in_combat_timeout": 10.0,
         }
 
         for param, value in balanced_timing.items():
