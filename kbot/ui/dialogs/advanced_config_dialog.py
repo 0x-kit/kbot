@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
     QMessageBox,
     QTextEdit,
+    QComboBox,
+    QWidget,
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPalette
@@ -82,13 +84,69 @@ class AdvancedConfigDialog(QDialog):
 
         # Timing parameters
         timing_params = [
-            ("skill_interval", "Skill Interval", "Time between skills", 0.1, 5.0, 0.1, "s"),
-            ("attack_interval", "Attack Interval", "Post-combat delay", 0.0, 10.0, 0.1, "s"),
-            ("target_attempt_interval", "Target Search", "How often to search for targets", 0.1, 2.0, 0.1, "s"),
-            ("stuck_detection_searching", "Search Timeout", "Time before anti-stuck when searching", 3.0, 30.0, 0.5, "s"),
-            ("stuck_in_combat_timeout", "Combat Timeout", "Time before anti-stuck in combat", 5.0, 60.0, 0.5, "s"),
-            ("vitals_check_interval", "Vitals Check Rate", "How often to check HP/MP", 0.1, 2.0, 0.1, "s"),
-            ("stats_update_interval", "Stats Update Rate", "How often to update statistics", 1.0, 30.0, 0.5, "s"),
+            (
+                "skill_interval",
+                "Skill Interval",
+                "Time between skills",
+                0.1,
+                5.0,
+                0.1,
+                "s",
+            ),
+            (
+                "attack_interval",
+                "Attack Interval",
+                "Post-combat delay",
+                0.0,
+                10.0,
+                0.1,
+                "s",
+            ),
+            (
+                "target_attempt_interval",
+                "Target Search",
+                "How often to search for targets",
+                0.1,
+                2.0,
+                0.1,
+                "s",
+            ),
+            (
+                "stuck_detection_searching",
+                "Search Timeout",
+                "Time before anti-stuck when searching",
+                3.0,
+                30.0,
+                0.5,
+                "s",
+            ),
+            (
+                "stuck_in_combat_timeout",
+                "Combat Timeout",
+                "Time before anti-stuck in combat",
+                5.0,
+                60.0,
+                0.5,
+                "s",
+            ),
+            (
+                "vitals_check_interval",
+                "Vitals Check Rate",
+                "How often to check HP/MP",
+                0.1,
+                2.0,
+                0.1,
+                "s",
+            ),
+            (
+                "stats_update_interval",
+                "Stats Update Rate",
+                "How often to update statistics",
+                1.0,
+                30.0,
+                0.5,
+                "s",
+            ),
         ]
 
         for param, label, tooltip, min_val, max_val, step, suffix in timing_params:
@@ -110,7 +168,11 @@ class AdvancedConfigDialog(QDialog):
         # Boolean options
         bool_params = [
             ("enable_looting", "Enable Looting", "Loot items after killing targets"),
-            ("assist_mode", "Assist Mode", "Use assist skill instead of searching for targets"),
+            (
+                "assist_mode",
+                "Assist Mode",
+                "Use assist skill instead of searching for targets",
+            ),
             ("use_skills", "Use Skills", "Enable skill usage in combat"),
         ]
 
@@ -124,13 +186,19 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["potion_threshold"] = QSpinBox()
         self.behavior_widgets["potion_threshold"].setRange(1, 99)
         self.behavior_widgets["potion_threshold"].setSuffix("%")
-        self.behavior_widgets["potion_threshold"].setToolTip("HP/MP percentage to trigger potion use")
-        behavior_layout.addRow("Potion Threshold:", self.behavior_widgets["potion_threshold"])
+        self.behavior_widgets["potion_threshold"].setToolTip(
+            "HP/MP percentage to trigger potion use"
+        )
+        behavior_layout.addRow(
+            "Potion Threshold:", self.behavior_widgets["potion_threshold"]
+        )
 
         self.behavior_widgets["ocr_tolerance"] = QSpinBox()
         self.behavior_widgets["ocr_tolerance"].setRange(50, 100)
         self.behavior_widgets["ocr_tolerance"].setSuffix("%")
-        self.behavior_widgets["ocr_tolerance"].setToolTip("OCR text matching accuracy required")
+        self.behavior_widgets["ocr_tolerance"].setToolTip(
+            "OCR text matching accuracy required"
+        )
         behavior_layout.addRow("OCR Tolerance:", self.behavior_widgets["ocr_tolerance"])
 
         # Looting parameters
@@ -161,7 +229,9 @@ class AdvancedConfigDialog(QDialog):
         whitelist_layout.addWidget(QLabel("Allowed mobs (one per line):"))
         self.whitelist_edit = QTextEdit()
         self.whitelist_edit.setMaximumHeight(150)
-        self.whitelist_edit.setToolTip("Enter mob names that the bot is allowed to attack")
+        self.whitelist_edit.setToolTip(
+            "Enter mob names that the bot is allowed to attack"
+        )
         whitelist_layout.addWidget(self.whitelist_edit)
 
         parent_layout.addWidget(whitelist_group)
@@ -192,7 +262,6 @@ class AdvancedConfigDialog(QDialog):
         config_layout.addRow("Summary:", self.config_summary)
 
         parent_layout.addWidget(config_group)
-
 
     def _load_current_values(self):
         """✅ Cargar valores actuales desde la configuración"""
@@ -264,7 +333,6 @@ class AdvancedConfigDialog(QDialog):
         if hasattr(self, "whitelist_edit"):
             self.whitelist_edit.textChanged.connect(self._on_whitelist_changed)
 
-
         # Connect config management buttons
         if hasattr(self, "export_btn"):
             self.export_btn.clicked.connect(self._export_config)
@@ -292,7 +360,6 @@ class AdvancedConfigDialog(QDialog):
         """Handle whitelist changes for real-time updates"""
         self._emit_config_change()
 
-
     def _update_config_summary(self):
         """✅ Enhanced configuration summary with ALL settings"""
         try:
@@ -307,54 +374,84 @@ class AdvancedConfigDialog(QDialog):
         """Generate comprehensive HTML summary of all configuration settings"""
         try:
             html_parts = []
-            html_parts.append("<h3 style='color: #2e86de; margin: 0;'>📋 Configuration Overview</h3>")
-            
+            html_parts.append(
+                "<h3 style='color: #2e86de; margin: 0;'>📋 Configuration Overview</h3>"
+            )
+
             # Basic Info
             version = self.config_manager.config_data.get("version", "Unknown")
             html_parts.append(f"<p><b>Version:</b> {version}</p>")
-            
+
             # Combat Behavior
             behavior = self.config_manager.get_combat_behavior()
-            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>⚔️ Combat Behavior</h4>")
+            html_parts.append(
+                "<h4 style='color: #00a8ff; margin: 5px 0;'>⚔️ Combat Behavior</h4>"
+            )
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(f"<li>Potion Threshold: <b>{behavior.get('potion_threshold', 'N/A')}%</b></li>")
-            html_parts.append(f"<li>Enable Looting: <b>{'✅' if behavior.get('enable_looting') else '❌'}</b></li>")
-            html_parts.append(f"<li>Assist Mode: <b>{'✅' if behavior.get('assist_mode') else '❌'}</b></li>")
-            html_parts.append(f"<li>Use Skills: <b>{'✅' if behavior.get('use_skills') else '❌'}</b></li>")
-            html_parts.append(f"<li>OCR Tolerance: <b>{behavior.get('ocr_tolerance', 'N/A')}%</b></li>")
+            html_parts.append(
+                f"<li>Potion Threshold: <b>{behavior.get('potion_threshold', 'N/A')}%</b></li>"
+            )
+            html_parts.append(
+                f"<li>Enable Looting: <b>{'✅' if behavior.get('enable_looting') else '❌'}</b></li>"
+            )
+            html_parts.append(
+                f"<li>Assist Mode: <b>{'✅' if behavior.get('assist_mode') else '❌'}</b></li>"
+            )
+            html_parts.append(
+                f"<li>Use Skills: <b>{'✅' if behavior.get('use_skills') else '❌'}</b></li>"
+            )
+            html_parts.append(
+                f"<li>OCR Tolerance: <b>{behavior.get('ocr_tolerance', 'N/A')}%</b></li>"
+            )
             html_parts.append("</ul>")
-            
+
             # Timing Settings
             timing = self.config_manager.get_combat_timing()
-            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>⏱️ Key Timings</h4>")
+            html_parts.append(
+                "<h4 style='color: #00a8ff; margin: 5px 0;'>⏱️ Key Timings</h4>"
+            )
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(f"<li>Skill Interval: <b>{timing.get('skill_interval', 'N/A')}s</b></li>")
-            html_parts.append(f"<li>Attack Interval: <b>{timing.get('attack_interval', 'N/A')}s</b></li>")
-            html_parts.append(f"<li>Stuck Detection: <b>{timing.get('stuck_detection_searching', 'N/A')}s</b></li>")
+            html_parts.append(
+                f"<li>Skill Interval: <b>{timing.get('skill_interval', 'N/A')}s</b></li>"
+            )
+            html_parts.append(
+                f"<li>Attack Interval: <b>{timing.get('attack_interval', 'N/A')}s</b></li>"
+            )
+            html_parts.append(
+                f"<li>Stuck Detection: <b>{timing.get('stuck_detection_searching', 'N/A')}s</b></li>"
+            )
             html_parts.append("</ul>")
-            
+
             # Skills Info
             skills_config = self.config_manager.get_skills_config()
             skills_count = len(skills_config.get("definitions", {}))
             rotations_count = len(skills_config.get("rotations", {}))
             active_rotation = skills_config.get("active_rotation", "None")
-            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>🎯 Skills & Rotations</h4>")
+            html_parts.append(
+                "<h4 style='color: #00a8ff; margin: 5px 0;'>🎯 Skills & Rotations</h4>"
+            )
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
             html_parts.append(f"<li>Total Skills: <b>{skills_count}</b></li>")
             html_parts.append(f"<li>Rotations: <b>{rotations_count}</b></li>")
             html_parts.append(f"<li>Active Rotation: <b>{active_rotation}</b></li>")
-            html_parts.append(f"<li>Global Cooldown: <b>{skills_config.get('global_cooldown', 'N/A')}s</b></li>")
+            html_parts.append(
+                f"<li>Global Cooldown: <b>{skills_config.get('global_cooldown', 'N/A')}s</b></li>"
+            )
             html_parts.append("</ul>")
-            
+
             # Whitelist
             whitelist = self.config_manager.get_whitelist()
-            html_parts.append("<h4 style='color: #00a8ff; margin: 5px 0;'>📋 Targets</h4>")
+            html_parts.append(
+                "<h4 style='color: #00a8ff; margin: 5px 0;'>📋 Targets</h4>"
+            )
             html_parts.append(f"<ul style='margin: 5px 0; padding-left: 20px;'>")
-            html_parts.append(f"<li>Whitelisted Mobs: <b>{len(whitelist)}</b> ({', '.join(whitelist[:3])}{'...' if len(whitelist) > 3 else ''})</li>")
+            html_parts.append(
+                f"<li>Whitelisted Mobs: <b>{len(whitelist)}</b> ({', '.join(whitelist[:3])}{'...' if len(whitelist) > 3 else ''})</li>"
+            )
             html_parts.append("</ul>")
-            
+
             return "".join(html_parts)
-            
+
         except Exception as e:
             return f"<p style='color: red;'>Error generating summary: {e}</p>"
 
@@ -396,7 +493,6 @@ class AdvancedConfigDialog(QDialog):
             config["whitelist"] = whitelist
 
         return config
-
 
     def _apply_changes(self):
         """Apply changes without closing dialog"""
