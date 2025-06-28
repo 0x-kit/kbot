@@ -128,7 +128,7 @@
     "definitions": {
       "Basic Attack": {
         "key": "r",
-        "check_interval": 10,
+        "check_interval": 1.0,
         "skill_type": "auto_attack",
         "priority": 1,
         "mana_cost": 0,

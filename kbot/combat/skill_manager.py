@@ -149,17 +149,22 @@ class SkillManager:
         current_time = time.time()
         # Comprobación de Global Cooldown
         if current_time - self.last_skill_used < self.global_cooldown:
+            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                self.logger.debug(f"Skill '{skill.name}' blocked by global cooldown: {current_time - self.last_skill_used:.2f}s < {self.global_cooldown}s")
             return False
 
         # Comprobación de intervalo mínimo para no spamear el análisis visual
         usage = self.usage_stats[skill_name]
         time_since_last_use = current_time - usage.last_used
         if time_since_last_use < skill.check_interval:
-            self.logger.debug(f"Skill '{skill.name}' check_interval not ready: {time_since_last_use:.2f}s < {skill.check_interval}s")
+            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                self.logger.debug(f"Skill '{skill.name}' check_interval not ready: {time_since_last_use:.2f}s < {skill.check_interval}s")
             return False
 
         # Comprobación de maná
         if skill.mana_cost > self.game_state.get("mp", 0):
+            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                self.logger.debug(f"Skill '{skill.name}' insufficient mana: {skill.mana_cost} > {self.game_state.get('mp', 0)}")
             return False
 
         # ✅ NUEVA LÓGICA DE COMPROBACIÓN VISUAL
@@ -175,7 +180,10 @@ class SkillManager:
                     if not self.pixel_analyzer.is_skill_ready(
                         slot_region, skill.icon, threshold
                     ):
-                        self.logger.debug(f"Skill '{skill.name}' en cooldown (visual).")
+                        if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                            self.logger.debug(f"Skill '{skill.name}' en cooldown (visual) - icon analysis failed")
+                        else:
+                            self.logger.debug(f"Skill '{skill.name}' en cooldown (visual).")
                         return False
                 else:
                     self.logger.warning(
