@@ -68,11 +68,12 @@ class CombatManager:
         self.potion_threshold = 50
         self.ocr_tolerance = 80
         self.fuzzy_match_threshold = 80
+        # ✅ CORREGIDO: Usar nombres que coincidan exactamente con bot_config.json
         self.timing = {
-            "target_search_interval": 0.3,
-            "skill_use_interval": 0.6,
-            "stuck_search_timeout": 8.0,
-            "stuck_combat_timeout": 10.0,
+            "target_attempt_interval": 0.3,
+            "skill_interval": 0.6,
+            "stuck_detection_searching": 8.0,
+            "stuck_in_combat_timeout": 10.0,
             "loot_duration": 1.5,
         }
         self.loot_key = "f"
@@ -113,7 +114,7 @@ class CombatManager:
 
         if (
             time.time() - self.stuck_detector["last_hp_change_time"]
-            > self.timing["stuck_combat_timeout"]
+            > self.timing["stuck_in_combat_timeout"]
         ):
             self.logger.warning(
                 f"Stuck in combat with {self.current_target_name} for too long. Abandoning."
@@ -122,7 +123,7 @@ class CombatManager:
             self._reset_combat_state()
             return
 
-        if time.time() - self.last_action_time > self.timing["skill_use_interval"]:
+        if time.time() - self.last_action_time > self.timing["skill_interval"]:
             self.execute_combat_action()
 
     def execute_combat_action(self):
@@ -164,7 +165,7 @@ class CombatManager:
             return
 
         if self.assist_mode:
-            if time.time() - self.last_assist_time > self.timing["skill_use_interval"]:
+            if time.time() - self.last_assist_time > self.timing["skill_interval"]:
                 self.logger.debug("Attempting to assist party leader...")
                 assist_skill = self.skill_manager.find_skill_by_type(SkillType.ASSIST)
                 if assist_skill:
@@ -178,17 +179,17 @@ class CombatManager:
 
             if (
                 time.time() - self.last_target_search_time
-                > self.timing["target_search_interval"]
+                > self.timing["target_attempt_interval"]
             ):
                 self.input_controller.send_key("e")
                 self.last_target_search_time = time.time()
 
             if (
                 time.time() - self.stuck_detector["search_start_time"]
-                > self.timing["stuck_search_timeout"]
+                > self.timing["stuck_detection_searching"]
             ):
                 self.logger.warning(
-                    f"No target found for {self.timing['stuck_search_timeout']}s. Performing anti-stuck maneuver."
+                    f"No target found for {self.timing['stuck_detection_searching']}s. Performing anti-stuck maneuver."
                 )
                 self.movement_manager.execute_anti_stuck_maneuver("Searching timeout")
                 self.stuck_detector["search_start_time"] = time.time()
@@ -274,4 +275,11 @@ class CombatManager:
         self.logger.info(f"Skill usage {'enabled' if enabled else 'disabled'}")
 
     def set_timing(self, timing_config: Dict[str, float]):
-        self.timing.update(timing_config)
+        """✅ SIMPLIFICADO: Usar nombres del config directamente."""
+        # Actualizar solo los valores que existen en timing_config
+        for key, value in timing_config.items():
+            if key in self.timing:
+                self.timing[key] = value
+                self.logger.debug(f"Timing config updated: {key} = {value}")
+        
+        self.logger.info(f"Combat timing updated: {self.timing}")

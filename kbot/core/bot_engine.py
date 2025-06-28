@@ -309,7 +309,13 @@ class BotEngine(QObject):
             )
             self.combat_manager.set_assist_mode(behavior.get("assist_mode", False))
             self.combat_manager.set_use_skills(behavior.get("use_skills", True))
-            self.combat_manager.set_timing(timing)
+            
+            # ✅ SIMPLIFICADO: Incluir loot_duration de behavior en timing
+            complete_timing = timing.copy()
+            if "loot_duration" in behavior:
+                complete_timing["loot_duration"] = behavior["loot_duration"]
+            
+            self.combat_manager.set_timing(complete_timing)
         except Exception as e:
             self.logger.error(
                 f"Failed to update components from config: {e}", exc_info=True
