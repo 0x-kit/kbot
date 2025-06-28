@@ -143,7 +143,7 @@
         "skill_type": "hp_potion",
         "priority": 10,
         "mana_cost": 0,
-        "icon": "resources/skills/samabat/ICON_SKILL_AO_DESTI.bmp",
+        "icon": "kbot/resources/skills/samabat/ICON_SKILL_AO_DESTI.bmp",
         "conditions": [],
         "description": "Emergency HP potion.",
         "enabled": false
@@ -154,7 +154,7 @@
         "skill_type": "mp_potion",
         "priority": 10,
         "mana_cost": 0,
-        "icon": "resources/skills/samabat/ICON_SKILL_AO_DADATI.bmp",
+        "icon": "kbot/resources/skills/samabat/ICON_SKILL_AO_DADATI.bmp",
         "conditions": [],
         "description": "Emergency MP potion.",
         "enabled": true
@@ -176,7 +176,7 @@
         "skill_type": "offensive",
         "priority": 10,
         "mana_cost": 10,
-        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.BMP",
+        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
         "conditions": [],
         "description": "Offensive skill slot 2",
         "enabled": true

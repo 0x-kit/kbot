@@ -238,7 +238,7 @@ class SkillManager:
             if mp_potion and self.can_use_skill(mp_potion.name):
                 return mp_potion.name
 
-        # Usar rotación
+        # Usar rotación si está activa
         if self.active_rotation and self.active_rotation in self.rotations:
             rotation = self.rotations[self.active_rotation]
             if rotation.enabled and rotation.skills:
@@ -247,8 +247,21 @@ class SkillManager:
                     next_skill_name = rotation.get_next_skill()
                     if next_skill_name and self.can_use_skill(next_skill_name):
                         return next_skill_name
+        else:
+            # Si no hay rotación activa, usar sistema de prioridades
+            # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
+            available_skills = [
+                skill for skill in self.skills.values() 
+                if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK]
+                and self.can_use_skill(skill.name)
+            ]
+            
+            if available_skills:
+                # Ordenar por prioridad descendente (mayor número = mayor prioridad)
+                available_skills.sort(key=lambda s: s.priority, reverse=True)
+                return available_skills[0].name
 
-        # Fallback a ataque básico si la rotación falla o no hay
+        # Fallback a ataque básico si la rotación falla o no hay skills disponibles
         auto_attack = self.find_skill_by_type(SkillType.AUTO_ATTACK)
         if auto_attack and self.can_use_skill(auto_attack.name):
             return auto_attack.name
