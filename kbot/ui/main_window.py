@@ -357,10 +357,10 @@ class TantraBotMainWindow(QMainWindow):
         control_group = QGroupBox("Bot Control")
         control_layout = QVBoxLayout(control_group)
         button_layout = QHBoxLayout()
-        self.start_stop_btn = QPushButton("Start Bot")
+        self.start_stop_btn = QPushButton("▶️ Start Bot")
         self.start_stop_btn.setMinimumHeight(40)
         button_layout.addWidget(self.start_stop_btn)
-        self.pause_resume_btn = QPushButton("Pause")
+        self.pause_resume_btn = QPushButton("⏸️ Pause")
         self.pause_resume_btn.setMinimumHeight(40)
         self.pause_resume_btn.setEnabled(False)
         button_layout.addWidget(self.pause_resume_btn)
@@ -373,7 +373,7 @@ class TantraBotMainWindow(QMainWindow):
     def _create_window_management_group(self, parent_layout):
         window_group = QGroupBox("Window Management")
         window_layout = QVBoxLayout(window_group)
-        self.select_window_btn = QPushButton("Select Game Window")
+        self.select_window_btn = QPushButton("🪟 Select Game Window")
         window_layout.addWidget(self.select_window_btn)
         self.current_window_label = QLabel("No window selected")
         window_layout.addWidget(self.current_window_label)
@@ -390,60 +390,50 @@ class TantraBotMainWindow(QMainWindow):
 
     def _create_quick_actions_group(self, parent_layout):
         """Quick actions and configuration access"""
-        actions_group = QGroupBox("Configuration & Actions")
+        actions_group = QGroupBox("Configuration Actions")
         actions_layout = QVBoxLayout(actions_group)
+        
+        # Estilo común para todos los botones (estilo simple)
+        simple_button_style = """
+            QPushButton {
+                min-height: 35px;
+                font-weight: bold;
+            }
+        """
 
-        # Advanced Configuration button - prominent access
+        # Skills Configuration button
+        self.skills_config_btn = QPushButton("🎯 Skills Configuration")
+        self.skills_config_btn.setToolTip(
+            "Configure combat skills and abilities"
+        )
+        self.skills_config_btn.clicked.connect(self._open_skill_config)
+        self.skills_config_btn.setStyleSheet(simple_button_style)
+        actions_layout.addWidget(self.skills_config_btn)
+
+        # Regions Configuration button
+        self.regions_config_btn = QPushButton("📍 Regions Configuration")
+        self.regions_config_btn.setToolTip(
+            "Configure game regions and detection areas"
+        )
+        self.regions_config_btn.clicked.connect(self._configure_regions)
+        self.regions_config_btn.setStyleSheet(simple_button_style)
+        actions_layout.addWidget(self.regions_config_btn)
+
+        # Advanced Configuration button
         self.advanced_config_btn = QPushButton("⚙️ Advanced Configuration")
         self.advanced_config_btn.setToolTip(
             "Open advanced timing, behavior, and settings configuration"
         )
         self.advanced_config_btn.clicked.connect(self._open_advanced_config)
-        self.advanced_config_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #4a90e2;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-                min-height: 30px;
-            }
-            QPushButton:hover {
-                background-color: #357abd;
-            }
-            QPushButton:pressed {
-                background-color: #2a5d87;
-            }
-            """
-        )
+        self.advanced_config_btn.setStyleSheet(simple_button_style)
         actions_layout.addWidget(self.advanced_config_btn)
 
-        # Save configuration button
+        # Save configuration button - diferente estilo para destacar
         self.save_changes_btn = QPushButton("💾 Save Configuration")
         self.save_changes_btn.setToolTip(
             "Save all current settings to configuration file"
         )
-        self.save_changes_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #28a745;
-                color: white;
-                border: none;
-                padding: 6px 12px;
-                border-radius: 4px;
-                font-weight: bold;
-                min-height: 25px;
-            }
-            QPushButton:hover {
-                background-color: #218838;
-            }
-            QPushButton:pressed {
-                background-color: #1e7e34;
-            }
-            """
-        )
+        self.save_changes_btn.setStyleSheet(simple_button_style)
         actions_layout.addWidget(self.save_changes_btn)
 
         parent_layout.addWidget(actions_group)
@@ -497,29 +487,8 @@ class TantraBotMainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-        # Tools Menu - MODIFICADO
+        # Tools Menu - SIMPLIFICADO
         tools_menu = menubar.addMenu("Tools")
-
-        # Configuraciones existentes
-        regions_action = QAction("Configure Regions", self)
-        regions_action.triggered.connect(self._configure_regions)
-        tools_menu.addAction(regions_action)
-
-        skills_action = QAction("Configure Skills", self)
-        skills_action.triggered.connect(self._open_skill_config)
-        tools_menu.addAction(skills_action)
-
-        # ✅ NUEVO - Configuración avanzada
-        tools_menu.addSeparator()
-        advanced_config_action = QAction("⚙️ Advanced Configuration", self)
-        advanced_config_action.setToolTip(
-            "Open advanced timing and behavior configuration"
-        )
-        advanced_config_action.triggered.connect(self._open_advanced_config)
-        tools_menu.addAction(advanced_config_action)
-
-        # Separador antes de tests
-        tools_menu.addSeparator()
 
         # Tests existentes
         test_pixels_action = QAction("Test Pixel Accuracy", self)
@@ -917,19 +886,53 @@ class TantraBotMainWindow(QMainWindow):
         self.bot_status_label.setText(f"Status: {state.title()}")
         self.bot_state_label.setText(state.title())
         if state == "running":
-            self.start_stop_btn.setText("Stop Bot")
+            self.start_stop_btn.setText("⏹️ Stop Bot")
             self.start_stop_btn.setStyleSheet(
-                "background-color: #f44336; color: white;"
+                """
+                QPushButton {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    min-height: 35px;
+                }
+                QPushButton:hover {
+                    background-color: #c82333;
+                }
+                QPushButton:pressed {
+                    background-color: #bd2130;
+                }
+                """
             )
             self.pause_resume_btn.setEnabled(True)
-            self.pause_resume_btn.setText("Pause")
+            self.pause_resume_btn.setText("⏸️ Pause")
         elif state == "stopped":
-            self.start_stop_btn.setText("Start Bot")
-            self.start_stop_btn.setStyleSheet("")
+            self.start_stop_btn.setText("▶️ Start Bot")
+            self.start_stop_btn.setStyleSheet(
+                """
+                QPushButton {
+                    background-color: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    min-height: 35px;
+                }
+                QPushButton:hover {
+                    background-color: #5a6268;
+                }
+                QPushButton:pressed {
+                    background-color: #495057;
+                }
+                """
+            )
             self.pause_resume_btn.setEnabled(False)
-            self.pause_resume_btn.setText("Pause")
+            self.pause_resume_btn.setText("⏸️ Pause")
         elif state == "paused":
-            self.pause_resume_btn.setText("Resume")
+            self.pause_resume_btn.setText("▶️ Resume")
 
     @pyqtSlot(str)
     def _on_error_occurred(self, error: str):
