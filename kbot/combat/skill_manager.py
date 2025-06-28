@@ -8,7 +8,7 @@ from utils.exceptions import SkillError
 from core.input_controller import InputController
 from core.pixel_analyzer import PixelAnalyzer
 from config.unified_config_manager import UnifiedConfigManager
-
+from utils.logger import BotLogger
 
 class SkillType(Enum):
     OFFENSIVE = "offensive"
@@ -197,7 +197,7 @@ class SkillManager:
         # Comprobación de condiciones (sin cambios)
         # if not self._evaluate_conditions(skill): return False
 
-        self.logger.debug(f"Skill '{skill.name}' passed all checks and is ready to use")
+        #self.logger.debug(f"Skill '{skill.name}' passed all checks and is ready to use")
         return True
 
     def use_skill(self, skill_name: str, force: bool = False) -> bool:
@@ -318,7 +318,7 @@ class SkillManager:
             
             for skill in offensive_skills:
                 can_use = self.can_use_skill(skill.name)
-                self.logger.debug(f"Skill '{skill.name}' - Enabled: {skill.enabled}, Type: {skill.skill_type.value}, Can use: {can_use}")
+                #self.logger.debug(f"Skill '{skill.name}' - Enabled: {skill.enabled}, Type: {skill.skill_type.value}, Can use: {can_use}")
             
             # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
             available_skills = [skill for skill in offensive_skills if self.can_use_skill(skill.name)]
@@ -326,9 +326,9 @@ class SkillManager:
             if available_skills:
                 # Ordenar por prioridad descendente (mayor número = mayor prioridad)
                 available_skills.sort(key=lambda s: s.priority, reverse=True)
-                self.logger.debug(f"Available skills by priority: {[(s.name, s.priority) for s in available_skills]}")
+                #self.logger.debug(f"Available skills by priority: {[(s.name, s.priority) for s in available_skills]}")
                 selected_skill = available_skills[0].name
-                self.logger.debug(f"Selected skill by priority: {selected_skill} (priority: {available_skills[0].priority})")
+                #self.logger.debug(f"Selected skill by priority: {selected_skill} (priority: {available_skills[0].priority})")
                 return selected_skill
 
         # Fallback a ataque básico si la rotación falla o no hay skills disponibles
