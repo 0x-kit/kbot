@@ -68,7 +68,6 @@ class CombatManager:
         self.looting_enabled = True
         self.potion_threshold = 50
         self.ocr_tolerance = 80
-        self.fuzzy_match_threshold = 80
         # ✅ CORREGIDO: Usar nombres que coincidan exactamente con bot_config.json
         self.timing = {
             "target_attempt_interval": 0.3,
@@ -252,7 +251,7 @@ class CombatManager:
             if FUZZYWUZZY_AVAILABLE
             else 0
         )
-        is_allowed = best_match_score >= self.fuzzy_match_threshold
+        is_allowed = best_match_score >= self.ocr_tolerance
 
         if is_allowed:
             self.logger.info(
@@ -300,7 +299,6 @@ class CombatManager:
 
     def set_ocr_tolerance(self, tolerance: int):
         self.ocr_tolerance = tolerance
-        self.fuzzy_match_threshold = tolerance
 
     def set_use_skills(self, enabled: bool):
         self.use_skills = enabled

@@ -16,7 +16,6 @@
       "assist_mode": false,
       "use_skills": true,
       "ocr_tolerance": 64,
-      "fuzzy_match_threshold": 80,
       "loot_duration": 1.5,
       "loot_attempts": 1,
       "loot_key": "f"

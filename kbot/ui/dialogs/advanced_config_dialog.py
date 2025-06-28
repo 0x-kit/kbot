@@ -212,9 +212,9 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["ocr_tolerance"].setRange(50, 100)
         self.behavior_widgets["ocr_tolerance"].setSuffix("%")
         self.behavior_widgets["ocr_tolerance"].setToolTip(
-            "OCR text matching accuracy required"
+            "OCR accuracy for text matching and target name validation (fuzzy matching threshold)"
         )
-        behavior_layout.addRow("OCR Tolerance:", self.behavior_widgets["ocr_tolerance"])
+        behavior_layout.addRow("OCR/Target Tolerance:", self.behavior_widgets["ocr_tolerance"])
 
         # Looting parameters
         self.behavior_widgets["loot_duration"] = QDoubleSpinBox()
