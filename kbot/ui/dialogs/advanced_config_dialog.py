@@ -228,7 +228,7 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["loot_duration"] = QDoubleSpinBox()
         self.behavior_widgets["loot_duration"].setRange(0.1, 5.0)
         self.behavior_widgets["loot_duration"].setSingleStep(0.1)
-        self.behavior_widgets["loot_duration"].setDecimals(1)  # Limit to 1 decimal place
+        self.behavior_widgets["loot_duration"].setDecimals(2)  # Limit to 1 decimal place
         self.behavior_widgets["loot_duration"].setSuffix(" s")
         self.behavior_widgets["loot_duration"].setToolTip("Total time spent looting")
         self.behavior_widgets["loot_duration"].setFixedWidth(120)  # Fixed width for consistency

@@ -117,7 +117,7 @@ class TantraBotMainWindow(QMainWindow):
             )
             self._connect_signals()
             self._load_configuration()
-            
+
             # Intentar cargar skills después de un pequeño delay para asegurar que el skill_manager esté listo
             QTimer.singleShot(1000, self._delayed_skills_load)
         except Exception as e:
@@ -351,21 +351,21 @@ class TantraBotMainWindow(QMainWindow):
         main_splitter.addWidget(left_panel_widget)
         right_panel_widget = QWidget()
         right_layout = QVBoxLayout(right_panel_widget)
-        
+
         # Session statistics horizontal bar at top
         self._create_stats_horizontal_bar(right_layout)
-        
+
         # Main content splitter (status widget + logs)
         right_splitter = QSplitter(Qt.Vertical)
-        
+
         # Status widget gets its own space
         self.status_widget = StatusWidget()
         right_splitter.addWidget(self.status_widget)
-        
+
         # Log widget
         self.log_widget = LogWidget()
         right_splitter.addWidget(self.log_widget)
-        
+
         right_layout.addWidget(right_splitter)
         main_splitter.addWidget(right_panel_widget)
         # Optimized layout proportions for status/monitoring focus
@@ -380,60 +380,15 @@ class TantraBotMainWindow(QMainWindow):
         self.start_stop_btn.setMinimumHeight(40)
         self.start_stop_btn.setMaximumHeight(40)
         self.start_stop_btn.setMinimumWidth(120)
-        # Apply initial start style
-        self.start_stop_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #6c757d;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-                min-height: 35px;
-                max-height: 40px;
-                min-width: 120px;
-            }
-            QPushButton:hover {
-                background-color: #5a6268;
-            }
-            QPushButton:pressed {
-                background-color: #495057;
-            }
-            """
-        )
         button_layout.addWidget(self.start_stop_btn)
         self.pause_resume_btn = QPushButton("⏸️ Pause")
         self.pause_resume_btn.setMinimumHeight(40)
         self.pause_resume_btn.setMaximumHeight(40)
         self.pause_resume_btn.setMinimumWidth(120)
         self.pause_resume_btn.setEnabled(False)
-        # Apply initial disabled style
-        self.pause_resume_btn.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #6c757d;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-                min-height: 35px;
-                max-height: 40px;
-                min-width: 120px;
-                opacity: 0.5;
-            }
-            QPushButton:disabled {
-                background-color: #6c757d;
-                color: #adb5bd;
-                opacity: 0.5;
-            }
-            """
-        )
         button_layout.addWidget(self.pause_resume_btn)
         control_layout.addLayout(button_layout)
         self.bot_status_label = QLabel("Status: Stopped")
-        self.bot_status_label.setStyleSheet("font-weight: bold;")
         control_layout.addWidget(self.bot_status_label)
         parent_layout.addWidget(control_group)
 
@@ -506,25 +461,25 @@ class TantraBotMainWindow(QMainWindow):
         stats_widget.setMaximumHeight(40)  # Keep it compact
         stats_layout = QHBoxLayout(stats_widget)
         stats_layout.setContentsMargins(0, 5, 0, 5)
-        
+
         # Push everything to the right
         stats_layout.addStretch()
-        
+
         # Runtime
         stats_layout.addWidget(QLabel("⏱️ Runtime:"))
         self.runtime_label = QLabel("00:00:00")
         self.runtime_label.setStyleSheet("font-weight: bold; color: black;")
         stats_layout.addWidget(self.runtime_label)
-        
+
         # Spacing
         stats_layout.addSpacing(20)
-        
+
         # Targets Killed
         stats_layout.addWidget(QLabel("🎯 Targets:"))
         self.targets_killed_label = QLabel("0")
         self.targets_killed_label.setStyleSheet("font-weight: bold; color: black;")
         stats_layout.addWidget(self.targets_killed_label)
-        
+
         parent_layout.addWidget(stats_widget)
 
     def _setup_menu_bar(self):
@@ -610,7 +565,7 @@ class TantraBotMainWindow(QMainWindow):
 
             # Configure whitelist (main window now only handles whitelist and actions)
             self.whitelist_edit.setPlainText("\n".join(whitelist))
-            
+
             # Load skills for status widget display
             try:
                 skills_data = self.bot_engine.get_skills_status()
@@ -966,119 +921,14 @@ class TantraBotMainWindow(QMainWindow):
         self.bot_state_label.setText(state.title())
         if state == "running":
             self.start_stop_btn.setText("⏹️ Stop Bot")
-            self.start_stop_btn.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #e74c3c;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-height: 35px;
-                    max-height: 40px;
-                    min-width: 120px;
-                }
-                QPushButton:hover {
-                    background-color: #c0392b;
-                }
-                QPushButton:pressed {
-                    background-color: #a93226;
-                }
-                """
-            )
             self.pause_resume_btn.setEnabled(True)
             self.pause_resume_btn.setText("⏸️ Pause")
-            self.pause_resume_btn.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #f39c12;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-height: 35px;
-                    max-height: 40px;
-                    min-width: 120px;
-                }
-                QPushButton:hover {
-                    background-color: #e67e22;
-                }
-                QPushButton:pressed {
-                    background-color: #d35400;
-                }
-                """
-            )
         elif state == "stopped":
             self.start_stop_btn.setText("▶️ Start Bot")
-            self.start_stop_btn.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #6c757d;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-height: 35px;
-                    max-height: 40px;
-                    min-width: 120px;
-                }
-                QPushButton:hover {
-                    background-color: #5a6268;
-                }
-                QPushButton:pressed {
-                    background-color: #495057;
-                }
-                """
-            )
             self.pause_resume_btn.setEnabled(False)
             self.pause_resume_btn.setText("⏸️ Pause")
-            self.pause_resume_btn.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #6c757d;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-height: 35px;
-                    max-height: 40px;
-                    min-width: 120px;
-                    opacity: 0.5;
-                }
-                QPushButton:disabled {
-                    background-color: #6c757d;
-                    color: #adb5bd;
-                    opacity: 0.5;
-                }
-                """
-            )
         elif state == "paused":
             self.pause_resume_btn.setText("▶️ Resume")
-            self.pause_resume_btn.setStyleSheet(
-                """
-                QPushButton {
-                    background-color: #27ae60;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-height: 35px;
-                    max-height: 40px;
-                    min-width: 120px;
-                }
-                QPushButton:hover {
-                    background-color: #229954;
-                }
-                QPushButton:pressed {
-                    background-color: #1e8449;
-                }
-                """
-            )
 
     @pyqtSlot(str)
     def _on_error_occurred(self, error: str):
