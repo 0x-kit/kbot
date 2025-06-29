@@ -105,42 +105,46 @@ class VitalsOverlaySelector(QGraphicsView):
         self._create_region_indicators()
 
     def _calculate_vitals_regions(self):
-        """Calculate regions for hp, mp, target, target_name based on the overlay image."""
-        # Análisis de la imagen vitals_region.png según descripción del usuario:
-        # - HP: Barra roja (primera desde arriba)
-        # - MP: Barra azul (segunda desde arriba)
-        # - Target name: Barra justo arriba de la barra roja de abajo  
-        # - Target: Barra roja de abajo del todo (última)
-        
-        overlay_width = self.vitals_pixmap.width()   # Ancho total del overlay
-        overlay_height = self.vitals_pixmap.height() # Alto total del overlay
-        
-        # Cada barra ocupa aproximadamente 1/4 del alto total
-        bar_height = overlay_height // 4
-        
-        # Definir las regiones para cada vital según la descripción correcta
+        """Version con valores absolutos más fáciles de ajustar."""
+        w = self.vitals_pixmap.width()
+
+        # ✅ Ajusta estos valores Y directamente
         regions = {
-            "hp": (0, 0, overlay_width, bar_height),                           # Primera barra (roja)
-            "mp": (0, bar_height, overlay_width, bar_height * 2),              # Segunda barra (azul)
-            "target_name": (0, bar_height * 2, overlay_width, bar_height * 3), # Tercera barra (arriba de target)
-            "target": (0, bar_height * 3, overlay_width, overlay_height),      # Cuarta barra (roja de abajo)
+            "hp": (4, 26, w - 2, 31),  # Empieza en Y=8, termina en Y=28
+            "mp": (4, 44, w - 2, 49),  # Empieza en Y=28, termina en Y=48
+            "target_name": (40, 55, w - 40, 67),  # Empieza en Y=48, termina en Y=63
+            "target": (4, 70, w - 1, 73),  # Empieza en Y=63, termina en Y=83
         }
-        
+
         return regions
 
     def _create_region_indicators(self):
-        """Create visual indicators for each vitals region."""
+        """Create visual indicators for each vitals region with better contrast colors."""
         colors = {
-            "target_name": QColor(255, 255, 255, 80),  # Blanco semi-transparente
-            "hp": QColor(255, 0, 0, 80),               # Rojo semi-transparente  
-            "mp": QColor(0, 0, 255, 80),               # Azul semi-transparente
-            "target": QColor(0, 255, 0, 80),           # Verde semi-transparente
+            # Para HP (sobre fondo rojo) - usar color complementario
+            "hp": QColor(0, 255, 255, 100),  # Cian brillante semi-transparente
+            # Para MP (sobre fondo azul) - usar color complementario
+            "mp": QColor(255, 255, 0, 100),  # Amarillo brillante semi-transparente
+            # Para target_name (sobre fondo blanco/texto) - usar color oscuro
+            "target_name": QColor(255, 0, 255, 120),  # Magenta semi-transparente
+            # Para target (sobre fondo verde) - usar color complementario
+            "target": QColor(255, 100, 0, 120),  # Naranja semi-transparente
         }
-        
+
+        pen_colors = {
+            "hp": QColor(0, 200, 200),  # Cian más oscuro para el borde
+            "mp": QColor(200, 200, 0),  # Amarillo más oscuro para el borde
+            "target_name": QColor(200, 0, 200),  # Magenta más oscuro para el borde
+            "target": QColor(200, 80, 0),  # Naranja más oscuro para el borde
+        }
+
         for region_name, (x1, y1, x2, y2) in self.vitals_regions.items():
             rect_item = QGraphicsRectItem(x1, y1, x2 - x1, y2 - y1)
-            rect_item.setPen(QPen(colors[region_name].darker(), 2, Qt.SolidLine))
+
+            # Usar colores específicos para mejor contraste
+            rect_item.setPen(QPen(pen_colors[region_name], 1, Qt.SolidLine))
             rect_item.setBrush(QBrush(colors[region_name]))
+
             rect_item.setParentItem(self.overlay_item)
             rect_item.setVisible(False)  # Hidden by default
             self.region_indicators.append(rect_item)
@@ -319,7 +323,7 @@ class RegionConfigDialog(QDialog):
             auto_btn = QPushButton("Auto-Configure All Vitals...")
             auto_btn.clicked.connect(self.launch_vitals_selector)
             layout.addWidget(auto_btn)
-            
+
             # Botones individuales para configuración manual (opcional)
             for key in region_keys:
                 btn = QPushButton(f"Select {key.replace('_', ' ').title()} Region...")
