@@ -20,11 +20,11 @@ from PyQt5.QtWidgets import (
     QListWidget,
     QWidget,
     QListWidgetItem,
-    QFileDialog,
     QDoubleSpinBox,
 )
 from PyQt5.QtCore import Qt, pyqtSlot
 import os
+from .icon_selector_dialog import IconSelectorDialog
 
 
 class SkillConfigDialog(QDialog):
@@ -92,15 +92,19 @@ class SkillConfigDialog(QDialog):
         self.skill_duration_spin.setSuffix(" sec")
         self.skill_duration_spin.setValue(0.0)
 
-        # ✅ NUEVO: Campo para el icono
+        # ✅ NUEVO: Selector visual de iconos
         self.icon_layout = QHBoxLayout()
         self.skill_icon_edit = QLineEdit()
         self.skill_icon_edit.setReadOnly(True)
-        icon_btn = QPushButton("...")
-        icon_btn.setFixedWidth(30)
-        icon_btn.clicked.connect(self.select_icon_file)
+        self.skill_icon_edit.setPlaceholderText("No visual skill selected")
+        icon_btn = QPushButton("Select Icon...")
+        icon_btn.clicked.connect(self.select_skill_icon)
+        clear_btn = QPushButton("Clear")
+        clear_btn.setFixedWidth(50)
+        clear_btn.clicked.connect(self.clear_skill_icon)
         self.icon_layout.addWidget(self.skill_icon_edit)
         self.icon_layout.addWidget(icon_btn)
+        self.icon_layout.addWidget(clear_btn)
 
         self.details_layout.addRow("Name:", self.skill_name_edit)
         self.details_layout.addRow("Key:", self.skill_key_edit)
@@ -109,7 +113,7 @@ class SkillConfigDialog(QDialog):
         self.details_layout.addRow("Priority:", self.skill_priority_spin)
         self.details_layout.addRow("Mana Cost:", self.skill_mana_spin)
         self.details_layout.addRow("Duration (buffs):", self.skill_duration_spin)
-        self.details_layout.addRow("Icon Path:", self.icon_layout)
+        self.details_layout.addRow("Visual skill (optional):", self.icon_layout)
         self.details_layout.addRow("Enabled:", self.skill_enabled_cb)
         self.details_layout.addRow("Description:", self.skill_desc_edit)
 
@@ -143,7 +147,6 @@ class SkillConfigDialog(QDialog):
             return
 
         # Guardar datos del skill anterior antes de cambiar
-        current_item = self.skill_tree.currentItem()
         if hasattr(self, "current_skill_name") and self.current_skill_name:
             self.save_current_skill_details()
 
@@ -224,17 +227,23 @@ class SkillConfigDialog(QDialog):
             self.load_config()
 
     @pyqtSlot()
-    def select_icon_file(self):
-        file_name, _ = QFileDialog.getOpenFileName(
-            self, "Select Skill Icon", "resources/skills", "Bitmap Files (*.bmp)"
-        )
-        if file_name:
-            # Hacer la ruta relativa si es posible
-            try:
-                relative_path = os.path.relpath(file_name, os.getcwd())
-                self.skill_icon_edit.setText(relative_path.replace("\\", "/"))
-            except ValueError:
-                self.skill_icon_edit.setText(file_name)
+    def select_skill_icon(self):
+        """Abrir el selector visual de iconos."""
+        dialog = IconSelectorDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            selected_path = dialog.get_selected_icon_path()
+            if selected_path:
+                # Hacer la ruta relativa si es posible
+                try:
+                    relative_path = os.path.relpath(selected_path, os.getcwd())
+                    self.skill_icon_edit.setText(relative_path.replace("\\", "/"))
+                except ValueError:
+                    self.skill_icon_edit.setText(selected_path)
+    
+    @pyqtSlot()
+    def clear_skill_icon(self):
+        """Limpiar la selección de icono."""
+        self.skill_icon_edit.clear()
 
     def accept(self):
         self.save_current_skill_details()
