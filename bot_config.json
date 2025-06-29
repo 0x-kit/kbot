@@ -3,7 +3,7 @@
   "combat": {
     "timing": {
       "skill_interval": 0.6,
-      "attack_interval": 3.0,
+      "attack_interval": 0.0,
       "target_attempt_interval": 0.3,
       "stuck_detection_searching": 8.0,
       "stuck_in_combat_timeout": 10.0,
@@ -16,7 +16,7 @@
       "assist_mode": false,
       "use_skills": true,
       "ocr_tolerance": 64,
-      "loot_duration": 1.5,
+      "loot_duration": 2.3,
       "loot_attempts": 3,
       "loot_key": "f"
     },
@@ -125,23 +125,21 @@
         "skill_type": "auto_attack",
         "priority": 1,
         "mana_cost": 0,
-        "icon": null,
         "duration": 0.0,
-        "conditions": [],
-        "description": "Basic attack, no visual check needed.",
-        "enabled": true
+        "icon": "",
+        "enabled": true,
+        "description": "Basic attack, no visual check needed."
       },
       "HP Potion": {
-        "key": "8",
+        "key": "0",
         "check_interval": 1.0,
         "skill_type": "hp_potion",
         "priority": 10,
         "mana_cost": 0,
-        "icon": "",
         "duration": 0.0,
-        "conditions": [],
-        "description": "Emergency HP potion.",
-        "enabled": false
+        "icon": "",
+        "enabled": true,
+        "description": "Emergency HP potion."
       },
       "MP Potion": {
         "key": "9",
@@ -149,11 +147,10 @@
         "skill_type": "mp_potion",
         "priority": 10,
         "mana_cost": 0,
-        "icon": "",
         "duration": 0.0,
-        "conditions": [],
-        "description": "Emergency MP potion.",
-        "enabled": true
+        "icon": "",
+        "enabled": true,
+        "description": "Emergency MP potion."
       },
       "Assist": {
         "key": "q",
@@ -161,11 +158,10 @@
         "skill_type": "assist",
         "priority": 1,
         "mana_cost": 0,
-        "icon": null,
         "duration": 0.0,
-        "conditions": [],
-        "description": "Assist party leader.",
-        "enabled": false
+        "icon": "",
+        "enabled": false,
+        "description": "Assist party leader."
       },
       "Amada": {
         "key": "2",
@@ -173,11 +169,10 @@
         "skill_type": "offensive",
         "priority": 5,
         "mana_cost": 0,
-        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
         "duration": 0.0,
-        "conditions": [],
-        "description": "Offensive skill slot 2",
-        "enabled": true
+        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
+        "enabled": true,
+        "description": "Offensive skill slot 2"
       },
       "Biz": {
         "key": "3",
@@ -185,11 +180,10 @@
         "skill_type": "offensive",
         "priority": 1,
         "mana_cost": 0,
-        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
         "duration": 0.0,
-        "conditions": [],
-        "description": "Offensive skill slot 3",
-        "enabled": true
+        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
+        "enabled": true,
+        "description": "Offensive skill slot 3"
       },
       "Samate": {
         "key": "7",
@@ -197,11 +191,10 @@
         "skill_type": "buff",
         "priority": 10,
         "mana_cost": 0,
-        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
         "duration": 105.0,
-        "conditions": [],
-        "description": "",
-        "enabled": true
+        "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
+        "enabled": true,
+        "description": ""
       },
       "Dru": {
         "key": "8",
@@ -209,11 +202,21 @@
         "skill_type": "buff",
         "priority": 1,
         "mana_cost": 0,
-        "icon": "",
         "duration": 305.0,
-        "conditions": [],
-        "description": "",
-        "enabled": true
+        "icon": "",
+        "enabled": true,
+        "description": ""
+      },
+      "Stun": {
+        "key": "1",
+        "check_interval": 0.2,
+        "skill_type": "offensive",
+        "priority": 6,
+        "mana_cost": 0,
+        "duration": 0.0,
+        "icon": "kbot/resources/skills/banar/Icon_skill_ao_stun01.bmp",
+        "enabled": true,
+        "description": ""
       }
     },
     "rotations": {
