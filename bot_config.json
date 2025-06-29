@@ -3,7 +3,7 @@
   "combat": {
     "timing": {
       "skill_interval": 0.6,
-      "attack_interval": 0,
+      "attack_interval": 3.0,
       "target_attempt_interval": 0.3,
       "stuck_detection_searching": 8.0,
       "stuck_in_combat_timeout": 10.0,
@@ -17,7 +17,7 @@
       "use_skills": true,
       "ocr_tolerance": 64,
       "loot_duration": 1.5,
-      "loot_attempts": 1,
+      "loot_attempts": 3,
       "loot_key": "f"
     },
     "whitelist": [
@@ -56,64 +56,64 @@
     "cooldown_similarity_threshold": 0.7,
     "slots": [
       [
-        17,
-        88,
-        51,
-        120
+        541,
+        577,
+        574,
+        610
       ],
       [
-        56,
-        88,
-        90,
-        120
+        580,
+        577,
+        613,
+        610
       ],
       [
-        95,
-        88,
-        129,
-        120
+        619,
+        577,
+        652,
+        610
       ],
       [
-        134,
-        88,
-        168,
-        120
+        658,
+        577,
+        691,
+        610
       ],
       [
-        173,
-        88,
-        207,
-        120
+        697,
+        577,
+        730,
+        610
       ],
       [
-        212,
-        88,
-        246,
-        120
+        736,
+        577,
+        769,
+        610
       ],
       [
-        251,
-        88,
-        285,
-        120
+        775,
+        577,
+        808,
+        610
       ],
       [
-        290,
-        88,
-        324,
-        120
+        814,
+        577,
+        847,
+        610
       ],
       [
-        329,
-        88,
-        363,
-        120
+        853,
+        577,
+        886,
+        610
       ],
       [
-        368,
-        88,
-        402,
-        120
+        892,
+        577,
+        925,
+        610
       ]
     ]
   },
@@ -126,6 +126,7 @@
         "priority": 1,
         "mana_cost": 0,
         "icon": null,
+        "duration": 0.0,
         "conditions": [],
         "description": "Basic attack, no visual check needed.",
         "enabled": true
@@ -137,6 +138,7 @@
         "priority": 10,
         "mana_cost": 0,
         "icon": "",
+        "duration": 0.0,
         "conditions": [],
         "description": "Emergency HP potion.",
         "enabled": false
@@ -148,6 +150,7 @@
         "priority": 10,
         "mana_cost": 0,
         "icon": "",
+        "duration": 0.0,
         "conditions": [],
         "description": "Emergency MP potion.",
         "enabled": true
@@ -159,6 +162,7 @@
         "priority": 1,
         "mana_cost": 0,
         "icon": null,
+        "duration": 0.0,
         "conditions": [],
         "description": "Assist party leader.",
         "enabled": false
@@ -170,6 +174,7 @@
         "priority": 5,
         "mana_cost": 0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
+        "duration": 0.0,
         "conditions": [],
         "description": "Offensive skill slot 2",
         "enabled": true
@@ -180,10 +185,11 @@
         "skill_type": "offensive",
         "priority": 1,
         "mana_cost": 0,
-        "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
-        "enabled": true,
-        "description": "Offensive skill slot 3"
+        "duration": 0.0,
+        "conditions": [],
+        "description": "Offensive skill slot 3",
+        "enabled": true
       },
       "Samate": {
         "key": "7",
@@ -191,10 +197,11 @@
         "skill_type": "buff",
         "priority": 10,
         "mana_cost": 0,
-        "duration": 105.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
-        "enabled": true,
-        "description": ""
+        "duration": 105.0,
+        "conditions": [],
+        "description": "",
+        "enabled": true
       },
       "Dru": {
         "key": "8",
@@ -202,10 +209,11 @@
         "skill_type": "buff",
         "priority": 1,
         "mana_cost": 0,
-        "duration": 305.0,
         "icon": "",
-        "enabled": true,
-        "description": ""
+        "duration": 305.0,
+        "conditions": [],
+        "description": "",
+        "enabled": true
       }
     },
     "rotations": {
