@@ -106,6 +106,7 @@ class StatusWidget(QWidget):
         self.skills_frame = QFrame()
         self.skills_layout = QGridLayout(self.skills_frame)
         self.skills_layout.setSpacing(5)
+        self.skills_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)  # Align to top-left
         
         # Default message when no skills configured
         self.no_skills_label = QLabel("No skills configured")
@@ -203,25 +204,31 @@ class StatusWidget(QWidget):
         
         skill_layout.addLayout(top_layout)
         
-        # Status line
+        # Status line with color coding
         if not enabled:
             status_text = "Disabled"
+            status_color = "#999"  # Gris para disabled
         elif skill_type == 'offensive':
             if skill_data.get('visual_cooldown', False):
                 status_text = "Cooldown"
+                status_color = "#f39c12"  # Naranja para cooldown
             else:
                 status_text = "Ready"
+                status_color = "#27ae60"  # Verde para ready
         elif skill_type == 'buff':
             buff_remaining = skill_data.get('buff_remaining', 0)
             if buff_remaining > 0:
                 status_text = f"{buff_remaining:.0f}s left"
+                status_color = "#3498db"  # Azul para buff activo
             else:
                 status_text = "Expired"
+                status_color = "#e67e22"  # Naranja para expired
         else:
             status_text = "Unknown"
+            status_color = "#999"
         
         status_label = QLabel(status_text)
-        status_label.setStyleSheet("color: #888; font-size: 9px;")
+        status_label.setStyleSheet(f"color: {status_color}; font-size: 9px; font-weight: bold;")
         status_label.setAlignment(Qt.AlignCenter)
         skill_layout.addWidget(status_label)
         

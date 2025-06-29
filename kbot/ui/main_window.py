@@ -921,19 +921,21 @@ class TantraBotMainWindow(QMainWindow):
             self.start_stop_btn.setStyleSheet(
                 """
                 QPushButton {
-                    background-color: #dc3545;
+                    background-color: #e74c3c;
                     color: white;
                     border: none;
                     padding: 8px 16px;
                     border-radius: 4px;
                     font-weight: bold;
                     min-height: 35px;
+                    max-height: 40px;
+                    min-width: 120px;
                 }
                 QPushButton:hover {
-                    background-color: #c82333;
+                    background-color: #c0392b;
                 }
                 QPushButton:pressed {
-                    background-color: #bd2130;
+                    background-color: #a93226;
                 }
                 """
             )
@@ -951,6 +953,8 @@ class TantraBotMainWindow(QMainWindow):
                     border-radius: 4px;
                     font-weight: bold;
                     min-height: 35px;
+                    max-height: 40px;
+                    min-width: 120px;
                 }
                 QPushButton:hover {
                     background-color: #5a6268;
