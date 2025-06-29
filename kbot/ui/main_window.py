@@ -378,6 +378,8 @@ class TantraBotMainWindow(QMainWindow):
         button_layout = QHBoxLayout()
         self.start_stop_btn = QPushButton("▶️ Start Bot")
         self.start_stop_btn.setMinimumHeight(40)
+        self.start_stop_btn.setMaximumHeight(40)
+        self.start_stop_btn.setMinimumWidth(120)
         button_layout.addWidget(self.start_stop_btn)
         self.pause_resume_btn = QPushButton("⏸️ Pause")
         self.pause_resume_btn.setMinimumHeight(40)

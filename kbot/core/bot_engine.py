@@ -140,7 +140,7 @@ class BotEngine(QObject):
                 Skill(
                     name="Basic Attack",
                     key="r",
-                    cooldown=1.0,
+                    check_interval=1.0,
                     skill_type=SkillType.AUTO_ATTACK,
                     priority=1,
                     enabled=True,
@@ -148,7 +148,7 @@ class BotEngine(QObject):
                 Skill(
                     name="HP Potion",
                     key="8",
-                    cooldown=1.0,
+                    check_interval=1.0,
                     skill_type=SkillType.HP_POTION,
                     priority=10,
                     enabled=True,
@@ -157,7 +157,7 @@ class BotEngine(QObject):
                 Skill(
                     name="MP Potion",
                     key="9",
-                    cooldown=1.0,
+                    check_interval=1.0,
                     skill_type=SkillType.MP_POTION,
                     priority=10,
                     enabled=True,
@@ -166,7 +166,7 @@ class BotEngine(QObject):
                 Skill(
                     name="Assist",
                     key="q",
-                    cooldown=1.0,
+                    check_interval=1.0,
                     skill_type=SkillType.ASSIST,
                     priority=1,
                     enabled=True,

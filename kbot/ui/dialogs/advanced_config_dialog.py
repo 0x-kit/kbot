@@ -95,6 +95,7 @@ class AdvancedConfigDialog(QDialog):
         self.global_cooldown_spin = QDoubleSpinBox()
         self.global_cooldown_spin.setRange(0.05, 1.0)
         self.global_cooldown_spin.setSingleStep(0.05)
+        self.global_cooldown_spin.setDecimals(2)  # 2 decimals for global cooldown precision
         self.global_cooldown_spin.setSuffix(" s")
         self.global_cooldown_spin.setToolTip("Minimum time between any skill uses")
         self.global_cooldown_spin.setFixedWidth(120)  # Fixed width for consistency
@@ -171,6 +172,7 @@ class AdvancedConfigDialog(QDialog):
             widget = QDoubleSpinBox()
             widget.setRange(min_val, max_val)
             widget.setSingleStep(step)
+            widget.setDecimals(1)  # Limit to 1 decimal place
             widget.setSuffix(f" {suffix}")
             widget.setToolTip(tooltip)
             widget.setFixedWidth(120)  # Fixed width for consistency
@@ -226,6 +228,7 @@ class AdvancedConfigDialog(QDialog):
         self.behavior_widgets["loot_duration"] = QDoubleSpinBox()
         self.behavior_widgets["loot_duration"].setRange(0.1, 5.0)
         self.behavior_widgets["loot_duration"].setSingleStep(0.1)
+        self.behavior_widgets["loot_duration"].setDecimals(1)  # Limit to 1 decimal place
         self.behavior_widgets["loot_duration"].setSuffix(" s")
         self.behavior_widgets["loot_duration"].setToolTip("Total time spent looting")
         self.behavior_widgets["loot_duration"].setFixedWidth(120)  # Fixed width for consistency
