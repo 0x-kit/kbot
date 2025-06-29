@@ -124,99 +124,99 @@
         "check_interval": 1.0,
         "skill_type": "auto_attack",
         "priority": 1,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "",
         "enabled": true,
-        "description": "Basic attack, no visual check needed."
+        "description": null
       },
       "HP Potion": {
         "key": "0",
         "check_interval": 1.0,
         "skill_type": "hp_potion",
         "priority": 10,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "",
         "enabled": true,
-        "description": "Emergency HP potion."
+        "description": null
       },
       "MP Potion": {
         "key": "9",
         "check_interval": 1.0,
         "skill_type": "mp_potion",
         "priority": 10,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "",
         "enabled": true,
-        "description": "Emergency MP potion."
+        "description": null
       },
       "Assist": {
         "key": "q",
         "check_interval": 1.0,
         "skill_type": "assist",
         "priority": 1,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "",
         "enabled": false,
-        "description": "Assist party leader."
+        "description": null
       },
       "Amada": {
         "key": "2",
         "check_interval": 0.2,
         "skill_type": "offensive",
         "priority": 5,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
         "enabled": true,
-        "description": "Offensive skill slot 2"
+        "description": null
       },
       "Biz": {
         "key": "3",
         "check_interval": 0.2,
         "skill_type": "offensive",
         "priority": 1,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
         "enabled": true,
-        "description": "Offensive skill slot 3"
+        "description": null
       },
       "Samate": {
         "key": "7",
         "check_interval": 10.0,
         "skill_type": "buff",
         "priority": 10,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 105.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
         "enabled": true,
-        "description": ""
+        "description": null
       },
       "Dru": {
         "key": "8",
         "check_interval": 10.0,
         "skill_type": "buff",
         "priority": 1,
-        "mana_cost": 0,
+        "mana_cost": 1,
         "duration": 305.0,
         "icon": "",
         "enabled": true,
-        "description": ""
+        "description": null
       },
       "Stun": {
         "key": "1",
         "check_interval": 0.2,
         "skill_type": "offensive",
-        "priority": 6,
-        "mana_cost": 0,
+        "priority": 7,
+        "mana_cost": 1,
         "duration": 0.0,
         "icon": "kbot/resources/skills/banar/Icon_skill_ao_stun01.bmp",
         "enabled": true,
-        "description": ""
+        "description": null
       }
     },
     "rotations": {

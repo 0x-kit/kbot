@@ -35,7 +35,7 @@ class SkillConfigDialog(QDialog):
         self.skill_manager = skill_manager
         self.config_manager = config_manager
         self.setWindowTitle("Skill Configuration")
-        self.resize(800, 600)
+        self.resize(600, 400)
 
         self._setup_ui()
         self.load_config()
@@ -97,7 +97,7 @@ class SkillConfigDialog(QDialog):
         self.skill_icon_edit = QLineEdit()
         self.skill_icon_edit.setReadOnly(True)
         self.skill_icon_edit.setPlaceholderText("No visual skill selected")
-        icon_btn = QPushButton("Select Icon...")
+        icon_btn = QPushButton("Select Skill...")
         icon_btn.clicked.connect(self.select_skill_icon)
         clear_btn = QPushButton("Clear")
         clear_btn.setFixedWidth(50)
@@ -106,16 +106,18 @@ class SkillConfigDialog(QDialog):
         self.icon_layout.addWidget(icon_btn)
         self.icon_layout.addWidget(clear_btn)
 
+        self.details_layout.addRow("Enabled:", self.skill_enabled_cb)
         self.details_layout.addRow("Name:", self.skill_name_edit)
         self.details_layout.addRow("Key:", self.skill_key_edit)
-        self.details_layout.addRow("Check Interval:", self.skill_cooldown_spin)
-        self.details_layout.addRow("Type:", self.skill_type_combo)
         self.details_layout.addRow("Priority:", self.skill_priority_spin)
-        self.details_layout.addRow("Mana Cost:", self.skill_mana_spin)
+        self.details_layout.addRow("Type:", self.skill_type_combo)
+        # self.details_layout.addRow("Mana Cost:", self.skill_mana_spin)
         self.details_layout.addRow("Duration (buffs):", self.skill_duration_spin)
         self.details_layout.addRow("Visual skill (optional):", self.icon_layout)
-        self.details_layout.addRow("Enabled:", self.skill_enabled_cb)
-        self.details_layout.addRow("Description:", self.skill_desc_edit)
+        self.details_layout.addRow(
+            "Check Interval (optional):", self.skill_cooldown_spin
+        )
+        # self.details_layout.addRow("Description:", self.skill_desc_edit)
 
         right_panel.setLayout(self.details_layout)
         splitter.addWidget(right_panel)
@@ -130,8 +132,16 @@ class SkillConfigDialog(QDialog):
     def load_config(self):
         self.skill_tree.clear()
         skills = self.config_manager.get_skills_config().get("definitions", {})
-        for name, data in skills.items():
+
+        # Ordenar por clave 'key': números primero, luego letras
+        sorted_skills = sorted(skills.items(), key=lambda item: (
+            item[1].get("key", "")[0].isalpha(),  # False (0) si empieza por número, True (1) si letra
+            item[1].get("key", "")                # luego ordena por valor alfabético
+        ))
+
+        for name, data in sorted_skills:
             self.add_skill_to_tree(name, data)
+
 
     def add_skill_to_tree(self, name, data):
         item = QTreeWidgetItem(
@@ -158,15 +168,17 @@ class SkillConfigDialog(QDialog):
         self.skill_name_edit.setText(self.current_skill_name)
         self.skill_key_edit.setText(data.get("key", ""))
         # ✅ CORREGIDO: Usar check_interval con compatibilidad hacia atrás
-        self.skill_cooldown_spin.setValue(float(data.get("check_interval", data.get("cooldown", 1.0))))
+        self.skill_cooldown_spin.setValue(
+            float(data.get("check_interval", data.get("cooldown", 1.0)))
+        )
         self.skill_type_combo.setCurrentText(data.get("skill_type", "offensive"))
         self.skill_priority_spin.setValue(int(data.get("priority", 1)))
-        self.skill_mana_spin.setValue(int(data.get("mana_cost", 0)))
+        self.skill_mana_spin.setValue(int(1))
         # ✅ NUEVO: Cargar duración
         self.skill_duration_spin.setValue(float(data.get("duration", 0.0)))
         self.skill_icon_edit.setText(data.get("icon", ""))
         self.skill_enabled_cb.setChecked(data.get("enabled", True))
-        self.skill_desc_edit.setText(data.get("description", ""))
+        # self.skill_desc_edit.setText(data.get("description", ""))
 
     def save_current_skill_details(self):
         if not hasattr(self, "current_skill_name") or not self.current_skill_name:
@@ -183,11 +195,11 @@ class SkillConfigDialog(QDialog):
             "check_interval": self.skill_cooldown_spin.value(),
             "skill_type": self.skill_type_combo.currentText(),
             "priority": self.skill_priority_spin.value(),
-            "mana_cost": self.skill_mana_spin.value(),
+            "mana_cost": 1,
             "duration": self.skill_duration_spin.value(),
             "icon": self.skill_icon_edit.text(),
             "enabled": self.skill_enabled_cb.isChecked(),
-            "description": self.skill_desc_edit.text(),
+            "description": None,
         }
 
         if old_name != new_name:
@@ -210,7 +222,12 @@ class SkillConfigDialog(QDialog):
             i += 1
         name = f"New Skill {i}"
 
-        data = {"key": "", "check_interval": 1.0, "skill_type": "offensive", "enabled": True}
+        data = {
+            "key": "",
+            "check_interval": 1.0,
+            "skill_type": "offensive",
+            "enabled": True,
+        }
         definitions[name] = data
         self.add_skill_to_tree(name, data)
 
@@ -239,7 +256,7 @@ class SkillConfigDialog(QDialog):
                     self.skill_icon_edit.setText(relative_path.replace("\\", "/"))
                 except ValueError:
                     self.skill_icon_edit.setText(selected_path)
-    
+
     @pyqtSlot()
     def clear_skill_icon(self):
         """Limpiar la selección de icono."""
