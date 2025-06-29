@@ -877,11 +877,18 @@ class TantraBotMainWindow(QMainWindow):
                 skills_data = self.bot_engine.get_skills_status()
                 self.status_widget.update_skills(skills_data)
             stats = self.bot_engine.get_stats()
-            runtime_seconds = int(stats.get("current_runtime", 0))
-            hours, remainder = divmod(runtime_seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            self.runtime_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
-            self.targets_killed_label.setText(str(stats.get("targets_lost", 0)))
+            # Debug: Log stats to understand what's being returned
+            if stats:
+                runtime_seconds = int(stats.get("current_runtime", 0))
+                hours, remainder = divmod(runtime_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                self.runtime_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
+                # Fix targets stat name - should be "targets_killed" not "targets_lost"
+                targets_count = stats.get("targets_killed", stats.get("targets_lost", 0))
+                self.targets_killed_label.setText(str(targets_count))
+            else:
+                # If no stats available, keep existing values
+                pass
 
             # Update bot state with color coding
             state = self.bot_engine.get_state()
@@ -923,10 +930,17 @@ class TantraBotMainWindow(QMainWindow):
             self.start_stop_btn.setText("⏹️ Stop Bot")
             self.pause_resume_btn.setEnabled(True)
             self.pause_resume_btn.setText("⏸️ Pause")
+            # Ensure statistics tracking starts when bot runs
+            if hasattr(self.bot_engine, 'start_time'):
+                import time
+                self.bot_engine.start_time = time.time()
         elif state == "stopped":
             self.start_stop_btn.setText("▶️ Start Bot")
             self.pause_resume_btn.setEnabled(False)
             self.pause_resume_btn.setText("⏸️ Pause")
+            # Reset statistics when bot stops
+            self.runtime_label.setText("00:00:00")
+            self.targets_killed_label.setText("0")
         elif state == "paused":
             self.pause_resume_btn.setText("▶️ Resume")
 
