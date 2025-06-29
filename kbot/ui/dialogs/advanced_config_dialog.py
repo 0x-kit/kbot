@@ -397,7 +397,11 @@ class AdvancedConfigDialog(QDialog):
             if isinstance(widget, QCheckBox):
                 behavior[param] = widget.isChecked()
             elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
-                behavior[param] = widget.value()
+                value = widget.value()
+                # Force proper rounding for decimal parameters
+                if param == "loot_duration":
+                    value = round(value, 1)  # 1 decimal place for loot_duration
+                behavior[param] = value
             elif isinstance(widget, QLineEdit):
                 behavior[param] = widget.text()
         config["behavior"] = behavior
@@ -436,7 +440,11 @@ class AdvancedConfigDialog(QDialog):
             if isinstance(widget, QCheckBox):
                 behavior[param] = widget.isChecked()
             elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
-                behavior[param] = widget.value()
+                value = widget.value()
+                # Force proper rounding for decimal parameters
+                if param == "loot_duration":
+                    value = round(value, 1)  # 1 decimal place for loot_duration
+                behavior[param] = value
             elif isinstance(widget, QLineEdit):
                 behavior[param] = widget.text()
         self.config_manager.set_combat_behavior(behavior)
