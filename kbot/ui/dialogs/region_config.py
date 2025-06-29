@@ -180,6 +180,9 @@ class SkillBarOverlaySelector(QGraphicsView):
         super().__init__(parent)
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+        
+        # Orientation: 'horizontal' or 'vertical'
+        self.orientation = 'horizontal'
 
         # Add screenshot as background
         self.scene.addPixmap(screenshot_pixmap)
@@ -198,6 +201,10 @@ class SkillBarOverlaySelector(QGraphicsView):
         self.overlay_item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
         self.overlay_item.setZValue(1)  # Above screenshot
         self.scene.addItem(self.overlay_item)
+        
+        # Apply rotation if vertical
+        if self.orientation == 'vertical':
+            self.overlay_item.setRotation(90)
 
         # Position overlay in center initially
         screenshot_rect = screenshot_pixmap.rect()
@@ -214,26 +221,36 @@ class SkillBarOverlaySelector(QGraphicsView):
         self._create_slot_indicators()
 
     def _calculate_slot_regions(self):
-        """Calculate regions for each of the 10 skill slots based on the overlay image."""
-        # Análisis de la imagen skill_bar.png (331x37 pixels)
-        # Cada slot es aproximadamente 30x30 pixels
-        # La barra tiene un borde y las casillas están centradas
-
+        """Calculate regions for each of the 10 skill slots based on the overlay image and orientation."""
         slot_width = 33
         slot_height = 33
 
-        # Ajustar la posición inicial y el espaciado basado en la imagen real
-        start_x = 17.5  # Offset desde el borde izquierdo
-        start_y = 4  # Centrado verticalmente (37-30)/2 ≈ 3.5, redondeado a 4
-        spacing = 39  # Distancia entre centros de slots (más preciso)
-
-        regions = []
-        for i in range(10):
-            x1 = start_x + (i * spacing)
-            y1 = start_y
-            x2 = x1 + slot_width
-            y2 = y1 + slot_height
-            regions.append((x1, y1, x2, y2))
+        if self.orientation == 'horizontal':
+            # Horizontal layout (original)
+            start_x = 17.5  # Offset desde el borde izquierdo
+            start_y = 4     # Centrado verticalmente
+            spacing = 39    # Distancia entre centros de slots
+            
+            regions = []
+            for i in range(10):
+                x1 = start_x + (i * spacing)
+                y1 = start_y
+                x2 = x1 + slot_width
+                y2 = y1 + slot_height
+                regions.append((x1, y1, x2, y2))
+        else:  # vertical
+            # Vertical layout - rotate the calculations
+            start_x = 4      # Centrado horizontalmente
+            start_y = 17.5   # Offset desde el borde superior
+            spacing = 39     # Distancia entre centros de slots
+            
+            regions = []
+            for i in range(10):
+                x1 = start_x
+                y1 = start_y + (i * spacing)
+                x2 = x1 + slot_width
+                y2 = y1 + slot_height
+                regions.append((x1, y1, x2, y2))
 
         return regions
 
@@ -251,6 +268,33 @@ class SkillBarOverlaySelector(QGraphicsView):
     def set_overlay_opacity(self, opacity):
         """Set the opacity of the overlay (0.0 to 1.0)."""
         self.overlay_item.setOpacity(opacity / 100.0)
+
+    def set_orientation(self, orientation):
+        """Set the orientation of the skill bar (horizontal or vertical)."""
+        if orientation in ['horizontal', 'vertical']:
+            self.orientation = orientation
+            
+            # Update rotation
+            if self.orientation == 'vertical':
+                self.overlay_item.setRotation(90)
+            else:
+                self.overlay_item.setRotation(0)
+            
+            # Recalculate regions and update indicators
+            self._update_slot_layout()
+    
+    def _update_slot_layout(self):
+        """Update slot regions and indicators based on current orientation."""
+        # Remove existing indicators
+        for indicator in self.slot_indicators:
+            self.scene.removeItem(indicator)
+        self.slot_indicators.clear()
+        
+        # Recalculate regions
+        self.slot_regions = self._calculate_slot_regions()
+        
+        # Recreate indicators
+        self._create_slot_indicators()
 
     def toggle_slot_indicators(self, visible):
         """Show/hide slot indicators."""
@@ -407,10 +451,11 @@ class RegionConfigDialog(QDialog):
         # Instructions
         instructions = QLabel(
             "🎯 Instructions:\n"
-            "1. Drag the skill bar overlay to align it with your game's skill bar\n"
-            "2. Use the opacity slider to see through the overlay\n"
-            "3. Toggle slot indicators to verify alignment\n"
-            "4. Click OK when perfectly aligned"
+            "1. Choose orientation (horizontal/vertical)\n"
+            "2. Drag the skill bar overlay to align it with your game's skill bar\n"
+            "3. Use the opacity slider to see through the overlay\n"
+            "4. Toggle slot indicators to verify alignment\n"
+            "5. Click OK when perfectly aligned"
         )
         instructions.setStyleSheet(
             "background-color: #f0f0f0; padding: 10px; border-radius: 5px;"
@@ -419,6 +464,17 @@ class RegionConfigDialog(QDialog):
 
         # Controls
         controls_layout = QHBoxLayout()
+
+        # Orientation buttons
+        controls_layout.addWidget(QLabel("Orientation:"))
+        horizontal_btn = QPushButton("Horizontal")
+        horizontal_btn.setCheckable(True)
+        horizontal_btn.setChecked(True)
+        controls_layout.addWidget(horizontal_btn)
+        
+        vertical_btn = QPushButton("Vertical")
+        vertical_btn.setCheckable(True)
+        controls_layout.addWidget(vertical_btn)
 
         # Opacity slider
         controls_layout.addWidget(QLabel("Overlay Opacity:"))
@@ -441,6 +497,22 @@ class RegionConfigDialog(QDialog):
         layout.addWidget(overlay_selector)
 
         # Connect controls
+        def on_horizontal_clicked():
+            if horizontal_btn.isChecked():
+                vertical_btn.setChecked(False)
+                overlay_selector.set_orientation('horizontal')
+            else:
+                horizontal_btn.setChecked(True)
+        
+        def on_vertical_clicked():
+            if vertical_btn.isChecked():
+                horizontal_btn.setChecked(False)
+                overlay_selector.set_orientation('vertical')
+            else:
+                vertical_btn.setChecked(True)
+        
+        horizontal_btn.clicked.connect(on_horizontal_clicked)
+        vertical_btn.clicked.connect(on_vertical_clicked)
         opacity_slider.valueChanged.connect(overlay_selector.set_overlay_opacity)
         indicators_btn.toggled.connect(overlay_selector.toggle_slot_indicators)
 
