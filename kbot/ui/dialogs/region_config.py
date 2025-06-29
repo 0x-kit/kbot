@@ -68,6 +68,107 @@ class RegionSelector(QGraphicsView):
         return None
 
 
+class VitalsOverlaySelector(QGraphicsView):
+    """Selector de vitals con overlay de imagen de referencia."""
+
+    def __init__(self, screenshot_pixmap, parent=None):
+        super().__init__(parent)
+        self.scene = QGraphicsScene()
+        self.setScene(self.scene)
+
+        # Add screenshot as background
+        self.scene.addPixmap(screenshot_pixmap)
+
+        # Load vitals overlay image
+        vitals_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "resources",
+            "vitals_region.png",
+        )
+        self.vitals_pixmap = QPixmap(vitals_path)
+
+        # Create overlay item
+        self.overlay_item = QGraphicsPixmapItem(self.vitals_pixmap)
+        self.overlay_item.setOpacity(0.7)  # 70% opacity
+        self.overlay_item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
+        self.overlay_item.setZValue(1)  # Above screenshot
+        self.scene.addItem(self.overlay_item)
+
+        # Position overlay in top-left initially (where vitals usually are)
+        self.overlay_item.setPos(50, 50)
+
+        # Store vitals regions (relative to overlay image)
+        self.vitals_regions = self._calculate_vitals_regions()
+
+        # Visual feedback for regions
+        self.region_indicators = []
+        self._create_region_indicators()
+
+    def _calculate_vitals_regions(self):
+        """Calculate regions for hp, mp, target, target_name based on the overlay image."""
+        # Análisis de la imagen vitals_region.png según descripción del usuario:
+        # - HP: Barra roja (primera desde arriba)
+        # - MP: Barra azul (segunda desde arriba)
+        # - Target name: Barra justo arriba de la barra roja de abajo  
+        # - Target: Barra roja de abajo del todo (última)
+        
+        overlay_width = self.vitals_pixmap.width()   # Ancho total del overlay
+        overlay_height = self.vitals_pixmap.height() # Alto total del overlay
+        
+        # Cada barra ocupa aproximadamente 1/4 del alto total
+        bar_height = overlay_height // 4
+        
+        # Definir las regiones para cada vital según la descripción correcta
+        regions = {
+            "hp": (0, 0, overlay_width, bar_height),                           # Primera barra (roja)
+            "mp": (0, bar_height, overlay_width, bar_height * 2),              # Segunda barra (azul)
+            "target_name": (0, bar_height * 2, overlay_width, bar_height * 3), # Tercera barra (arriba de target)
+            "target": (0, bar_height * 3, overlay_width, overlay_height),      # Cuarta barra (roja de abajo)
+        }
+        
+        return regions
+
+    def _create_region_indicators(self):
+        """Create visual indicators for each vitals region."""
+        colors = {
+            "target_name": QColor(255, 255, 255, 80),  # Blanco semi-transparente
+            "hp": QColor(255, 0, 0, 80),               # Rojo semi-transparente  
+            "mp": QColor(0, 0, 255, 80),               # Azul semi-transparente
+            "target": QColor(0, 255, 0, 80),           # Verde semi-transparente
+        }
+        
+        for region_name, (x1, y1, x2, y2) in self.vitals_regions.items():
+            rect_item = QGraphicsRectItem(x1, y1, x2 - x1, y2 - y1)
+            rect_item.setPen(QPen(colors[region_name].darker(), 2, Qt.SolidLine))
+            rect_item.setBrush(QBrush(colors[region_name]))
+            rect_item.setParentItem(self.overlay_item)
+            rect_item.setVisible(False)  # Hidden by default
+            self.region_indicators.append(rect_item)
+
+    def set_overlay_opacity(self, opacity):
+        """Set the opacity of the overlay (0.0 to 1.0)."""
+        self.overlay_item.setOpacity(opacity / 100.0)
+
+    def toggle_region_indicators(self, visible):
+        """Show/hide region indicators."""
+        for indicator in self.region_indicators:
+            indicator.setVisible(visible)
+
+    def get_vitals_regions(self):
+        """Get absolute coordinates for all vitals regions."""
+        overlay_pos = self.overlay_item.pos()
+        absolute_regions = {}
+
+        for region_name, (x1, y1, x2, y2) in self.vitals_regions.items():
+            abs_x1 = int(overlay_pos.x() + x1)
+            abs_y1 = int(overlay_pos.y() + y1)
+            abs_x2 = int(overlay_pos.x() + x2)
+            abs_y2 = int(overlay_pos.y() + y2)
+            absolute_regions[region_name] = (abs_x1, abs_y1, abs_x2, abs_y2)
+
+        return absolute_regions
+
+
 class SkillBarOverlaySelector(QGraphicsView):
     """Selector de skillbar con overlay de imagen de referencia."""
 
@@ -213,7 +314,18 @@ class RegionConfigDialog(QDialog):
             btn = QPushButton("Auto-Configure Skill Bar...")
             btn.clicked.connect(self.launch_skill_bar_selector)
             layout.addWidget(btn)
-        else:  # Botones individuales para vitals
+        elif title == "Vitals & Target":
+            # Botón para auto-configurar todas las regiones de vitals
+            auto_btn = QPushButton("Auto-Configure All Vitals...")
+            auto_btn.clicked.connect(self.launch_vitals_selector)
+            layout.addWidget(auto_btn)
+            
+            # Botones individuales para configuración manual (opcional)
+            for key in region_keys:
+                btn = QPushButton(f"Select {key.replace('_', ' ').title()} Region...")
+                btn.clicked.connect(lambda _, k=key: self.launch_region_selector(k))
+                form_layout.addRow(btn)
+        else:  # Otros grupos
             for key in region_keys:
                 btn = QPushButton(f"Select {key.replace('_', ' ').title()} Region...")
                 btn.clicked.connect(lambda _, k=key: self.launch_region_selector(k))
@@ -347,6 +459,82 @@ class RegionConfigDialog(QDialog):
                 "Success",
                 f"✅ Successfully configured all 10 skill slots!\n"
                 f"Slot regions have been automatically calculated.",
+            )
+
+    def launch_vitals_selector(self):
+        """New vitals selector with overlay image."""
+        pixmap, _ = self._get_capture_for_selection()
+        if not pixmap:
+            return
+
+        # Create dialog with vitals overlay selector
+        selector_dialog = QDialog(self)
+        selector_dialog.setWindowTitle(
+            "Position Vitals Overlay - Drag to align with your vitals"
+        )
+        selector_dialog.setWindowState(Qt.WindowMaximized)
+
+        layout = QVBoxLayout(selector_dialog)
+
+        # Instructions
+        instructions = QLabel(
+            "🎯 Instructions:\n"
+            "1. Drag the vitals overlay to align it with your game's HP/MP/Target bars\n"
+            "2. Use the opacity slider to see through the overlay\n"
+            "3. Toggle region indicators to verify alignment\n"
+            "4. Click OK when perfectly aligned"
+        )
+        instructions.setStyleSheet(
+            "background-color: #f0f0f0; padding: 10px; border-radius: 5px;"
+        )
+        layout.addWidget(instructions)
+
+        # Controls
+        controls_layout = QHBoxLayout()
+
+        # Opacity slider
+        controls_layout.addWidget(QLabel("Overlay Opacity:"))
+        opacity_slider = QSlider(Qt.Horizontal)
+        opacity_slider.setRange(10, 100)
+        opacity_slider.setValue(70)
+        opacity_slider.setFixedWidth(200)
+        controls_layout.addWidget(opacity_slider)
+
+        # Show indicators checkbox
+        indicators_btn = QPushButton("Toggle Region Indicators")
+        indicators_btn.setCheckable(True)
+        controls_layout.addWidget(indicators_btn)
+
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
+
+        # Vitals overlay selector
+        vitals_selector = VitalsOverlaySelector(pixmap)
+        layout.addWidget(vitals_selector)
+
+        # Connect controls
+        opacity_slider.valueChanged.connect(vitals_selector.set_overlay_opacity)
+        indicators_btn.toggled.connect(vitals_selector.toggle_region_indicators)
+
+        # Buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(selector_dialog.accept)
+        buttons.rejected.connect(selector_dialog.reject)
+        layout.addWidget(buttons)
+
+        if selector_dialog.exec_() == QDialog.Accepted:
+            # Get all vitals regions
+            vitals_regions = vitals_selector.get_vitals_regions()
+
+            # Update all vitals regions
+            for region_name, region_coords in vitals_regions.items():
+                self._update_spinboxes(region_name, region_coords)
+
+            QMessageBox.information(
+                self,
+                "Success",
+                f"✅ Successfully configured all vitals regions!\n"
+                f"HP, MP, Target, and Target Name regions have been automatically calculated.",
             )
 
     def _get_region_from_user(self, title, pixmap):
