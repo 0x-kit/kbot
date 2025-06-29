@@ -16,12 +16,15 @@ from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QGraphicsRectItem,
+    QGraphicsPixmapItem,
     QApplication,
     QInputDialog,
     QFormLayout,
+    QSlider,
 )
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QImage, QPen
+from PyQt5.QtCore import Qt, QRectF, QPointF
+from PyQt5.QtGui import QPixmap, QImage, QPen, QBrush, QColor
+import os
 
 
 class RegionSelector(QGraphicsView):
@@ -63,6 +66,98 @@ class RegionSelector(QGraphicsView):
                 int(rect.y() + rect.height()),
             )
         return None
+
+
+class SkillBarOverlaySelector(QGraphicsView):
+    """Selector de skillbar con overlay de imagen de referencia."""
+
+    def __init__(self, screenshot_pixmap, parent=None):
+        super().__init__(parent)
+        self.scene = QGraphicsScene()
+        self.setScene(self.scene)
+        
+        # Add screenshot as background
+        self.scene.addPixmap(screenshot_pixmap)
+        
+        # Load skill bar overlay image
+        skill_bar_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                                      "resources", "skill_bar.png")
+        self.skill_bar_pixmap = QPixmap(skill_bar_path)
+        
+        # Create overlay item
+        self.overlay_item = QGraphicsPixmapItem(self.skill_bar_pixmap)
+        self.overlay_item.setOpacity(0.7)  # 70% opacity
+        self.overlay_item.setFlag(QGraphicsPixmapItem.ItemIsMovable, True)
+        self.overlay_item.setZValue(1)  # Above screenshot
+        self.scene.addItem(self.overlay_item)
+        
+        # Position overlay in center initially
+        screenshot_rect = screenshot_pixmap.rect()
+        overlay_rect = self.skill_bar_pixmap.rect()
+        center_x = (screenshot_rect.width() - overlay_rect.width()) / 2
+        center_y = (screenshot_rect.height() - overlay_rect.height()) / 2
+        self.overlay_item.setPos(center_x, center_y)
+        
+        # Store slot regions (relative to overlay image)
+        self.slot_regions = self._calculate_slot_regions()
+        
+        # Visual feedback for slots
+        self.slot_indicators = []
+        self._create_slot_indicators()
+        
+    def _calculate_slot_regions(self):
+        """Calculate regions for each of the 10 skill slots based on the overlay image."""
+        # These coordinates are based on the skill_bar.png image (331x37 pixels)
+        # Each slot is approximately 30x30 pixels with consistent spacing
+        slot_width = 30
+        slot_height = 30
+        start_x = 5   # Small offset from edge
+        start_y = 4   # Small offset from top
+        spacing = 33  # Distance between slot centers
+        
+        regions = []
+        for i in range(10):
+            x1 = start_x + (i * spacing)
+            y1 = start_y
+            x2 = x1 + slot_width
+            y2 = y1 + slot_height
+            regions.append((x1, y1, x2, y2))
+        
+        return regions
+    
+    def _create_slot_indicators(self):
+        """Create visual indicators for each slot."""
+        for i, (x1, y1, x2, y2) in enumerate(self.slot_regions):
+            # Create a semi-transparent rectangle for each slot
+            rect_item = QGraphicsRectItem(x1, y1, x2-x1, y2-y1)
+            rect_item.setPen(QPen(Qt.green, 2, Qt.SolidLine))
+            rect_item.setBrush(QBrush(QColor(0, 255, 0, 50)))  # Semi-transparent green
+            rect_item.setParentItem(self.overlay_item)
+            rect_item.setVisible(False)  # Hidden by default
+            self.slot_indicators.append(rect_item)
+    
+    def set_overlay_opacity(self, opacity):
+        """Set the opacity of the overlay (0.0 to 1.0)."""
+        self.overlay_item.setOpacity(opacity / 100.0)
+    
+    def toggle_slot_indicators(self, visible):
+        """Show/hide slot indicators."""
+        for indicator in self.slot_indicators:
+            indicator.setVisible(visible)
+    
+    def get_slot_regions(self):
+        """Get absolute coordinates for all 10 slots."""
+        overlay_pos = self.overlay_item.pos()
+        absolute_regions = []
+        
+        for x1, y1, x2, y2 in self.slot_regions:
+            abs_x1 = int(overlay_pos.x() + x1)
+            abs_y1 = int(overlay_pos.y() + y1)
+            abs_x2 = int(overlay_pos.x() + x2)
+            abs_y2 = int(overlay_pos.y() + y2)
+            absolute_regions.append((abs_x1, abs_y1, abs_x2, abs_y2))
+        
+        return absolute_regions
 
 
 class RegionConfigDialog(QDialog):
@@ -172,40 +267,73 @@ class RegionConfigDialog(QDialog):
             self._update_spinboxes(region_key, region)
 
     def launch_skill_bar_selector(self):
+        """New skill bar selector with overlay image."""
         pixmap, (offset_x, offset_y) = self._get_capture_for_selection()
         if not pixmap:
             return
 
-        if not self._get_region_from_user(
-            "Draw a box over a SINGLE skill slot (ideally the first one)", pixmap
-        ):
-            return
+        # Create dialog with overlay selector
+        selector_dialog = QDialog(self)
+        selector_dialog.setWindowTitle("Position Skill Bar Overlay - Drag to align with your skill bar")
+        selector_dialog.setWindowState(Qt.WindowMaximized)
 
-        first_slot_rel_region = self.temp_region
-
-        num_slots, ok1 = QInputDialog.getInt(
-            self, "Number of Slots", "How many skill slots in the bar?", 10, 1, 12, 1
+        layout = QVBoxLayout(selector_dialog)
+        
+        # Instructions
+        instructions = QLabel(
+            "🎯 Instructions:\n"
+            "1. Drag the skill bar overlay to align it with your game's skill bar\n"
+            "2. Use the opacity slider to see through the overlay\n"
+            "3. Toggle slot indicators to verify alignment\n"
+            "4. Click OK when perfectly aligned"
         )
-        if not ok1:
-            return
-        spacing, ok2 = QInputDialog.getInt(
-            self, "Spacing", "Horizontal space between slots (in pixels)?", 5, 0, 50, 1
-        )
-        if not ok2:
-            return
+        instructions.setStyleSheet("background-color: #f0f0f0; padding: 10px; border-radius: 5px;")
+        layout.addWidget(instructions)
+        
+        # Controls
+        controls_layout = QHBoxLayout()
+        
+        # Opacity slider
+        controls_layout.addWidget(QLabel("Overlay Opacity:"))
+        opacity_slider = QSlider(Qt.Horizontal)
+        opacity_slider.setRange(10, 100)
+        opacity_slider.setValue(70)
+        opacity_slider.setFixedWidth(200)
+        controls_layout.addWidget(opacity_slider)
+        
+        # Show indicators checkbox
+        indicators_btn = QPushButton("Toggle Slot Indicators")
+        indicators_btn.setCheckable(True)
+        controls_layout.addWidget(indicators_btn)
+        
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
 
-        x1, y1, x2, y2 = first_slot_rel_region
-        width = x2 - x1
-        height = y2 - y1
+        # Overlay selector
+        overlay_selector = SkillBarOverlaySelector(pixmap)
+        layout.addWidget(overlay_selector)
 
-        for i in range(num_slots):
-            slot_x1 = x1 + i * (width + spacing)
-            slot_x2 = slot_x1 + width
+        # Connect controls
+        opacity_slider.valueChanged.connect(overlay_selector.set_overlay_opacity)
+        indicators_btn.toggled.connect(overlay_selector.toggle_slot_indicators)
 
-            # Coordenadas relativas a la captura
-            rel_region = (slot_x1, y1, slot_x2, y2)
-            # Como la captura empieza en (0,0), las coordenadas absolutas son las mismas que las relativas.
-            self._update_spinboxes(f"slot_{i}", rel_region)
+        # Buttons
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(selector_dialog.accept)
+        buttons.rejected.connect(selector_dialog.reject)
+        layout.addWidget(buttons)
+
+        if selector_dialog.exec_() == QDialog.Accepted:
+            # Get all 10 slot regions
+            slot_regions = overlay_selector.get_slot_regions()
+            
+            # Update all 10 slots
+            for i, region in enumerate(slot_regions):
+                self._update_spinboxes(f"slot_{i}", region)
+            
+            QMessageBox.information(self, "Success", 
+                                  f"✅ Successfully configured all 10 skill slots!\n"
+                                  f"Slot regions have been automatically calculated.")
 
     def _get_region_from_user(self, title, pixmap):
         selector_dialog = QDialog(self)
