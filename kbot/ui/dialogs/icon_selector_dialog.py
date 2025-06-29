@@ -101,7 +101,7 @@ class IconSelectorDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Skill selection")
         self.setModal(True)
-        self.resize(800, 600)
+        self.resize(400, 475)
 
         self.selected_icon_path = None
         self.current_selected_label = None
@@ -112,22 +112,25 @@ class IconSelectorDialog(QDialog):
     def _setup_ui(self):
         layout = QVBoxLayout(self)
 
-        # Tab widget para las clases
-        self.tab_widget = QTabWidget()
-        layout.addWidget(self.tab_widget)
-
-        # Buttons
-        button_layout = QHBoxLayout()
-
-        # Checkbox para mostrar/ocultar tabs vacíos
-        self.show_empty_tabs = QCheckBox("Show empty classes")
-        self.show_empty_tabs.setChecked(True)
-        self.show_empty_tabs.toggled.connect(self._toggle_empty_tabs)
-        button_layout.addWidget(self.show_empty_tabs)
-
-        button_layout.addStretch()
+        # Crear layout de 2 filas para tabs (4+4)
+        tabs_container = QWidget()
+        tabs_layout = QVBoxLayout(tabs_container)
+        tabs_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Primera fila de tabs (4 clases)
+        self.tab_widget_row1 = QTabWidget()
+        tabs_layout.addWidget(self.tab_widget_row1)
+        
+        # Segunda fila de tabs (4 clases)
+        self.tab_widget_row2 = QTabWidget()
+        tabs_layout.addWidget(self.tab_widget_row2)
+        
+        layout.addWidget(tabs_container)
 
         # Dialog buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         )
@@ -171,12 +174,15 @@ class IconSelectorDialog(QDialog):
         # Ordenar por order especificado en metadata
         class_metadata_list.sort(key=lambda x: x.get("order", 999))
 
-        # Crear tab para cada clase usando metadata
-        for class_metadata in class_metadata_list:
-            if class_metadata.get("enabled", True):
-                self._create_class_tab_with_metadata(class_metadata)
+        # Distribuir clases entre las dos filas (4+4)
+        enabled_classes = [cm for cm in class_metadata_list if cm.get("enabled", True)]
+        
+        for i, class_metadata in enumerate(enabled_classes):
+            # Primeras 4 clases van a la fila 1, siguientes 4 a la fila 2
+            target_widget = self.tab_widget_row1 if i < 4 else self.tab_widget_row2
+            self._create_class_tab_with_metadata(class_metadata, target_widget)
 
-    def _create_class_tab_with_metadata(self, class_metadata):
+    def _create_class_tab_with_metadata(self, class_metadata, tab_widget):
         """Crear una pestaña para una clase usando metadata con agrupación por skill type."""
         class_name = class_metadata["class_name"]
         display_name = class_metadata["display_name"]
@@ -186,8 +192,8 @@ class IconSelectorDialog(QDialog):
         # Filtrar skills habilitados
         enabled_skills = [skill for skill in skills if skill.get("enabled", True)]
 
-        # Si no hay skills y no se muestran tabs vacíos, saltar
-        if not enabled_skills and not self.show_empty_tabs.isChecked():
+        # Si no hay skills, saltar
+        if not enabled_skills:
             return
 
         # Agrupar skills por tipo
@@ -223,9 +229,7 @@ class IconSelectorDialog(QDialog):
 
             # Título de la sección
             type_label = QLabel(f"{skill_type.title()} Skills ({len(type_skills)})")
-            type_label.setStyleSheet(
-                "font-weight: bold; font-size: 12px; color: #333; margin: 10px 0 5px 0;"
-            )
+            type_label.setStyleSheet("color: #333; margin: 10px 0 5px 0;")
             main_layout.addWidget(type_label)
 
             # Grid para los iconos de este tipo
@@ -233,7 +237,7 @@ class IconSelectorDialog(QDialog):
             type_grid_layout = QGridLayout(type_grid_widget)
             type_grid_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            max_columns = 6
+            max_columns = 4
             for i, skill in enumerate(type_skills):
                 row = i // max_columns
                 col = i % max_columns
@@ -263,10 +267,10 @@ class IconSelectorDialog(QDialog):
         main_layout.addStretch()
         scroll_area.setWidget(container_widget)
 
-        # Añadir tab al widget
-        tab_index = self.tab_widget.addTab(scroll_area, display_name)
+        # Añadir tab al widget correspondiente
+        tab_index = tab_widget.addTab(scroll_area, display_name)
 
-        # Almacenar información del tab para poder ocultarlo/mostrarlo
+        # Almacenar información del tab
         scroll_area.setProperty("class_name", class_name)
         scroll_area.setProperty("has_icons", total_skills > 0)
 
@@ -280,8 +284,8 @@ class IconSelectorDialog(QDialog):
 
         icon_files.sort()
 
-        # Si no hay iconos y no se muestran tabs vacíos, saltar
-        if not icon_files and not self.show_empty_tabs.isChecked():
+        # Si no hay iconos, saltar
+        if not icon_files:
             return
 
         # Crear widget de scroll para el tab
@@ -295,8 +299,8 @@ class IconSelectorDialog(QDialog):
         grid_layout = QGridLayout(container_widget)
         grid_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-        # Añadir iconos al grid (6 columnas máximo)
-        max_columns = 6
+        # Añadir iconos al grid (4 columnas máximo)
+        max_columns = 4
         for i, icon_path in enumerate(icon_files):
             row = i // max_columns
             col = i % max_columns
@@ -316,8 +320,8 @@ class IconSelectorDialog(QDialog):
 
         scroll_area.setWidget(container_widget)
 
-        # Añadir tab al widget
-        tab_index = self.tab_widget.addTab(scroll_area, class_name.title())
+        # Añadir tab al primer widget (fallback)
+        tab_index = self.tab_widget_row1.addTab(scroll_area, class_name.title())
 
         # Almacenar información del tab para poder ocultarlo/mostrarlo
         scroll_area.setProperty("class_name", class_name)
@@ -339,14 +343,6 @@ class IconSelectorDialog(QDialog):
             # Habilitar botón OK
             self.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
 
-    def _toggle_empty_tabs(self, show_empty):
-        """Mostrar/ocultar tabs que no tienen iconos."""
-        for i in range(self.tab_widget.count()):
-            widget = self.tab_widget.widget(i)
-            has_icons = widget.property("has_icons")
-
-            if not has_icons:
-                self.tab_widget.setTabVisible(i, show_empty)
 
     def get_selected_icon_path(self):
         """Obtener la ruta del icono seleccionado."""
