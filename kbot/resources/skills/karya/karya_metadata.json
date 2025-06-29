@@ -1,0 +1,106 @@
+{
+  "class_name": "karya",
+  "display_name": "Karya (Archer)",
+  "enabled": true,
+  "order": 4,
+  "skills": [
+    {
+      "id": "100lv_04",
+      "name": "100lv 04",
+      "icon_file": "ICON_SKILL_100lv_04.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chaya02",
+      "name": "AO Chaya02",
+      "icon_file": "ICON_SKILL_AO_CHAYA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_cud",
+      "name": "AO Cud",
+      "icon_file": "ICON_SKILL_AO_CUD.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_irintirika",
+      "name": "AO Irintirika",
+      "icon_file": "ICON_SKILL_AO_IRINTIRIKA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_irintirika02",
+      "name": "AO Irintirika02",
+      "icon_file": "ICON_SKILL_AO_IRINTIRIKA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_pranaarrow",
+      "name": "AO Pranaarrow",
+      "icon_file": "ICON_SKILL_AO_PRANAARROW.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_pranica",
+      "name": "AO Pranica",
+      "icon_file": "ICON_SKILL_AO_PRANICA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_sacatarada",
+      "name": "AO Sacatarada",
+      "icon_file": "ICON_SKILL_AO_SACATARADA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_samayoga",
+      "name": "AO Samayoga",
+      "icon_file": "ICON_SKILL_AO_SAMAYOGA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_znath",
+      "name": "AO Znath",
+      "icon_file": "ICON_SKILL_AO_ZNATH.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_bisarada",
+      "name": "AV Bisarada",
+      "icon_file": "ICON_SKILL_AV_BISARADA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_himarada",
+      "name": "AV Himarada",
+      "icon_file": "ICON_SKILL_AV_HIMARADA.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "p_ramhan02",
+      "name": "P Ramhan02",
+      "icon_file": "ICON_SKILL_P_RAMHAN02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_orashield01",
+      "name": "AV Orashield01",
+      "icon_file": "Icon_skill_av_orashield01.bmp",
+      "type": "utility",
+      "enabled": true
+    }
+  ]
+}

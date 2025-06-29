@@ -1,0 +1,113 @@
+{
+  "class_name": "vidya",
+  "display_name": "Vidya (Support)",
+  "enabled": true,
+  "order": 8,
+  "skills": [
+    {
+      "id": "100lv_05",
+      "name": "100lv 05",
+      "icon_file": "ICON_SKILL_100lv_05.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_astakarohati",
+      "name": "AO Astakarohati",
+      "icon_file": "ICON_SKILL_AO_ASTAKAROHATI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_astakarohati02",
+      "name": "AO Astakarohati02",
+      "icon_file": "ICON_SKILL_AO_ASTAKAROHATI02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_gunajast",
+      "name": "AO Gunajast",
+      "icon_file": "ICON_SKILL_AO_GUNAJAST.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_jasat",
+      "name": "AO Jasat",
+      "icon_file": "ICON_SKILL_AO_JASAT.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantraskin",
+      "name": "AO Mantraskin",
+      "icon_file": "ICON_SKILL_AO_MANTRASKIN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_nikrti",
+      "name": "AO Nikrti",
+      "icon_file": "ICON_SKILL_AO_NIKRTI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_senya",
+      "name": "AO Senya",
+      "icon_file": "ICON_SKILL_AO_SENYA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_indrazala",
+      "name": "AV Indrazala",
+      "icon_file": "ICON_SKILL_AV_INDRAZALA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_orashield",
+      "name": "AV Orashield",
+      "icon_file": "ICON_SKILL_AV_ORASHIELD.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_scandapuri",
+      "name": "AV Scandapuri",
+      "icon_file": "ICON_SKILL_AV_SCANDAPURI.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_tan",
+      "name": "AV Tan",
+      "icon_file": "ICON_SKILL_AV_tan.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_varana",
+      "name": "AV Varana",
+      "icon_file": "ICON_SKILL_AV_vAraNa.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "incresechacra_naga",
+      "name": "Incresechacra Naga",
+      "icon_file": "ICON_SKILL_INCRESECHACRA_NAGA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "p_cundalinirise02",
+      "name": "P Cundalinirise02",
+      "icon_file": "ICON_SKILL_P_CUNDALINIRISE02.bmp",
+      "type": "utility",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "class_name": "samabat",
+  "display_name": "Samabat (Summoner)",
+  "enabled": true,
+  "order": 6,
+  "skills": [
+    {
+      "id": "monster_attack",
+      "name": "Monster Attack",
+      "icon_file": "COMMAND_MONSTER_ATTACK.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "command_monster_defense",
+      "name": "Command Monster Defense",
+      "icon_file": "Command_Monster_defense.bmp",
+      "type": "defensive",
+      "enabled": true
+    },
+    {
+      "id": "100lv_08",
+      "name": "100lv 08",
+      "icon_file": "ICON_SKILL_100lv_08.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "agniarrow",
+      "name": "Agniarrow",
+      "icon_file": "ICON_SKILL_AGNIARROW.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_agni",
+      "name": "AO Agni",
+      "icon_file": "ICON_SKILL_AO_AGNI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chandraforce",
+      "name": "AO Chandraforce",
+      "icon_file": "ICON_SKILL_AO_CHANDRAFORCE.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chandraroca",
+      "name": "AO Chandraroca",
+      "icon_file": "ICON_SKILL_AO_CHANDRAROCA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_dadati",
+      "name": "AO Dadati",
+      "icon_file": "ICON_SKILL_AO_DADATI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_desti",
+      "name": "AO Desti",
+      "icon_file": "ICON_SKILL_AO_DESTI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_hima",
+      "name": "AO Hima",
+      "icon_file": "ICON_SKILL_AO_HIMA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_himachacra",
+      "name": "AO Himachacra",
+      "icon_file": "ICON_SKILL_AO_HIMACHACRA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_himaresman",
+      "name": "AO Himaresman",
+      "icon_file": "ICON_SKILL_AO_HIMARESMAN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_maholka",
+      "name": "AO Maholka",
+      "icon_file": "ICON_SKILL_AO_MAHOLKA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantraykamsya",
+      "name": "AO Mantraykamsya",
+      "icon_file": "ICON_SKILL_AO_MANTRAYKAMSYA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantraypattra",
+      "name": "AO Mantraypattra",
+      "icon_file": "ICON_SKILL_AO_MANTRAYPATTRA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_rauti",
+      "name": "AO Rauti",
+      "icon_file": "ICON_SKILL_AO_RAUTI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_ru",
+      "name": "AO RU",
+      "icon_file": "ICON_SKILL_AO_RU.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_zama02",
+      "name": "AO Zama02",
+      "icon_file": "ICON_SKILL_AO_ZAMA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_saata",
+      "name": "AV Saata",
+      "icon_file": "ICON_SKILL_AV_SAATA.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_vishunuzroca",
+      "name": "AV Vishunuzroca",
+      "icon_file": "ICON_SKILL_AV_VISHUNUZROCA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "holdfire",
+      "name": "Holdfire",
+      "icon_file": "ICON_SKILL_HOLDFIRE.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "p_laksroka02",
+      "name": "P Laksroka02",
+      "icon_file": "ICON_SKILL_P_LAKSROKA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "p_ramhas",
+      "name": "P Ramhas",
+      "icon_file": "ICON_SKILL_P_Ramhas.bmp",
+      "type": "offensive",
+      "enabled": true
+    }
+  ]
+}

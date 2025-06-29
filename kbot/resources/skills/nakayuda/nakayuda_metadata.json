@@ -1,0 +1,113 @@
+{
+  "class_name": "nakayuda",
+  "display_name": "Nakayuda (Monk)",
+  "enabled": true,
+  "order": 5,
+  "skills": [
+    {
+      "id": "100lv_01",
+      "name": "100lv 01",
+      "icon_file": "ICON_SKILL_100lv_01.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_astakarohati02",
+      "name": "AO Astakarohati02",
+      "icon_file": "ICON_SKILL_AO_ASTAKAROHATI02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bisacro",
+      "name": "AO Bisacro",
+      "icon_file": "ICON_SKILL_AO_BISACRO.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_janatipara",
+      "name": "AO Janatipara",
+      "icon_file": "ICON_SKILL_AO_JANATIPARA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantra",
+      "name": "AO Mantra",
+      "icon_file": "ICON_SKILL_AO_MANTRA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantraskin",
+      "name": "AO Mantraskin",
+      "icon_file": "ICON_SKILL_AO_MANTRASKIN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_pauvaprya",
+      "name": "AO Pauvaprya",
+      "icon_file": "ICON_SKILL_AO_PAUVAPRYA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_prapad",
+      "name": "AO Prapad",
+      "icon_file": "ICON_SKILL_AO_PRAPAD.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_stun",
+      "name": "AO Stun",
+      "icon_file": "ICON_SKILL_AO_STUN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_suriafirecrack",
+      "name": "AO Suriafirecrack",
+      "icon_file": "ICON_SKILL_AO_SURIAFIRECRACK.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_tripleorapunch",
+      "name": "AO Tripleorapunch",
+      "icon_file": "ICON_SKILL_AO_TRIPLEORAPUNCH.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_zams",
+      "name": "AO Zams",
+      "icon_file": "ICON_SKILL_AO_ZAMS.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_indrazala",
+      "name": "AV Indrazala",
+      "icon_file": "ICON_SKILL_AV_INDRAZALA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_kalati",
+      "name": "AV Kalati",
+      "icon_file": "ICON_SKILL_AV_KALATI.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_orashield",
+      "name": "AV Orashield",
+      "icon_file": "ICON_SKILL_AV_ORASHIELD.BMP",
+      "type": "utility",
+      "enabled": true
+    }
+  ]
+}

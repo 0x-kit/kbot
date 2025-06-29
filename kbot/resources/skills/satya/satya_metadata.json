@@ -1,0 +1,71 @@
+{
+  "class_name": "satya",
+  "display_name": "Satya (Earth Mage)",
+  "enabled": true,
+  "order": 7,
+  "skills": [
+    {
+      "id": "100lv_02",
+      "name": "100lv 02",
+      "icon_file": "ICON_SKILL_100lv_02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bukampa02",
+      "name": "AO Bukampa02",
+      "icon_file": "ICON_SKILL_AO_BUKAMPA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_dorbatrash02",
+      "name": "AO Dorbatrash02",
+      "icon_file": "ICON_SKILL_AO_DORBATRASH02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_nauti",
+      "name": "AO Nauti",
+      "icon_file": "ICON_SKILL_AO_NAUTI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_sabitristun",
+      "name": "AO Sabitristun",
+      "icon_file": "ICON_SKILL_AO_SABITRISTUN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_azaca",
+      "name": "AV Azaca",
+      "icon_file": "ICON_SKILL_AV_AZACA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_mayat",
+      "name": "AV Mayat",
+      "icon_file": "ICON_SKILL_AV_MAYAT.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_stamcarman",
+      "name": "AV Stamcarman",
+      "icon_file": "ICON_SKILL_AV_STAMCARMAN.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_tarca",
+      "name": "AV Tarca",
+      "icon_file": "ICON_SKILL_AV_TARCA.BMP",
+      "type": "utility",
+      "enabled": true
+    }
+  ]
+}

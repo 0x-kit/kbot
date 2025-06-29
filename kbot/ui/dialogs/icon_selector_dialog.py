@@ -1,6 +1,7 @@
 # kbot/ui/dialogs/icon_selector_dialog.py
 
 import os
+import json
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -140,7 +141,7 @@ class IconSelectorDialog(QDialog):
         self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
     
     def _load_skill_icons(self):
-        """Cargar todos los iconos de skills organizados por clases."""
+        """Cargar todos los iconos de skills organizados por clases usando metadata."""
         skills_base_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "resources",
@@ -150,22 +151,123 @@ class IconSelectorDialog(QDialog):
         if not os.path.exists(skills_base_path):
             return
         
-        # Obtener todas las clases (carpetas)
-        classes = []
+        # Obtener todas las clases que tienen archivos de metadata
+        class_metadata_list = []
         for item in os.listdir(skills_base_path):
             class_path = os.path.join(skills_base_path, item)
             if os.path.isdir(class_path):
-                classes.append(item)
+                metadata_file = os.path.join(class_path, f"{item}_metadata.json")
+                if os.path.exists(metadata_file):
+                    try:
+                        with open(metadata_file, 'r', encoding='utf-8') as f:
+                            metadata = json.load(f)
+                            metadata['path'] = class_path
+                            class_metadata_list.append(metadata)
+                    except (json.JSONDecodeError, KeyError) as e:
+                        print(f"Error loading metadata for {item}: {e}")
+                        # Fallback al método anterior si no hay metadata
+                        self._create_class_tab_fallback(item, class_path)
         
-        classes.sort()  # Orden alfabético
+        # Ordenar por order especificado en metadata
+        class_metadata_list.sort(key=lambda x: x.get('order', 999))
         
-        # Crear tab para cada clase
-        for class_name in classes:
-            class_path = os.path.join(skills_base_path, class_name)
-            self._create_class_tab(class_name, class_path)
+        # Crear tab para cada clase usando metadata
+        for class_metadata in class_metadata_list:
+            if class_metadata.get('enabled', True):
+                self._create_class_tab_with_metadata(class_metadata)
     
-    def _create_class_tab(self, class_name, class_path):
-        """Crear una pestaña para una clase específica."""
+    def _create_class_tab_with_metadata(self, class_metadata):
+        """Crear una pestaña para una clase usando metadata con agrupación por skill type."""
+        class_name = class_metadata['class_name']
+        display_name = class_metadata['display_name'] 
+        class_path = class_metadata['path']
+        skills = class_metadata.get('skills', [])
+        
+        # Filtrar skills habilitados
+        enabled_skills = [skill for skill in skills if skill.get('enabled', True)]
+        
+        # Si no hay skills y no se muestran tabs vacíos, saltar
+        if not enabled_skills and not self.show_empty_tabs.isChecked():
+            return
+        
+        # Agrupar skills por tipo
+        skills_by_type = {}
+        for skill in enabled_skills:
+            skill_type = skill.get('type', 'offensive')
+            if skill_type not in skills_by_type:
+                skills_by_type[skill_type] = []
+            skills_by_type[skill_type].append(skill)
+        
+        # Crear widget de scroll para el tab principal
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        # Widget contenedor principal
+        container_widget = QWidget()
+        main_layout = QVBoxLayout(container_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Ordenar tipos de skills (offensive -> utility -> defensive)
+        type_order = ['offensive', 'utility', 'defensive']
+        ordered_types = [t for t in type_order if t in skills_by_type]
+        ordered_types.extend([t for t in skills_by_type.keys() if t not in type_order])
+        
+        # Crear sección para cada tipo de skill
+        total_skills = 0
+        for skill_type in ordered_types:
+            type_skills = skills_by_type[skill_type]
+            if not type_skills:
+                continue
+                
+            # Título de la sección
+            type_label = QLabel(f"{skill_type.title()} Skills ({len(type_skills)})")
+            type_label.setStyleSheet("font-weight: bold; font-size: 12px; color: #333; margin: 10px 0 5px 0;")
+            main_layout.addWidget(type_label)
+            
+            # Grid para los iconos de este tipo
+            type_grid_widget = QWidget()
+            type_grid_layout = QGridLayout(type_grid_widget)
+            type_grid_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            
+            max_columns = 6
+            for i, skill in enumerate(type_skills):
+                row = i // max_columns
+                col = i % max_columns
+                
+                icon_file = skill.get('icon_file', '')
+                icon_path = os.path.join(class_path, icon_file)
+                
+                if os.path.exists(icon_path):
+                    icon_label = ClickableIconLabel(icon_path)
+                    icon_label.clicked.connect(self._on_icon_selected)
+                    # Añadir tooltip con el nombre del skill
+                    icon_label.setToolTip(skill.get('name', icon_file))
+                    type_grid_layout.addWidget(icon_label, row, col)
+                    total_skills += 1
+            
+            main_layout.addWidget(type_grid_widget)
+        
+        # Si no hay skills, mostrar mensaje
+        if total_skills == 0:
+            no_icons_label = QLabel("No skills available in this class")
+            no_icons_label.setAlignment(Qt.AlignCenter)
+            no_icons_label.setStyleSheet("color: #666; font-style: italic; padding: 20px;")
+            main_layout.addWidget(no_icons_label)
+        
+        main_layout.addStretch()
+        scroll_area.setWidget(container_widget)
+        
+        # Añadir tab al widget
+        tab_index = self.tab_widget.addTab(scroll_area, display_name)
+        
+        # Almacenar información del tab para poder ocultarlo/mostrarlo
+        scroll_area.setProperty("class_name", class_name)
+        scroll_area.setProperty("has_icons", total_skills > 0)
+    
+    def _create_class_tab_fallback(self, class_name, class_path):
+        """Crear una pestaña para una clase específica (método fallback sin metadata)."""
         # Obtener todos los archivos de imagen en la carpeta
         icon_files = []
         for file in os.listdir(class_path):

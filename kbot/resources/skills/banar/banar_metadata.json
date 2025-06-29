@@ -1,0 +1,134 @@
+{
+  "class_name": "banar",
+  "display_name": "Banar (Warrior)",
+  "enabled": true,
+  "order": 2,
+  "skills": [
+    {
+      "id": "100lv_06",
+      "name": "100lv 06",
+      "icon_file": "ICON_SKILL_100lv_06.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_balukamantra",
+      "name": "AO Balukamantra",
+      "icon_file": "ICON_SKILL_AO_BALUKAMANTRA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_balukatrash",
+      "name": "AO Balukatrash",
+      "icon_file": "ICON_SKILL_AO_BALUKATRASH.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bizsai",
+      "name": "AO Bizsai",
+      "icon_file": "ICON_SKILL_AO_BIZSAI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bukampa",
+      "name": "AO Bukampa",
+      "icon_file": "ICON_SKILL_AO_BUKAMPA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bukampa02",
+      "name": "AO Bukampa02",
+      "icon_file": "ICON_SKILL_AO_BUKAMPA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_dorbaagainst",
+      "name": "AO Dorbaagainst",
+      "icon_file": "ICON_SKILL_AO_DORBAAGAINST.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_dorbatrash02",
+      "name": "AO Dorbatrash02",
+      "icon_file": "ICON_SKILL_AO_DORBATRASH02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_nauti",
+      "name": "AO Nauti",
+      "icon_file": "ICON_SKILL_AO_NAUTI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_prabeza",
+      "name": "AO Prabeza",
+      "icon_file": "ICON_SKILL_AO_PRABEZA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_sabitristun",
+      "name": "AO Sabitristun",
+      "icon_file": "ICON_SKILL_AO_SABITRISTUN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_akhila_ruj",
+      "name": "AV Akhila Ruj",
+      "icon_file": "ICON_SKILL_AV_AKHILA_ruj.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_azaca",
+      "name": "AV Azaca",
+      "icon_file": "ICON_SKILL_AV_AZACA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_mayat",
+      "name": "AV Mayat",
+      "icon_file": "ICON_SKILL_AV_MAYAT.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_savitriforce",
+      "name": "AV Savitriforce",
+      "icon_file": "ICON_SKILL_AV_SAVITRIFORCE.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_tarca",
+      "name": "AV Tarca",
+      "icon_file": "ICON_SKILL_AV_TARCA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_uttha",
+      "name": "AV Uttha",
+      "icon_file": "ICON_SKILL_AV_UTTHA.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "ao_stun01",
+      "name": "AO Stun01",
+      "icon_file": "Icon_skill_ao_stun01.bmp",
+      "type": "offensive",
+      "enabled": true
+    }
+  ]
+}

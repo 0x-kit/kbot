@@ -1,0 +1,106 @@
+{
+  "class_name": "druka",
+  "display_name": "Druka (Assassin)",
+  "enabled": true,
+  "order": 3,
+  "skills": [
+    {
+      "id": "100lv_07",
+      "name": "100lv 07",
+      "icon_file": "ICON_SKILL_100lv_07.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_agupta",
+      "name": "AO Agupta",
+      "icon_file": "ICON_SKILL_AO_AGUPTA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_antakara",
+      "name": "AO Antakara",
+      "icon_file": "ICON_SKILL_AO_ANTAKARA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_bega",
+      "name": "AO Bega",
+      "icon_file": "ICON_SKILL_AO_BEGA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_cacolaground",
+      "name": "AO Cacolaground",
+      "icon_file": "ICON_SKILL_AO_CACOLAGROUND.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chaya02",
+      "name": "AO Chaya02",
+      "icon_file": "ICON_SKILL_AO_CHAYA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_dibanda",
+      "name": "AO Dibanda",
+      "icon_file": "ICON_SKILL_AO_DIBANDA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_gathana",
+      "name": "AO Gathana",
+      "icon_file": "ICON_SKILL_AO_GATHANA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_holdpoison",
+      "name": "AO Holdpoison",
+      "icon_file": "ICON_SKILL_AO_HOLDPOISON.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "av_akhila",
+      "name": "AV Akhila",
+      "icon_file": "ICON_SKILL_AV_AKHILA.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_incresespeed",
+      "name": "AV Incresespeed",
+      "icon_file": "ICON_SKILL_AV_INCRESESPEED.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_sanutar",
+      "name": "AV Sanutar",
+      "icon_file": "ICON_SKILL_AV_SANUTAR.bmp",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_viraba",
+      "name": "AV Viraba",
+      "icon_file": "ICON_SKILL_AV_VIRABA.BMP",
+      "type": "utility",
+      "enabled": true
+    },
+    {
+      "id": "av_orashield01",
+      "name": "AV Orashield01",
+      "icon_file": "Icon_skill_av_orashield01.bmp",
+      "type": "utility",
+      "enabled": true
+    }
+  ]
+}

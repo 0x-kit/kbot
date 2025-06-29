@@ -1,0 +1,148 @@
+{
+  "class_name": "abikara",
+  "display_name": "Abikara (Fire Mage)",
+  "enabled": true,
+  "order": 1,
+  "skills": [
+    {
+      "id": "100lv_03",
+      "name": "100lv 03",
+      "icon_file": "ICON_SKILL_100lv_03.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "agniarrow",
+      "name": "Agniarrow",
+      "icon_file": "ICON_SKILL_AGNIARROW.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_agni",
+      "name": "AO Agni",
+      "icon_file": "ICON_SKILL_AO_AGNI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chandraforce",
+      "name": "AO Chandraforce",
+      "icon_file": "ICON_SKILL_AO_CHANDRAFORCE.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_chandraroca",
+      "name": "AO Chandraroca",
+      "icon_file": "ICON_SKILL_AO_CHANDRAROCA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_hima",
+      "name": "AO Hima",
+      "icon_file": "ICON_SKILL_AO_HIMA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_himachacra",
+      "name": "AO Himachacra",
+      "icon_file": "ICON_SKILL_AO_HIMACHACRA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_himaresman",
+      "name": "AO Himaresman",
+      "icon_file": "ICON_SKILL_AO_HIMARESMAN.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_himatirika",
+      "name": "AO Himatirika",
+      "icon_file": "ICON_SKILL_AO_HIMATIRIKA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_jakti",
+      "name": "AO Jakti",
+      "icon_file": "ICON_SKILL_AO_JAKTI.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_maholka",
+      "name": "AO Maholka",
+      "icon_file": "ICON_SKILL_AO_MAHOLKA.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_mantra01",
+      "name": "AO Mantra01",
+      "icon_file": "ICON_SKILL_AO_MANTRA01.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_rauti",
+      "name": "AO Rauti",
+      "icon_file": "ICON_SKILL_AO_RAUTI.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_ru",
+      "name": "AO RU",
+      "icon_file": "ICON_SKILL_AO_RU.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_sidharu",
+      "name": "AO Sidharu",
+      "icon_file": "ICON_SKILL_AO_SIDHARU.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_sugama",
+      "name": "AO Sugama",
+      "icon_file": "ICON_SKILL_AO_SUGAMA.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_vartate",
+      "name": "AO Vartate",
+      "icon_file": "ICON_SKILL_AO_VARTATE.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "ao_agnimani",
+      "name": "AO Agnimani",
+      "icon_file": "ICON_SKILL_AO_agnimaNi.bmp",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "holdfire",
+      "name": "Holdfire",
+      "icon_file": "ICON_SKILL_HOLDFIRE.BMP",
+      "type": "offensive",
+      "enabled": true
+    },
+    {
+      "id": "p_laksroka02",
+      "name": "P Laksroka02",
+      "icon_file": "ICON_SKILL_P_LAKSROKA02.bmp",
+      "type": "offensive",
+      "enabled": true
+    }
+  ]
+}
