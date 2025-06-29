@@ -158,18 +158,28 @@ class CombatManager:
                 self._start_post_combat_delay()  # ✅ NUEVO: Delay incluso sin looting
 
         if self.state == CombatState.LOOTING:
-            # ✅ NUEVO: Lógica con loot_attempts
-            if (
-                time.time() - getattr(self, "looting_start_time", 0)
-                > self.timing["loot_duration"]
-                or self.current_loot_attempts >= self.loot_attempts
-            ):
+            # ✅ MEJORADO: Lógica con delay entre intentos de loot
+            current_time = time.time()
+            looting_elapsed = current_time - getattr(self, "looting_start_time", 0)
+            
+            # Check if looting should finish
+            if (looting_elapsed > self.timing["loot_duration"] or self.current_loot_attempts >= self.loot_attempts):
                 self.logger.debug(f"Looting finished. Attempts: {self.current_loot_attempts}/{self.loot_attempts}")
                 self._start_post_combat_delay()
+                return
+            
+            # Calculate delay between loot attempts (distribute attempts over duration)
+            if self.loot_attempts > 0:
+                attempt_interval = self.timing["loot_duration"] / self.loot_attempts
             else:
+                attempt_interval = 0.5  # Default 0.5s between attempts
+                
+            # Check if it's time for next loot attempt
+            expected_attempt_time = self.current_loot_attempts * attempt_interval
+            if looting_elapsed >= expected_attempt_time and self.current_loot_attempts < self.loot_attempts:
                 self.input_controller.send_key(self.loot_key)
                 self.current_loot_attempts += 1
-                self.logger.debug(f"Loot attempt {self.current_loot_attempts}/{self.loot_attempts}")
+                self.logger.debug(f"Loot attempt {self.current_loot_attempts}/{self.loot_attempts} (at {looting_elapsed:.1f}s)")
             return
 
         if self.state == CombatState.POST_COMBAT_DELAY:
