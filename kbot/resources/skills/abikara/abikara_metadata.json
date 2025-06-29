@@ -2,7 +2,7 @@
   "class_name": "abikara",
   "display_name": "Abikara",
   "enabled": true,
-  "order": 1,
+  "order": 2,
   "skills": [
     {
       "id": "100lv_03",

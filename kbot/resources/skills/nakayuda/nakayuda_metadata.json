@@ -2,7 +2,7 @@
   "class_name": "nakayuda",
   "display_name": "Nakayuda",
   "enabled": true,
-  "order": 5,
+  "order": 4,
   "skills": [
     {
       "id": "100lv_01",

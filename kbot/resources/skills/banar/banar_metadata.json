@@ -2,7 +2,7 @@
   "class_name": "banar",
   "display_name": "Banar",
   "enabled": true,
-  "order": 2,
+  "order": 1,
   "skills": [
     {
       "id": "100lv_06",
