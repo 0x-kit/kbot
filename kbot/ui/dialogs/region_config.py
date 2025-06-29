@@ -225,32 +225,19 @@ class SkillBarOverlaySelector(QGraphicsView):
         slot_width = 33
         slot_height = 33
 
-        if self.orientation == 'horizontal':
-            # Horizontal layout (original)
-            start_x = 17.5  # Offset desde el borde izquierdo
-            start_y = 4     # Centrado verticalmente
-            spacing = 39    # Distancia entre centros de slots
-            
-            regions = []
-            for i in range(10):
-                x1 = start_x + (i * spacing)
-                y1 = start_y
-                x2 = x1 + slot_width
-                y2 = y1 + slot_height
-                regions.append((x1, y1, x2, y2))
-        else:  # vertical
-            # Vertical layout - rotate the calculations
-            start_x = 4      # Centrado horizontalmente
-            start_y = 17.5   # Offset desde el borde superior
-            spacing = 39     # Distancia entre centros de slots
-            
-            regions = []
-            for i in range(10):
-                x1 = start_x
-                y1 = start_y + (i * spacing)
-                x2 = x1 + slot_width
-                y2 = y1 + slot_height
-                regions.append((x1, y1, x2, y2))
+        # Always calculate as horizontal (relative to original image)
+        # because the indicators are children of the rotated overlay
+        start_x = 17.5  # Offset desde el borde izquierdo
+        start_y = 4     # Centrado verticalmente
+        spacing = 39    # Distancia entre centros de slots
+        
+        regions = []
+        for i in range(10):
+            x1 = start_x + (i * spacing)
+            y1 = start_y
+            x2 = x1 + slot_width
+            y2 = y1 + slot_height
+            regions.append((x1, y1, x2, y2))
 
         return regions
 
@@ -307,10 +294,31 @@ class SkillBarOverlaySelector(QGraphicsView):
         absolute_regions = []
 
         for x1, y1, x2, y2 in self.slot_regions:
-            abs_x1 = int(overlay_pos.x() + x1)
-            abs_y1 = int(overlay_pos.y() + y1)
-            abs_x2 = int(overlay_pos.x() + x2)
-            abs_y2 = int(overlay_pos.y() + y2)
+            if self.orientation == 'vertical':
+                # For vertical orientation, we need to apply rotation transformation
+                # Get the center of the overlay for rotation
+                overlay_center_x = self.skill_bar_pixmap.width() / 2
+                overlay_center_y = self.skill_bar_pixmap.height() / 2
+                
+                # Transform coordinates for 90-degree rotation around center
+                # Rotation matrix for 90 degrees: (x', y') = (-y + cx + cy, x - cx + cy)
+                new_x1 = -y1 + overlay_center_x + overlay_center_y - overlay_center_x
+                new_y1 = x1 - overlay_center_x + overlay_center_y - overlay_center_y
+                new_x2 = -y2 + overlay_center_x + overlay_center_y - overlay_center_x  
+                new_y2 = x2 - overlay_center_x + overlay_center_y - overlay_center_y
+                
+                # Ensure x1 < x2 and y1 < y2
+                abs_x1 = int(overlay_pos.x() + min(new_x1, new_x2))
+                abs_y1 = int(overlay_pos.y() + min(new_y1, new_y2))
+                abs_x2 = int(overlay_pos.x() + max(new_x1, new_x2))
+                abs_y2 = int(overlay_pos.y() + max(new_y1, new_y2))
+            else:
+                # Horizontal orientation - no transformation needed
+                abs_x1 = int(overlay_pos.x() + x1)
+                abs_y1 = int(overlay_pos.y() + y1)
+                abs_x2 = int(overlay_pos.x() + x2)
+                abs_y2 = int(overlay_pos.y() + y2)
+            
             absolute_regions.append((abs_x1, abs_y1, abs_x2, abs_y2))
 
         return absolute_regions
