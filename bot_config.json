@@ -11,7 +11,7 @@
       "stats_update_interval": 5.0
     },
     "behavior": {
-      "potion_threshold": 50,
+      "potion_threshold": 40,
       "enable_looting": true,
       "assist_mode": false,
       "use_skills": true,
@@ -23,97 +23,98 @@
     "whitelist": [
       "Zaku",
       "Byokbo",
-      "Sinkiu Gosu"
+      "Sinkiu Gosu",
+      "SlnkluS3"
     ]
   },
   "regions": {
     "hp": [
-      1034,
-      563,
-      1198,
-      568
+      599,
+      25,
+      763,
+      30
     ],
     "mp": [
-      1034,
-      581,
-      1198,
-      586
+      599,
+      43,
+      763,
+      48
     ],
     "target": [
-      1034,
-      607,
-      1199,
-      610
+      599,
+      69,
+      764,
+      72
     ],
     "target_name": [
-      1070,
-      592,
-      1160,
-      604
+      635,
+      54,
+      725,
+      66
     ]
   },
   "skill_bar": {
     "cooldown_similarity_threshold": 0.7,
     "slots": [
       [
-        541,
-        577,
-        574,
-        610
+        17,
+        4,
+        50,
+        37
       ],
       [
-        580,
-        577,
-        613,
-        610
+        56,
+        4,
+        89,
+        37
       ],
       [
-        619,
-        577,
-        652,
-        610
+        95,
+        4,
+        128,
+        37
       ],
       [
-        658,
-        577,
-        691,
-        610
+        134,
+        4,
+        167,
+        37
       ],
       [
-        697,
-        577,
-        730,
-        610
+        173,
+        4,
+        206,
+        37
       ],
       [
-        736,
-        577,
-        769,
-        610
+        212,
+        4,
+        245,
+        37
       ],
       [
-        775,
-        577,
-        808,
-        610
+        251,
+        4,
+        284,
+        37
       ],
       [
-        814,
-        577,
-        847,
-        610
+        290,
+        4,
+        323,
+        37
       ],
       [
-        853,
-        577,
-        886,
-        610
+        329,
+        4,
+        362,
+        37
       ],
       [
-        892,
-        577,
-        925,
-        610
+        368,
+        4,
+        401,
+        37
       ]
     ]
   },
@@ -125,10 +126,11 @@
         "skill_type": "auto_attack",
         "priority": 1,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "",
-        "enabled": true,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "HP Potion": {
         "key": "0",
@@ -147,10 +149,11 @@
         "skill_type": "mp_potion",
         "priority": 10,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "",
-        "enabled": true,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "Assist": {
         "key": "q",
@@ -158,10 +161,11 @@
         "skill_type": "assist",
         "priority": 1,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "",
-        "enabled": false,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": false
       },
       "Amada": {
         "key": "2",
@@ -202,10 +206,11 @@
         "skill_type": "buff",
         "priority": 1,
         "mana_cost": 1,
-        "duration": 305.0,
         "icon": "",
-        "enabled": true,
-        "description": null
+        "duration": 305.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "Stun": {
         "key": "1",
@@ -215,7 +220,7 @@
         "mana_cost": 1,
         "duration": 0.0,
         "icon": "kbot/resources/skills/banar/Icon_skill_ao_stun01.bmp",
-        "enabled": true,
+        "enabled": false,
         "description": null
       }
     },
