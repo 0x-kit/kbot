@@ -88,7 +88,7 @@ class SkillConfigDialog(QDialog):
 
         # ✅ NUEVO: Campo de duración para buffs
         self.skill_duration_spin = QDoubleSpinBox()
-        self.skill_duration_spin.setRange(0, 3600)  # 0 a 1 hora
+        self.skill_duration_spin.setRange(0, 14400)  # 0 a 1 hora
         self.skill_duration_spin.setSuffix(" sec")
         self.skill_duration_spin.setValue(0.0)
 
@@ -134,14 +134,18 @@ class SkillConfigDialog(QDialog):
         skills = self.config_manager.get_skills_config().get("definitions", {})
 
         # Ordenar por clave 'key': números primero, luego letras
-        sorted_skills = sorted(skills.items(), key=lambda item: (
-            item[1].get("key", "")[0].isalpha(),  # False (0) si empieza por número, True (1) si letra
-            item[1].get("key", "")                # luego ordena por valor alfabético
-        ))
+        sorted_skills = sorted(
+            skills.items(),
+            key=lambda item: (
+                item[1]
+                .get("key", "")[0]
+                .isalpha(),  # False (0) si empieza por número, True (1) si letra
+                item[1].get("key", ""),  # luego ordena por valor alfabético
+            ),
+        )
 
         for name, data in sorted_skills:
             self.add_skill_to_tree(name, data)
-
 
     def add_skill_to_tree(self, name, data):
         item = QTreeWidgetItem(
