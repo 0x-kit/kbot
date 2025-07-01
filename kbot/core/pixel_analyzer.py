@@ -35,7 +35,7 @@ class PixelAnalyzer:
         self.target_hwnd = hwnd
 
     def capture_screen(
-        self, region: Optional[Tuple[int, int, int, int]] = None
+        self, region: Optional[Tuple[int, int, int, int]] = None, debug_save: bool = False
     ) -> Image.Image:
         """
         ✅ CORREGIDO: Captura el área cliente completa o una región específica de ella.
@@ -87,9 +87,58 @@ class PixelAnalyzer:
             mfc_dc.DeleteDC()
             win32gui.ReleaseDC(self.target_hwnd, hwnd_dc)
 
+            # Debug: Save captured screen if requested
+            if debug_save:
+                try:
+                    img.save("debug_captured_screen.png")
+                    self.logger.info("Debug screen capture saved: debug_captured_screen.png")
+                except Exception as debug_e:
+                    self.logger.warning(f"Could not save debug screen capture: {debug_e}")
+
             return img
         except Exception as e:
             raise AnalysisError(f"Fallo en la captura de pantalla: {e}")
+
+    def debug_ocr_pipeline(self, name_region: Tuple[int, int, int, int]) -> Dict[str, any]:
+        """
+        Debug method to save all intermediate images in the OCR pipeline.
+        Useful for troubleshooting OCR issues.
+        """
+        try:
+            # Capture full screen with debug
+            full_capture = self.capture_screen(debug_save=True)
+            
+            # Convert region coordinates to relative if needed
+            if self.target_hwnd:
+                client_left, client_top = win32gui.ClientToScreen(self.target_hwnd, (0, 0))
+                relative_region = (
+                    name_region[0] - client_left,
+                    name_region[1] - client_top,
+                    name_region[2] - client_left,
+                    name_region[3] - client_top,
+                )
+            else:
+                relative_region = name_region
+            
+            # Extract target name with debug
+            extracted_name = self.extract_target_name_from_image(
+                full_capture, relative_region, debug_save=True
+            )
+            
+            return {
+                "extracted_name": extracted_name,
+                "region_coords": name_region,
+                "relative_region": relative_region,
+                "success": bool(extracted_name),
+                "debug_files": [
+                    "debug_captured_screen.png",
+                    "debug_original_crop.png", 
+                    "debug_processed_crop.png"
+                ]
+            }
+        except Exception as e:
+            self.logger.error(f"Debug OCR pipeline failed: {e}")
+            return {"error": str(e), "success": False}
 
     def _get_skill_icon(self, icon_path: str) -> Optional[np.ndarray]:
         """Carga un icono de skill y lo convierte a formato OpenCV, usando caché."""
@@ -241,11 +290,21 @@ class PixelAnalyzer:
             return img
 
     def extract_target_name_from_image(
-        self, img: Image.Image, name_region_relative: Tuple[int, int, int, int]
+        self, img: Image.Image, name_region_relative: Tuple[int, int, int, int], debug_save: bool = False
     ) -> str:
         try:
             name_img = img.crop(name_region_relative)
             processed_img = self.preprocess_name_image(name_img)
+            
+            # Debug: Save images if requested
+            if debug_save:
+                try:
+                    name_img.save("debug_original_crop.png")
+                    processed_img.save("debug_processed_crop.png")
+                    self.logger.info("Debug images saved: debug_original_crop.png, debug_processed_crop.png")
+                except Exception as debug_e:
+                    self.logger.warning(f"Could not save debug images: {debug_e}")
+            
             # Updated config: PSM 7 for single text line, better for complex names
             custom_config = r"--psm 7 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ()"
             raw_name = pytesseract.image_to_string(
