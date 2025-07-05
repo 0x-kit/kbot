@@ -8,23 +8,23 @@
       "stuck_detection_searching": 8.0,
       "stuck_in_combat_timeout": 10.0,
       "vitals_check_interval": 0.5,
-      "stats_update_interval": 5.0
+      "stats_update_interval": 3.0
     },
     "behavior": {
-      "potion_threshold": 40,
-      "enable_looting": true,
+      "potion_threshold": 25,
+      "enable_looting": false,
       "assist_mode": false,
       "use_skills": true,
       "ocr_tolerance": 64,
-      "loot_duration": 2.3,
-      "loot_attempts": 3,
+      "loot_duration": 1.5,
+      "loot_attempts": 2,
       "loot_key": "f"
     },
     "whitelist": [
-      "Zaku",
-      "Byokbo",
+      "Ghorayogi",
+      "Farku Rudhira",
       "Sinkiu Gosu",
-      "SlnkluS3"
+      "Zarku"
     ]
   },
   "regions": {
@@ -48,9 +48,9 @@
     ],
     "target_name": [
       635,
-      54,
+      55,
       725,
-      66
+      67
     ]
   },
   "skill_bar": {
@@ -138,10 +138,11 @@
         "skill_type": "hp_potion",
         "priority": 10,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "",
-        "enabled": true,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "MP Potion": {
         "key": "9",
@@ -173,10 +174,11 @@
         "skill_type": "offensive",
         "priority": 5,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
-        "enabled": true,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "Biz": {
         "key": "3",
@@ -184,10 +186,11 @@
         "skill_type": "offensive",
         "priority": 1,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
-        "enabled": true,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "Samate": {
         "key": "7",
@@ -195,10 +198,11 @@
         "skill_type": "buff",
         "priority": 10,
         "mana_cost": 1,
-        "duration": 105.0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_DORBAAGAINST.BMP",
-        "enabled": true,
-        "description": null
+        "duration": 105.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       },
       "Dru": {
         "key": "8",
@@ -218,10 +222,23 @@
         "skill_type": "offensive",
         "priority": 7,
         "mana_cost": 1,
-        "duration": 0.0,
         "icon": "kbot/resources/skills/banar/Icon_skill_ao_stun01.bmp",
-        "enabled": false,
-        "description": null
+        "duration": 0.0,
+        "conditions": [],
+        "description": null,
+        "enabled": false
+      },
+      "Repara": {
+        "key": "6",
+        "check_interval": 1.0,
+        "skill_type": "buff",
+        "priority": 1,
+        "mana_cost": 1,
+        "icon": "",
+        "duration": 11000.0,
+        "conditions": [],
+        "description": null,
+        "enabled": true
       }
     },
     "rotations": {
@@ -234,7 +251,7 @@
       }
     },
     "active_rotation": null,
-    "global_cooldown": 0.2
+    "global_cooldown": 0.15
   },
   "ui": {
     "refresh_interval": 1000,
