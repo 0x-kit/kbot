@@ -161,7 +161,7 @@
         "check_interval": 0.2,
         "skill_type": "offensive",
         "priority": 5,
-        "mana_cost": 1,
+        "mana_cost": 0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BALUKATRASH.bmp",
         "duration": 0.0,
         "conditions": [],
@@ -173,7 +173,7 @@
         "check_interval": 0.2,
         "skill_type": "offensive",
         "priority": 1,
-        "mana_cost": 1,
+        "mana_cost": 0,
         "icon": "kbot/resources/skills/banar/ICON_SKILL_AO_BIZSAI.bmp",
         "duration": 0.0,
         "conditions": [],
@@ -209,7 +209,7 @@
         "check_interval": 0.2,
         "skill_type": "offensive",
         "priority": 7,
-        "mana_cost": 1,
+        "mana_cost": 0,
         "icon": "kbot/resources/skills/banar/Icon_skill_ao_stun01.bmp",
         "duration": 0.0,
         "conditions": [],
@@ -229,16 +229,6 @@
         "enabled": true
       }
     },
-    "rotations": {
-      "BasicCombo": {
-        "skills": [
-          "Amada",
-          "Biz"
-        ],
-        "repeat": true
-      }
-    },
-    "active_rotation": null,
     "global_cooldown": 0.15
   },
   "ui": {

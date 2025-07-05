@@ -3,6 +3,7 @@
 import json
 import os
 from typing import Dict, Any, List, Tuple
+
 try:
     from utils.exceptions import ConfigError
     from utils.logger import BotLogger
@@ -10,20 +11,20 @@ except ImportError:
     # Define basic exceptions and logger if not available
     class ConfigError(Exception):
         pass
-    
+
     class BotLogger:
         def __init__(self, name):
             self.name = name
-        
+
         def info(self, msg):
             print(f"[INFO] {self.name}: {msg}")
-        
+
         def debug(self, msg):
             print(f"[DEBUG] {self.name}: {msg}")
-        
+
         def error(self, msg):
             print(f"[ERROR] {self.name}: {msg}")
-        
+
         def warning(self, msg):
             print(f"[WARNING] {self.name}: {msg}")
 
@@ -41,110 +42,101 @@ class UnifiedConfigManager:
         self._load_or_create_config()
 
     def _get_default_config(self) -> Dict[str, Any]:
-        """✅ Configuración por defecto completamente definida"""
+        """✅ Configuración por defecto v3.0 actualizada"""
         return {
-            "version": "2.0",
+            "version": "3.0",
             "combat": {
                 "timing": {
-                    # Timing principal del combate
-                    "skill_interval": 1.0,  # Intervalo entre skills
-                    "attack_interval": 1.2,  # Intervalo entre ataques básicos
-                    "target_attempt_interval": 0.3,  # Frecuencia de búsqueda de targets
-                    "post_combat_delay": 1.5,  # Espera después de matar
-                    "assist_interval": 0.8,  # Frecuencia de assist
-                    # Detección de problemas
-                    "stuck_detection_searching": 6.0,  # Timeout búsqueda
-                    "stuck_in_combat_timeout": 8.0,  # Timeout combate
-                    "unstuck_cooldown": 3.0,  # Cooldown anti-stuck
-                    # Logging y monitoreo
-                    "combat_log_interval": 5.0,  # Frecuencia logs combate
-                    "vitals_check_interval": 0.5,  # Frecuencia check HP/MP
-                    "stats_update_interval": 5.0,  # Frecuencia stats
+                    "skill_interval": 0.5,
+                    "attack_interval": 0.5,
+                    "target_attempt_interval": 0.3,
+                    "stuck_detection_searching": 8.0,
+                    "stuck_in_combat_timeout": 10.0,
+                    "vitals_check_interval": 0.5,
+                    "stats_update_interval": 3.0,
                 },
                 "behavior": {
-                    # Comportamiento general
-                    "auto_potions": True,
-                    "potion_threshold": 70,
+                    "potion_threshold": 50,
                     "enable_looting": True,
                     "assist_mode": False,
                     "use_skills": True,
-                    # OCR y targeting
-                    "ocr_tolerance": 85,
-                    "fuzzy_match_threshold": 80,
-                    # Looteo
-                    "loot_duration": 0.8,
-                    "loot_initial_delay": 0.1,
+                    "ocr_tolerance": 65,
+                    "loot_duration": 1.5,
                     "loot_attempts": 2,
-                    "loot_attempt_interval": 0.2,
                     "loot_key": "f",
                 },
-                "whitelist": ["Byokbo"],
+                "whitelist": ["Kubasang"],
             },
             "regions": {
-                "hp": [4, 20, 168, 36],
-                "mp": [4, 36, 168, 51],
-                "target": [4, 66, 168, 75],
-                "target_name": [4, 55, 168, 70],
+                "hp": [599, 25, 763, 30],
+                "mp": [599, 43, 763, 48],
+                "target": [599, 69, 764, 72],
+                "target_name": [635, 55, 725, 67],
+            },
+            "skill_bar": {
+                "cooldown_similarity_threshold": 0.7,
+                "slots": [
+                    [17, 4, 50, 37],
+                    [56, 4, 89, 37],
+                    [95, 4, 128, 37],
+                    [134, 4, 167, 37],
+                    [173, 4, 206, 37],
+                    [212, 4, 245, 37],
+                    [251, 4, 284, 37],
+                    [290, 4, 323, 37],
+                    [329, 4, 362, 37],
+                    [368, 4, 401, 37],
+                ],
             },
             "skills": {
                 "global_cooldown": 0.15,
-                "active_rotation": None,
                 "definitions": {
-                    # Skills básicos por defecto
                     "Basic Attack": {
                         "key": "r",
-                        "cooldown": 1.0,
-                        "type": "auto_attack",
+                        "check_interval": 1.0,
+                        "skill_type": "auto_attack",
                         "priority": 1,
                         "mana_cost": 0,
+                        "icon": "",
+                        "duration": 0.0,
+                        "conditions": [],
+                        "description": None,
                         "enabled": True,
-                        "description": "Basic attack skill",
                     },
                     "HP Potion": {
                         "key": "0",
-                        "cooldown": 0.3,
-                        "type": "hp_potion",
+                        "check_interval": 1.0,
+                        "skill_type": "hp_potion",
                         "priority": 10,
                         "mana_cost": 0,
+                        "icon": "",
+                        "duration": 0.0,
+                        "conditions": [],
+                        "description": None,
                         "enabled": True,
-                        "description": "Emergency HP potion",
-                        "conditions": [{"type": "hp_below", "value": 70}],
                     },
                     "MP Potion": {
                         "key": "9",
-                        "cooldown": 0.3,
-                        "type": "mp_potion",
+                        "check_interval": 1.0,
+                        "skill_type": "mp_potion",
                         "priority": 10,
                         "mana_cost": 0,
+                        "icon": "",
+                        "duration": 0.0,
+                        "conditions": [],
+                        "description": None,
                         "enabled": True,
-                        "description": "Emergency MP potion",
-                        "conditions": [{"type": "mp_below", "value": 70}],
-                    },
-                    "Assist": {
-                        "key": "q",
-                        "cooldown": 0.5,
-                        "type": "assist",
-                        "priority": 1,
-                        "mana_cost": 0,
-                        "enabled": True,
-                        "description": "Assist party leader",
                     },
                 },
-                "rotations": {},
             },
             "ui": {
-                "refresh_interval": 1000,  # ms
+                "refresh_interval": 1000,
                 "log_max_lines": 1000,
                 "auto_scroll_logs": True,
                 "window_size": [1200, 800],
                 "window_position": [100, 100],
             },
-            "debug": {
-                "log_level": "INFO",
-                "save_screenshots": False,
-                "performance_monitoring": True,
-                "verbose_combat_logs": False,
-            },
+            "debug": {"log_level": "INFO", "performance_monitoring": True},
         }
 
     def _load_or_create_config(self):
@@ -289,7 +281,6 @@ class UnifiedConfigManager:
         self.config_data["skills"] = skills_config
         self.logger.info(f"Updated skills configuration")
 
-
     # ✅ UTILIDADES
 
     def export_config(self, filename: str):
@@ -344,16 +335,3 @@ class UnifiedConfigManager:
                 issues.append(f"Invalid coordinate values for {region_name}")
 
         return issues
-
-    def get_summary(self) -> Dict[str, Any]:
-        """Get configuration summary for debugging"""
-        return {
-            "version": self.config_data.get("version"),
-            "skills_count": len(self.get_skills_config().get("definitions", {})),
-            "rotations_count": len(self.get_skills_config().get("rotations", {})),
-            "whitelist_count": len(self.get_whitelist()),
-            "active_rotation": self.get_skills_config().get("active_rotation"),
-            "auto_potions": self.get_combat_behavior().get("auto_potions"),
-            "assist_mode": self.get_combat_behavior().get("assist_mode"),
-        }
-

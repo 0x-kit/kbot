@@ -199,11 +199,12 @@ class SkillConfigDialog(QDialog):
             "check_interval": self.skill_cooldown_spin.value(),
             "skill_type": self.skill_type_combo.currentText(),
             "priority": self.skill_priority_spin.value(),
-            "mana_cost": 1,
-            "duration": self.skill_duration_spin.value(),
+            "mana_cost": 0,
             "icon": self.skill_icon_edit.text(),
-            "enabled": self.skill_enabled_cb.isChecked(),
+            "duration": self.skill_duration_spin.value(),
+            "conditions": [],
             "description": None,
+            "enabled": self.skill_enabled_cb.isChecked(),
         }
 
         if old_name != new_name:
@@ -230,6 +231,7 @@ class SkillConfigDialog(QDialog):
             "key": "",
             "check_interval": 1.0,
             "skill_type": "offensive",
+            "priority": "1",
             "enabled": True,
         }
         definitions[name] = data

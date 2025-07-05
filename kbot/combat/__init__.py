@@ -7,7 +7,6 @@ from .skill_manager import (
     Skill,
     SkillType,
     TriggerCondition,
-    SkillRotation,
 )
 
 __all__ = [
@@ -17,5 +16,4 @@ __all__ = [
     "Skill",
     "SkillType",
     "TriggerCondition",
-    "SkillRotation",
 ]

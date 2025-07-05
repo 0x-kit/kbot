@@ -10,6 +10,7 @@ from core.pixel_analyzer import PixelAnalyzer
 from config.unified_config_manager import UnifiedConfigManager
 from utils.logger import BotLogger
 
+
 class SkillType(Enum):
     OFFENSIVE = "offensive"
     BUFF = "buff"
@@ -60,27 +61,6 @@ class SkillUsage:
         return self.successful_uses / self.total_uses
 
 
-class SkillRotation:
-    def __init__(self, name: str, skills: List[str], repeat: bool = True):
-        self.name = name
-        self.skills = skills
-        self.repeat = repeat
-        self.current_index = 0
-        self.enabled = True
-
-    def get_next_skill(self) -> Optional[str]:
-        if not self.enabled or not self.skills:
-            return None
-        skill_name = self.skills[self.current_index]
-        self.current_index = (self.current_index + 1) % len(self.skills)
-        if not self.repeat and self.current_index == 0:
-            self.enabled = False
-        return skill_name
-
-    def reset(self):
-        self.current_index = 0
-
-
 class SkillManager:
     """✅ MODIFICADO: Gestión de habilidades con comprobación visual."""
 
@@ -97,9 +77,7 @@ class SkillManager:
         self.logger = logger or BotLogger("SkillManager")
 
         self.skills: Dict[str, Skill] = {}
-        self.rotations: Dict[str, SkillRotation] = {}
         self.usage_stats: Dict[str, SkillUsage] = {}
-        self.active_rotation: Optional[str] = None
         self.global_cooldown = 0.15
         self.last_skill_used = 0.0
 
@@ -121,20 +99,6 @@ class SkillManager:
         self.skills[skill.name] = skill
         self.usage_stats[skill.name] = SkillUsage()
 
-    def create_rotation(self, name: str, skill_names: List[str], repeat: bool = True):
-        for skill_name in skill_names:
-            if skill_name not in self.skills:
-                raise SkillError(f"Skill '{skill_name}' not found")
-        self.rotations[name] = SkillRotation(name, skill_names, repeat)
-
-    def set_active_rotation(self, rotation_name: Optional[str]):
-        if rotation_name and rotation_name not in self.rotations:
-            raise SkillError(f"Rotation '{rotation_name}' not found")
-        self.active_rotation = rotation_name
-        self.logger.info(f"Active rotation set to: {rotation_name}")
-        if rotation_name:
-            self.rotations[rotation_name].reset()
-
     def update_game_state(self, state: Dict[str, Any]):
         self.game_state.update(state)
 
@@ -146,27 +110,27 @@ class SkillManager:
         if not skill.enabled:
             return False
 
-        current_time = time.time()
-        # Comprobación de Global Cooldown
-        if current_time - self.last_skill_used < self.global_cooldown:
-            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
-                self.logger.debug(f"Skill '{skill.name}' blocked by global cooldown: {current_time - self.last_skill_used:.2f}s < {self.global_cooldown}s")
-            return False
+        """      current_time = time.time()
+                # Comprobación de Global Cooldown
+                if current_time - self.last_skill_used < self.global_cooldown:
+                    if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                        self.logger.debug(f"Skill '{skill.name}' blocked by global cooldown: {current_time - self.last_skill_used:.2f}s < {self.global_cooldown}s")
+                    return False
 
-        # Comprobación de intervalo mínimo para no spamear el análisis visual
-        usage = self.usage_stats[skill_name]
-        time_since_last_use = current_time - usage.last_used
-        if time_since_last_use < skill.check_interval:
-            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
-                self.logger.debug(f"Skill '{skill.name}' check_interval not ready: {time_since_last_use:.2f}s < {skill.check_interval}s")
-            return False
+                # Comprobación de intervalo mínimo para no spamear el análisis visual
+                usage = self.usage_stats[skill_name]
+                time_since_last_use = current_time - usage.last_used
+                if time_since_last_use < skill.check_interval:
+                    if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                        self.logger.debug(f"Skill '{skill.name}' check_interval not ready: {time_since_last_use:.2f}s < {skill.check_interval}s")
+                    return False
 
-        # Comprobación de maná
-        if skill.mana_cost > self.game_state.get("mp", 0):
-            if skill_name in ["Amada", "Biz"]:  # DEBUG específico
-                self.logger.debug(f"Skill '{skill.name}' insufficient mana: {skill.mana_cost} > {self.game_state.get('mp', 0)}")
-            return False
-
+                # Comprobación de maná
+                if skill.mana_cost > self.game_state.get("mp", 0):
+                    if skill_name in ["Amada", "Biz"]:  # DEBUG específico
+                        self.logger.debug(f"Skill '{skill.name}' insufficient mana: {skill.mana_cost} > {self.game_state.get('mp', 0)}")
+                    return False
+        """
         # ✅ NUEVA LÓGICA DE COMPROBACIÓN VISUAL
         if skill.icon and skill.icon.strip():
             slot_index = self.key_to_slot_map.get(skill.key.lower())
@@ -181,9 +145,13 @@ class SkillManager:
                         slot_region, skill.icon, threshold
                     ):
                         if skill_name in ["Amada", "Biz"]:  # DEBUG específico
-                            self.logger.debug(f"Skill '{skill.name}' en cooldown (visual) - icon analysis failed")
+                            self.logger.debug(
+                                f"Skill '{skill.name}' en cooldown (visual) - icon analysis failed"
+                            )
                         else:
-                            self.logger.debug(f"Skill '{skill.name}' en cooldown (visual).")
+                            self.logger.debug(
+                                f"Skill '{skill.name}' en cooldown (visual)."
+                            )
                         return False
                 else:
                     self.logger.warning(
@@ -197,7 +165,7 @@ class SkillManager:
         # Comprobación de condiciones (sin cambios)
         # if not self._evaluate_conditions(skill): return False
 
-        #self.logger.debug(f"Skill '{skill.name}' passed all checks and is ready to use")
+        # self.logger.debug(f"Skill '{skill.name}' passed all checks and is ready to use")
         return True
 
     def use_skill(self, skill_name: str, force: bool = False) -> bool:
@@ -214,7 +182,9 @@ class SkillManager:
 
         # DEBUG para buffs específicamente
         if skill.skill_type == SkillType.BUFF:
-            self.logger.info(f"🔍 ATTEMPTING to use {skill_name} - Type: {skill.skill_type.value}, Duration: {skill.duration}s, Icon: '{skill.icon}'")
+            self.logger.info(
+                f"🔍 ATTEMPTING to use {skill_name} - Type: {skill.skill_type.value}, Duration: {skill.duration}s, Icon: '{skill.icon}'"
+            )
 
         try:
             # Enviar la tecla
@@ -226,26 +196,35 @@ class SkillManager:
 
             # ✅ SIMPLIFICADO: Esperar y verificar - lógica straight-forward
             import time as time_module
+
             time_module.sleep(0.15)  # Esperar para que el juego procese
-            
+
             # Verificación simple: si tiene icono, verificar que ya no esté disponible
             skill_confirmed = True
             if skill.icon and skill.icon.strip():
                 slot_index = self.key_to_slot_map.get(skill.key.lower())
                 if slot_index is not None:
-                    skill_bar_config = self.config_manager.config_data.get("skill_bar", {})
+                    skill_bar_config = self.config_manager.config_data.get(
+                        "skill_bar", {}
+                    )
                     slots = skill_bar_config.get("slots", [])
-                    threshold = skill_bar_config.get("cooldown_similarity_threshold", 0.7)
-                    
+                    threshold = skill_bar_config.get(
+                        "cooldown_similarity_threshold", 0.7
+                    )
+
                     if slot_index < len(slots):
                         slot_region = tuple(slots[slot_index])
                         # Para buffs, asumimos que siempre se usan correctamente (no tienen cooldown visual)
                         if skill.skill_type == SkillType.BUFF:
                             skill_confirmed = True
-                            self.logger.debug(f"Buff '{skill.name}' assumed successful (buffs don't have visual cooldown)")
+                            self.logger.debug(
+                                f"Buff '{skill.name}' assumed successful (buffs don't have visual cooldown)"
+                            )
                         else:
                             # Simple: si sigue disponible = no se usó
-                            skill_confirmed = not self.pixel_analyzer.is_skill_ready(slot_region, skill.icon, threshold)
+                            skill_confirmed = not self.pixel_analyzer.is_skill_ready(
+                                slot_region, skill.icon, threshold
+                            )
 
             # Log simple y directo
             if skill_confirmed:
@@ -259,15 +238,19 @@ class SkillManager:
             usage.last_used = current_time
             usage.total_uses += 1
             self.last_skill_used = current_time
-            
+
             if skill_confirmed:
                 usage.successful_uses += 1
                 # Si es un buff, establecer cuándo expira
                 if skill.skill_type == SkillType.BUFF and skill.duration > 0:
                     usage.buff_expires_at = current_time + skill.duration
-                    self.logger.info(f"🛡️ Buff '{skill.name}' applied, expires at {usage.buff_expires_at:.1f} (duration: {skill.duration}s)")
+                    self.logger.info(
+                        f"🛡️ Buff '{skill.name}' applied, expires at {usage.buff_expires_at:.1f} (duration: {skill.duration}s)"
+                    )
                 elif skill.skill_type == SkillType.BUFF:
-                    self.logger.debug(f"Buff '{skill.name}' has no duration ({skill.duration}), not tracking expiration")
+                    self.logger.debug(
+                        f"Buff '{skill.name}' has no duration ({skill.duration}), not tracking expiration"
+                    )
                 return True
             else:
                 usage.failed_uses += 1
@@ -292,46 +275,35 @@ class SkillManager:
             if mp_potion and self.can_use_skill(mp_potion.name):
                 return mp_potion.name
 
-        # Prioridad 2: Buffs automáticos (solo out of combat)
+        # Prioridad 2: Buffs automáticos (solo fuera de combate)
         if not self.game_state.get("in_combat", False):
             buff_to_cast = self._get_expired_buff()
             if buff_to_cast:
                 return buff_to_cast
 
-        # Prioridad 3: Usar rotación si está activa (solo in combat o si no hay buffs pendientes)
-        if self.active_rotation and self.active_rotation in self.rotations:
-            self.logger.debug(f"Using active rotation: {self.active_rotation}")
-            rotation = self.rotations[self.active_rotation]
-            if rotation.enabled and rotation.skills:
-                # Intentar encontrar un skill de la rotación que esté listo
-                for _ in range(len(rotation.skills)):
-                    next_skill_name = rotation.get_next_skill()
-                    if next_skill_name and self.can_use_skill(next_skill_name):
-                        return next_skill_name
-        else:
-            # Si no hay rotación activa, usar sistema de prioridades
-            self.logger.debug("No active rotation, using priority system")
-            
-            # DEBUG: Evaluar todos los skills ofensivos individualmente
-            offensive_skills = [skill for skill in self.skills.values() 
-                              if skill.enabled and skill.skill_type not in [SkillType.HP_POTION, SkillType.MP_POTION, SkillType.AUTO_ATTACK, SkillType.BUFF]]
-            
-            for skill in offensive_skills:
-                can_use = self.can_use_skill(skill.name)
-                #self.logger.debug(f"Skill '{skill.name}' - Enabled: {skill.enabled}, Type: {skill.skill_type.value}, Can use: {can_use}")
-            
-            # Obtener skills habilitados ordenados por prioridad (mayor número = mayor prioridad)
-            available_skills = [skill for skill in offensive_skills if self.can_use_skill(skill.name)]
-            
-            if available_skills:
-                # Ordenar por prioridad descendente (mayor número = mayor prioridad)
-                available_skills.sort(key=lambda s: s.priority, reverse=True)
-                #self.logger.debug(f"Available skills by priority: {[(s.name, s.priority) for s in available_skills]}")
-                selected_skill = available_skills[0].name
-                #self.logger.debug(f"Selected skill by priority: {selected_skill} (priority: {available_skills[0].priority})")
-                return selected_skill
+        # Prioridad 3: Evaluar skills ofensivos disponibles
+        offensive_skills = [
+            skill
+            for skill in self.skills.values()
+            if skill.enabled
+            and skill.skill_type
+            not in [
+                SkillType.HP_POTION,
+                SkillType.MP_POTION,
+                SkillType.AUTO_ATTACK,
+                SkillType.BUFF,
+            ]
+        ]
 
-        # Fallback a ataque básico si la rotación falla o no hay skills disponibles
+        available_skills = [
+            skill for skill in offensive_skills if self.can_use_skill(skill.name)
+        ]
+
+        if available_skills:
+            available_skills.sort(key=lambda s: s.priority, reverse=True)
+            return available_skills[0].name
+
+        # Fallback a ataque básico
         auto_attack = self.find_skill_by_type(SkillType.AUTO_ATTACK)
         if auto_attack and self.can_use_skill(auto_attack.name):
             return auto_attack.name
@@ -343,7 +315,7 @@ class SkillManager:
             if skill.skill_type == skill_type and skill.enabled:
                 return skill
         return None
-    
+
     def get_all_skills(self) -> List[Skill]:
         """Get all configured skills"""
         return list(self.skills.values())
@@ -352,25 +324,32 @@ class SkillManager:
         """✅ CORREGIDO: Encuentra buffs que han expirado y necesitan ser relanzados."""
         current_time = time.time()
         buff_skills = [
-            skill for skill in self.skills.values()
-            if skill.skill_type == SkillType.BUFF and skill.enabled and skill.duration > 0
+            skill
+            for skill in self.skills.values()
+            if skill.skill_type == SkillType.BUFF
+            and skill.enabled
+            and skill.duration > 0
         ]
-        
+
         # DEBUG: Log all available buffs
         if buff_skills:
             self.logger.debug(f"Available buff skills: {[s.name for s in buff_skills]}")
-        
+
         for skill in buff_skills:
             usage = self.usage_stats[skill.name]
-            
+
             # Si nunca se ha usado (buff_expires_at == 0.0) o si ha expirado
-            if (usage.buff_expires_at == 0.0 or current_time >= usage.buff_expires_at):
+            if usage.buff_expires_at == 0.0 or current_time >= usage.buff_expires_at:
                 if self.can_use_skill(skill.name):
-                    self.logger.debug(f"Buff '{skill.name}' needs to be cast: expires_at={usage.buff_expires_at}, current={current_time:.1f}")
+                    self.logger.debug(
+                        f"Buff '{skill.name}' needs to be cast: expires_at={usage.buff_expires_at}, current={current_time:.1f}"
+                    )
                     return skill.name
                 else:
-                    self.logger.debug(f"Buff '{skill.name}' expired but can't use skill yet")
-        
+                    self.logger.debug(
+                        f"Buff '{skill.name}' expired but can't use skill yet"
+                    )
+
         return None
 
     def export_config(self) -> Dict[str, Any]:
@@ -389,23 +368,13 @@ class SkillManager:
                 "enabled": skill.enabled,
             }
 
-        rotations_data = {}
-        for name, rotation in self.rotations.items():
-            rotations_data[name] = {
-                "skills": rotation.skills,
-                "repeat": rotation.repeat,
-            }
-
         return {
             "definitions": skills_data,
-            "rotations": rotations_data,
-            "active_rotation": self.active_rotation,
             "global_cooldown": self.global_cooldown,
         }
 
     def import_config(self, config: Dict[str, Any]) -> None:
         self.skills.clear()
-        self.rotations.clear()
         self.usage_stats.clear()
 
         skills_data = config.get("definitions", {})
@@ -414,7 +383,9 @@ class SkillManager:
                 skill = Skill(
                     name=name,
                     key=skill_data["key"],
-                    check_interval=skill_data.get("check_interval", skill_data.get("cooldown", 1.0)),  # Compatibilidad con ambos nombres
+                    check_interval=skill_data.get(
+                        "check_interval", skill_data.get("cooldown", 1.0)
+                    ),  # Compatibilidad con ambos nombres
                     skill_type=SkillType(skill_data["skill_type"]),
                     priority=skill_data.get("priority", 1),
                     mana_cost=skill_data.get("mana_cost", 0),
@@ -428,23 +399,10 @@ class SkillManager:
             except Exception as e:
                 self.logger.error(f"Failed to import skill '{name}': {e}")
 
-        rotations_data = config.get("rotations", {})
-        for name, rotation_data in rotations_data.items():
-            self.create_rotation(
-                name, rotation_data["skills"], rotation_data.get("repeat", True)
-            )
-
-        self.active_rotation = config.get("active_rotation")
         self.global_cooldown = config.get("global_cooldown", 0.15)
-        self.logger.info(
-            f"Imported {len(self.skills)} skills and {len(self.rotations)} rotations. Active rotation: {self.active_rotation}"
-        )
+        self.logger.info(f"Imported {len(self.skills)} skills.")
 
     def reset_usage_stats(self):
         self.usage_stats.clear()
         for name in self.skills:
             self.usage_stats[name] = SkillUsage()
-
-    def reset_active_rotation(self):
-        if self.active_rotation and self.active_rotation in self.rotations:
-            self.rotations[self.active_rotation].reset()

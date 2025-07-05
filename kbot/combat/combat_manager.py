@@ -131,14 +131,15 @@ class CombatManager:
     def execute_combat_action(self):
         """Lógica de decisión de skills con logging mejorado."""
         if self.use_skills:
-            # ✅ CORREGIDO: Usar get_next_skill() que maneja rotaciones Y prioridades
             next_skill_name = self.skill_manager.get_next_skill()
             if next_skill_name:
                 if self.skill_manager.use_skill(next_skill_name):
                     self.last_action_time = time.time()
                     return
             else:
-                self.logger.debug("No usable skills found, falling back to basic attack.")
+                self.logger.debug(
+                    "No usable skills found, falling back to basic attack."
+                )
 
         # Fallback: usar ataque básico si no hay skills disponibles
         basic_attack = self.skill_manager.find_skill_by_type(SkillType.AUTO_ATTACK)
@@ -161,25 +162,35 @@ class CombatManager:
             # ✅ MEJORADO: Lógica con delay entre intentos de loot
             current_time = time.time()
             looting_elapsed = current_time - getattr(self, "looting_start_time", 0)
-            
+
             # Check if looting should finish
-            if (looting_elapsed > self.timing["loot_duration"] or self.current_loot_attempts >= self.loot_attempts):
-                self.logger.debug(f"Looting finished. Attempts: {self.current_loot_attempts}/{self.loot_attempts}")
+            if (
+                looting_elapsed > self.timing["loot_duration"]
+                or self.current_loot_attempts >= self.loot_attempts
+            ):
+                self.logger.debug(
+                    f"Looting finished. Attempts: {self.current_loot_attempts}/{self.loot_attempts}"
+                )
                 self._start_post_combat_delay()
                 return
-            
+
             # Calculate delay between loot attempts (distribute attempts over duration)
             if self.loot_attempts > 0:
                 attempt_interval = self.timing["loot_duration"] / self.loot_attempts
             else:
                 attempt_interval = 0.5  # Default 0.5s between attempts
-                
+
             # Check if it's time for next loot attempt
             expected_attempt_time = self.current_loot_attempts * attempt_interval
-            if looting_elapsed >= expected_attempt_time and self.current_loot_attempts < self.loot_attempts:
+            if (
+                looting_elapsed >= expected_attempt_time
+                and self.current_loot_attempts < self.loot_attempts
+            ):
                 self.input_controller.send_key(self.loot_key)
                 self.current_loot_attempts += 1
-                self.logger.debug(f"Loot attempt {self.current_loot_attempts}/{self.loot_attempts} (at {looting_elapsed:.1f}s)")
+                self.logger.debug(
+                    f"Loot attempt {self.current_loot_attempts}/{self.loot_attempts} (at {looting_elapsed:.1f}s)"
+                )
             return
 
         if self.state == CombatState.POST_COMBAT_DELAY:
@@ -188,7 +199,9 @@ class CombatManager:
                 time.time() - getattr(self, "post_combat_delay_start", 0)
                 >= self.timing["attack_interval"]
             ):
-                self.logger.debug(f"Post-combat delay finished ({self.timing['attack_interval']}s)")
+                self.logger.debug(
+                    f"Post-combat delay finished ({self.timing['attack_interval']}s)"
+                )
                 self._reset_combat_state()
             return
 
@@ -228,14 +241,15 @@ class CombatManager:
         self.current_target_name = target_name
         self.last_target_hp = 100
         self.stuck_detector["last_hp_change_time"] = time.time()
-        self.skill_manager.reset_active_rotation()
 
     def _start_post_combat_delay(self):
         """✅ NUEVO: Inicia el delay post-combate usando attack_interval."""
         if self.timing["attack_interval"] > 0:
             self.state = CombatState.POST_COMBAT_DELAY
             self.post_combat_delay_start = time.time()
-            self.logger.debug(f"Starting post-combat delay: {self.timing['attack_interval']}s")
+            self.logger.debug(
+                f"Starting post-combat delay: {self.timing['attack_interval']}s"
+            )
         else:
             # Si attack_interval es 0, ir directamente a IDLE
             self._reset_combat_state()
@@ -260,27 +274,27 @@ class CombatManager:
         # OCR may detect "Byokbo (56)" but whitelist only contains "Byokbo"
         best_match_score = 0
         best_match_name = ""
-        
+
         if FUZZYWUZZY_AVAILABLE:
             # Extract base target name (remove level info if present)
             base_target = target_lower.split("(")[0].strip()
-            
+
             for mob in self.whitelist:
                 mob_lower = mob.lower()
-                
+
                 # Primary match: base target name vs whitelist entry
                 base_score = fuzz.ratio(base_target, mob_lower)
-                
+
                 # Secondary match: full target name vs whitelist entry (fallback)
                 full_score = fuzz.ratio(target_lower, mob_lower)
-                
+
                 # Prioritize base name matching since whitelist contains base names
                 final_score = max(base_score, full_score)
-                
+
                 if final_score > best_match_score:
                     best_match_score = final_score
                     best_match_name = mob
-        
+
         is_allowed = best_match_score >= self.ocr_tolerance
 
         if is_allowed:
@@ -348,5 +362,5 @@ class CombatManager:
             if key in self.timing:
                 self.timing[key] = value
                 self.logger.debug(f"Timing config updated: {key} = {value}")
-        
+
         self.logger.info(f"Combat timing updated: {self.timing}")
