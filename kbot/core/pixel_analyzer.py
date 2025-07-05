@@ -322,7 +322,7 @@ class PixelAnalyzer:
                     self.logger.warning(f"Could not save debug images: {debug_e}")
 
             # Updated config: PSM 7 for single text line, better for complex names
-            custom_config = r"--psm 7"
+            custom_config = r"--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
             raw_name = pytesseract.image_to_string(processed_img, config=custom_config)
             # No error correction needed with improved preprocessing
             return raw_name

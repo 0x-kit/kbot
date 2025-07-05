@@ -320,12 +320,6 @@ class UnifiedConfigManager:
         """Validate configuration and return list of issues"""
         issues = []
 
-        # Validar timing values
-        timing = self.get_combat_timing()
-        for key, value in timing.items():
-            if not isinstance(value, (int, float)) or value <= 0:
-                issues.append(f"Invalid timing value for {key}: {value}")
-
         # Validar regions
         regions = self.get_regions()
         for region_name, coords in regions.items():
