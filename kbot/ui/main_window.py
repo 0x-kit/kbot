@@ -54,7 +54,7 @@ class TantraBotMainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Tantra Bot v2.0.0 - by 0xkit (Unified Config)")
+        self.setWindowTitle("Tantra Bot v1.0.0")
         self.setMinimumSize(700, 400)
 
         from utils.logger import BotLogger
@@ -530,7 +530,7 @@ class TantraBotMainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.bot_state_label = QLabel("Stopped")
         self.status_bar.addWidget(self.bot_state_label)
-        self.status_bar.addPermanentWidget(QLabel("Tantra Bot v1.0.0"))
+        # self.status_bar.addPermanentWidget(QLabel("Tantra Bot v1.0.0"))
 
     def _connect_signals(self):
         # Conecta las señales de la UI (hilo principal) a los slots del worker (hilo del bot)
@@ -883,15 +883,16 @@ class TantraBotMainWindow(QMainWindow):
                 total_runtime = stats.get("total_runtime", 0)
                 if start_time > 0 and self.bot_engine.get_state() == "running":
                     import time
+
                     current_runtime = total_runtime + (time.time() - start_time)
                 else:
                     current_runtime = total_runtime
-                
+
                 runtime_seconds = int(current_runtime)
                 hours, remainder = divmod(runtime_seconds, 3600)
                 minutes, seconds = divmod(remainder, 60)
                 self.runtime_label.setText(f"{hours:02}:{minutes:02}:{seconds:02}")
-                
+
                 # Update targets count
                 targets_count = stats.get("targets_killed", 0)
                 self.targets_killed_label.setText(str(targets_count))
@@ -940,8 +941,9 @@ class TantraBotMainWindow(QMainWindow):
             self.pause_resume_btn.setEnabled(True)
             self.pause_resume_btn.setText("⏸️ Pause")
             # Ensure statistics tracking starts when bot runs
-            if hasattr(self.bot_engine, 'start_time'):
+            if hasattr(self.bot_engine, "start_time"):
                 import time
+
                 self.bot_engine.start_time = time.time()
         elif state == "stopped":
             self.start_stop_btn.setText("▶️ Start Bot")
