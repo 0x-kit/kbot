@@ -35,7 +35,9 @@ class PixelAnalyzer:
         self.target_hwnd = hwnd
 
     def capture_screen(
-        self, region: Optional[Tuple[int, int, int, int]] = None, debug_save: bool = False
+        self,
+        region: Optional[Tuple[int, int, int, int]] = None,
+        debug_save: bool = False,
     ) -> Image.Image:
         """
         ✅ CORREGIDO: Captura el área cliente completa o una región específica de ella.
@@ -91,15 +93,21 @@ class PixelAnalyzer:
             if debug_save:
                 try:
                     img.save("debug_captured_screen.png")
-                    self.logger.info("Debug screen capture saved: debug_captured_screen.png")
+                    self.logger.info(
+                        "Debug screen capture saved: debug_captured_screen.png"
+                    )
                 except Exception as debug_e:
-                    self.logger.warning(f"Could not save debug screen capture: {debug_e}")
+                    self.logger.warning(
+                        f"Could not save debug screen capture: {debug_e}"
+                    )
 
             return img
         except Exception as e:
             raise AnalysisError(f"Fallo en la captura de pantalla: {e}")
 
-    def debug_ocr_pipeline(self, name_region: Tuple[int, int, int, int]) -> Dict[str, any]:
+    def debug_ocr_pipeline(
+        self, name_region: Tuple[int, int, int, int]
+    ) -> Dict[str, any]:
         """
         Debug method to save all intermediate images in the OCR pipeline.
         Useful for troubleshooting OCR issues.
@@ -107,10 +115,12 @@ class PixelAnalyzer:
         try:
             # Capture full screen with debug
             full_capture = self.capture_screen(debug_save=True)
-            
+
             # Convert region coordinates to relative if needed
             if self.target_hwnd:
-                client_left, client_top = win32gui.ClientToScreen(self.target_hwnd, (0, 0))
+                client_left, client_top = win32gui.ClientToScreen(
+                    self.target_hwnd, (0, 0)
+                )
                 relative_region = (
                     name_region[0] - client_left,
                     name_region[1] - client_top,
@@ -119,12 +129,12 @@ class PixelAnalyzer:
                 )
             else:
                 relative_region = name_region
-            
+
             # Extract target name with debug
             extracted_name = self.extract_target_name_from_image(
                 full_capture, relative_region, debug_save=True
             )
-            
+
             return {
                 "extracted_name": extracted_name,
                 "region_coords": name_region,
@@ -132,9 +142,9 @@ class PixelAnalyzer:
                 "success": bool(extracted_name),
                 "debug_files": [
                     "debug_captured_screen.png",
-                    "debug_original_crop.png", 
-                    "debug_processed_crop.png"
-                ]
+                    "debug_original_crop.png",
+                    "debug_processed_crop.png",
+                ],
             }
         except Exception as e:
             self.logger.error(f"Debug OCR pipeline failed: {e}")
@@ -221,6 +231,7 @@ class PixelAnalyzer:
 
     def analyze_vitals(self, regions: Dict[str, Tuple[int, int, int, int]]):
         try:
+            self.logger.debug("regions", regions)
             img = self.capture_screen()
             client_left, client_top = win32gui.ClientToScreen(self.target_hwnd, (0, 0))
 
@@ -269,47 +280,50 @@ class PixelAnalyzer:
         try:
             # Convert PIL to OpenCV format
             open_cv_image = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-            
+
             # Step 1: Invert colors (white text becomes black, better for OCR)
             inverted = cv2.bitwise_not(open_cv_image)
-            
+
             # Step 2: Enhance contrast dramatically
             enhanced = cv2.convertScaleAbs(inverted, alpha=2.0, beta=0)
-            
+
             # Step 3: Convert to grayscale
             gray = cv2.cvtColor(enhanced, cv2.COLOR_BGR2GRAY)
-            
+
             # Step 4: Apply OTSU threshold for perfect binarization
             _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            
+
             # Convert back to PIL Image
             return Image.fromarray(binary)
-            
+
         except Exception as e:
             self.logger.error(f"Fallo en el preprocesamiento mejorado de OCR: {e}")
             return img
 
     def extract_target_name_from_image(
-        self, img: Image.Image, name_region_relative: Tuple[int, int, int, int], debug_save: bool = False
+        self,
+        img: Image.Image,
+        name_region_relative: Tuple[int, int, int, int],
+        debug_save: bool = False,
     ) -> str:
         try:
             name_img = img.crop(name_region_relative)
             processed_img = self.preprocess_name_image(name_img)
-            
+
             # Debug: Save images if requested
             if debug_save:
                 try:
                     name_img.save("debug_original_crop.png")
                     processed_img.save("debug_processed_crop.png")
-                    self.logger.info("Debug images saved: debug_original_crop.png, debug_processed_crop.png")
+                    self.logger.info(
+                        "Debug images saved: debug_original_crop.png, debug_processed_crop.png"
+                    )
                 except Exception as debug_e:
                     self.logger.warning(f"Could not save debug images: {debug_e}")
-            
+
             # Updated config: PSM 7 for single text line, better for complex names
-            custom_config = r"--psm 7 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ()"
-            raw_name = pytesseract.image_to_string(
-                processed_img, config=custom_config
-            ).strip()
+            custom_config = r"--psm 7"
+            raw_name = pytesseract.image_to_string(processed_img, config=custom_config)
             # No error correction needed with improved preprocessing
             return raw_name
         except Exception as e:
@@ -343,7 +357,12 @@ class PixelAnalyzer:
     def correct_ocr_mistakes(self, text: str) -> str:
         # Updated to preserve spaces, numbers, and parentheses for multi-word mob names with levels
         char_map = {
-            "J": "Z", "i": "l", "1": "l", "0": "O", "5": "S", "8": "B",
+            "J": "Z",
+            "i": "l",
+            "1": "l",
+            "0": "O",
+            "5": "S",
+            "8": "B",
             # Remove the space mapping that was causing issues: " ": "",
         }
         corrected = "".join(char_map.get(char, char) for char in text)
@@ -365,7 +384,7 @@ class PixelAnalyzer:
             original_image = full_capture.crop(relative_region)
             processed_image = self.preprocess_name_image(original_image)
             # Updated config: PSM 7 for single text line, consistent with extract_target_name_from_image
-            custom_config = r"--psm 7 --oem 1 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ()"
+            custom_config = r"--psm 7"
             raw_name = pytesseract.image_to_string(
                 processed_image, config=custom_config
             ).strip()
